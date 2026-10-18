@@ -4,20 +4,39 @@
   "description": "Framework-agnostic, fully typed query builder core: schema, store, validation, evaluation and format codecs.",
   "license": "MIT",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": "./src/index.ts",
-    "./formats/*": "./src/formats/*.ts"
+    "./formats/*": "./src/formats/*.ts",
+    "./styles.css": "./styles.css"
   },
   "publishConfig": {
     "exports": {
-      ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-      "./formats/*": { "types": "./dist/formats/*.d.ts", "default": "./dist/formats/*.js" }
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./formats/*": {
+        "types": "./dist/formats/*.d.ts",
+        "default": "./dist/formats/*.js"
+      },
+      "./styles.css": "./styles.css"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "styles.css"
+  ],
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@react-awesome-query-builder/core": "6.6.15",
+    "@react-querybuilder/core": "8.25.0",
+    "@types/json-logic-js": "^2.0.8",
+    "json-logic-js": "^2.0.5"
   }
 }

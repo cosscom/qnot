@@ -1,0 +1,78 @@
+/* Optional default look for trawlnet's built-in components. Every binding renders the same classes. */
+.tn {
+  --tn-border: #d4d4d8;
+  --tn-bg: #fafafa;
+  --tn-accent: #2563eb;
+  --tn-danger: #dc2626;
+  --tn-radius: 6px;
+  --tn-gap: 6px;
+  font: 14px/1.4 system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  .tn {
+    --tn-border: #3f3f46;
+    --tn-bg: #18181b;
+    --tn-accent: #60a5fa;
+    --tn-danger: #f87171;
+  }
+}
+.tn-group {
+  border: 1px solid var(--tn-border);
+  border-radius: var(--tn-radius);
+  background: var(--tn-bg);
+  padding: 8px;
+}
+/* Off-screen groups skip layout entirely; this is what keeps 1000+ rule trees responsive. */
+.tn-children > .tn-group {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
+}
+.tn-group-header,
+.tn-rule {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tn-gap);
+  align-items: center;
+}
+.tn-children {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tn-gap);
+  margin: var(--tn-gap) 0 0 16px;
+}
+.tn-children:empty {
+  min-height: 24px;
+  border: 1px dashed var(--tn-border);
+  border-radius: var(--tn-radius);
+}
+.tn-handle {
+  cursor: grab;
+  user-select: none;
+  opacity: 0.5;
+}
+.tn-value-pair {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.tn-invalid input,
+.tn-invalid select {
+  border-color: var(--tn-danger);
+}
+.tn-issues {
+  color: var(--tn-danger);
+  font-size: 12px;
+  flex-basis: 100%;
+}
+.tn-dragging {
+  opacity: 0.4;
+}
+.tn-drop-before {
+  box-shadow: 0 -2px 0 var(--tn-accent);
+}
+.tn-drop-after {
+  box-shadow: 0 2px 0 var(--tn-accent);
+}
+.tn-drop-inside {
+  outline: 2px dashed var(--tn-accent);
+}
