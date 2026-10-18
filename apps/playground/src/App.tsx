@@ -3,6 +3,7 @@ import { compile, createQueryStore, isValidQuery } from '@trawlnet/core';
 import { QueryBuilder, QueryProvider, useHistory, useIsValid, useQuery } from '@trawlnet/react';
 import { Redo2Icon, Undo2Icon } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Tip } from '@/components/tip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
@@ -19,15 +20,21 @@ function Toolbar() {
   const query = useQuery<Fields>();
   return (
     <div className="flex items-center gap-2">
-      <Badge variant={valid ? 'success' : 'warning'}>{valid ? 'Valid' : 'Incomplete'}</Badge>
+      <Tip label={valid ? 'Every rule is complete and valid' : 'Some rules are incomplete; exports and filtering skip them'}>
+        <Badge variant={valid ? 'success' : 'warning'}>{valid ? 'Valid' : 'Incomplete'}</Badge>
+      </Tip>
       <span className="text-muted-foreground text-xs">{countRules(query)} rules</span>
       <div className="ms-auto flex gap-1">
-        <Button size="icon-sm" variant="ghost" disabled={!canUndo} onClick={undo} aria-label="Undo">
-          <Undo2Icon />
-        </Button>
-        <Button size="icon-sm" variant="ghost" disabled={!canRedo} onClick={redo} aria-label="Redo">
-          <Redo2Icon />
-        </Button>
+        <Tip label="Undo">
+          <Button size="icon-sm" variant="ghost" disabled={!canUndo} onClick={undo} aria-label="Undo">
+            <Undo2Icon />
+          </Button>
+        </Tip>
+        <Tip label="Redo">
+          <Button size="icon-sm" variant="ghost" disabled={!canRedo} onClick={redo} aria-label="Redo">
+            <Redo2Icon />
+          </Button>
+        </Tip>
       </div>
     </div>
   );

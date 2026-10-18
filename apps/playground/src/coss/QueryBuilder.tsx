@@ -24,6 +24,8 @@ import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from '@/c
 import { Switch } from '@/components/ui/switch';
 import { Toggle } from '@/components/ui/toggle';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Tip } from '@/components/tip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface Item {
@@ -167,9 +169,11 @@ const Rule = memo(function Rule({ id, fields }: { id: NodeId; fields: Item[] }) 
   return (
     <div className={cn('group/rule flex flex-col gap-1 rounded-lg', isDragging && 'opacity-40', dropLine(position))} {...dropProps}>
       <div className="flex flex-wrap items-center gap-2">
-        <span {...handleProps} className="cursor-grab text-muted-foreground/60 hover:text-foreground" title="Drag to move">
-          <GripVerticalIcon className="size-4" />
-        </span>
+        <Tip label="Drag to move">
+          <span {...handleProps} className="cursor-grab text-muted-foreground/60 hover:text-foreground">
+            <GripVerticalIcon className="size-4" />
+          </span>
+        </Tip>
         <CossSelect items={fields} value={rule.field} onChange={(f) => setField(f)} />
         <CossSelect items={operators} value={rule.operator} onChange={(op) => setOperator(op as typeof rule.operator)} />
         {rule.ref !== undefined ? (
@@ -179,16 +183,22 @@ const Rule = memo(function Rule({ id, fields }: { id: NodeId; fields: Item[] }) 
         )}
         <div className="ms-auto flex items-center gap-0.5 opacity-60 transition-opacity group-hover/rule:opacity-100">
           {refs.length > 0 && (
-            <Button size="icon-sm" variant="ghost" title={rule.ref === undefined ? 'Compare with another field' : 'Compare with a value'} onClick={() => setRef(rule.ref === undefined ? refs[0]!.value : null)}>
-              {rule.ref === undefined ? <VariableIcon /> : <PencilLineIcon />}
-            </Button>
+            <Tip label={rule.ref === undefined ? 'Compare with another field' : 'Compare with a value'}>
+              <Button size="icon-sm" variant="ghost" aria-label={rule.ref === undefined ? 'Compare with another field' : 'Compare with a value'} onClick={() => setRef(rule.ref === undefined ? refs[0]!.value : null)}>
+                {rule.ref === undefined ? <VariableIcon /> : <PencilLineIcon />}
+              </Button>
+            </Tip>
           )}
-          <Button size="icon-sm" variant="ghost" title="Duplicate" onClick={clone}>
-            <CopyIcon />
-          </Button>
-          <Button size="icon-sm" variant="ghost" title="Remove" onClick={remove}>
-            <XIcon />
-          </Button>
+          <Tip label="Duplicate rule">
+            <Button size="icon-sm" variant="ghost" aria-label="Duplicate rule" onClick={clone}>
+              <CopyIcon />
+            </Button>
+          </Tip>
+          <Tip label="Remove rule">
+            <Button size="icon-sm" variant="ghost" aria-label="Remove rule" onClick={remove}>
+              <XIcon />
+            </Button>
+          </Tip>
         </div>
       </div>
       {invalid && <p className="ps-6 text-destructive-foreground text-xs">{errors.map((e) => e.message).join(' · ')}</p>}
@@ -221,32 +231,48 @@ const Group = memo(function Group({ id, fields, depth }: { id: NodeId; fields: I
     >
       <div className="flex flex-wrap items-center gap-2">
         {!isRoot && (
-          <span {...handleProps} className="cursor-grab text-muted-foreground/60 hover:text-foreground" title="Drag to move">
-            <GripVerticalIcon className="size-4" />
-          </span>
+          <Tip label="Drag to move">
+            <span {...handleProps} className="cursor-grab text-muted-foreground/60 hover:text-foreground">
+              <GripVerticalIcon className="size-4" />
+            </span>
+          </Tip>
         )}
-        <Toggle size="sm" variant="outline" pressed={group.not} onPressedChange={setNot} title="Negate this group">
-          NOT
-        </Toggle>
+        <Tip label={group.not ? 'Negated: matches when this group does NOT match' : 'Negate this group'}>
+          <Toggle size="sm" variant="outline" pressed={group.not} onPressedChange={setNot}>
+            NOT
+          </Toggle>
+        </Tip>
         <ToggleGroup size="sm" variant="outline" value={[group.combinator]} onValueChange={(v) => v[0] && setCombinator(v[0] as 'and' | 'or')}>
-          <ToggleGroupItem value="and">AND</ToggleGroupItem>
-          <ToggleGroupItem value="or">OR</ToggleGroupItem>
+          <Tip label="Match when every rule matches">
+            <ToggleGroupItem value="and">AND</ToggleGroupItem>
+          </Tip>
+          <Tip label="Match when any rule matches">
+            <ToggleGroupItem value="or">OR</ToggleGroupItem>
+          </Tip>
         </ToggleGroup>
         <div className="ms-auto flex items-center gap-1">
-          <Button size="sm" variant="outline" onClick={() => addRule()}>
-            <PlusIcon /> Rule
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => addGroup()}>
-            <FolderPlusIcon /> Group
-          </Button>
+          <Tip label="Add a rule to this group">
+            <Button size="sm" variant="outline" onClick={() => addRule()}>
+              <PlusIcon /> Rule
+            </Button>
+          </Tip>
+          <Tip label="Add a nested group">
+            <Button size="sm" variant="ghost" onClick={() => addGroup()}>
+              <FolderPlusIcon /> Group
+            </Button>
+          </Tip>
           {!isRoot && (
             <>
-              <Button size="icon-sm" variant="ghost" title="Duplicate group" onClick={clone}>
-                <CopyIcon />
-              </Button>
-              <Button size="icon-sm" variant="ghost" title="Remove group" onClick={remove}>
-                <XIcon />
-              </Button>
+              <Tip label="Duplicate group">
+                <Button size="icon-sm" variant="ghost" aria-label="Duplicate group" onClick={clone}>
+                  <CopyIcon />
+                </Button>
+              </Tip>
+              <Tip label="Remove group and its rules">
+                <Button size="icon-sm" variant="ghost" aria-label="Remove group" onClick={remove}>
+                  <XIcon />
+                </Button>
+              </Tip>
             </>
           )}
         </div>
@@ -266,7 +292,9 @@ export function CossQueryBuilder({ store }: { store: QueryStore<any, any> }) {
   const fields = useMemo(() => fieldOptions(store.fields), [store]);
   return (
     <QueryProvider store={store}>
-      <Group id={store.rootId} fields={fields} depth={0} />
+      <TooltipProvider delay={300}>
+        <Group id={store.rootId} fields={fields} depth={0} />
+      </TooltipProvider>
     </QueryProvider>
   );
 }

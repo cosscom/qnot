@@ -8,6 +8,7 @@ import { sqlFormat } from '@trawlnet/core/formats/sql';
 import { useQuery, useStore } from '@trawlnet/react';
 import { CheckIcon, CopyIcon, DownloadIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Tip } from '@/components/tip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -65,11 +66,12 @@ export function FormatsPanel() {
       <div className="flex items-center gap-2 text-xs">
         <Badge variant="outline">{format.codec.decode ? 'two-way' : 'export only'}</Badge>
         <span className="text-muted-foreground">encoded in {ms.toFixed(3)} ms (memoized per node: only edited branches re-encode)</span>
+        <Tip label={copied ? 'Copied' : 'Copy to clipboard'}>
         <Button
           size="icon-sm"
           variant="ghost"
           className="ms-auto"
-          title="Copy"
+          aria-label="Copy"
           onClick={() => {
             void navigator.clipboard.writeText(text);
             setCopied(true);
@@ -78,6 +80,7 @@ export function FormatsPanel() {
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
         </Button>
+        </Tip>
       </div>
       <pre className="max-h-[50vh] overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/50 p-3 font-mono text-xs">{text}</pre>
       {format.codec.decode && (
