@@ -9,8 +9,13 @@
     format: (v: unknown) => string;
     onChange: (v: unknown) => void;
     invalid: boolean;
+    disabled?: boolean;
+    min?: number;
+    max?: number;
+    step?: number;
+    placeholder?: string;
   }
-  let { type, value, parse, format, onChange, invalid }: Props = $props();
+  let { type, value, parse, format, onChange, invalid, disabled, min, max, step, placeholder }: Props = $props();
 
   // svelte-ignore state_referenced_locally
   let draft = $state(format(value));
@@ -23,6 +28,11 @@
 <input
   class={CLASS.value}
   {type}
+  {min}
+  {max}
+  {step}
+  {placeholder}
+  {disabled}
   value={draft}
   aria-invalid={invalid || undefined}
   oninput={(e) => {

@@ -77,15 +77,17 @@ describe('mountQueryBuilder', () => {
     expect(list.value).toBe('1, 2, ');
   });
 
-  it('adds rules and groups, removes, clones, and toggles refs', () => {
+  it('adds rules and groups, removes and clones', () => {
     const { store, host } = setup();
     const addGroup = [...host.querySelectorAll('button')].find((b) => b.textContent === '+ Group')!;
     addGroup.click();
     expect(host.querySelectorAll('.tn-group')).toHaveLength(2);
     const nested = host.querySelectorAll('.tn-group')[1]!;
-    [...nested.querySelectorAll('button')].find((b) => b.textContent === '+ Rule')!.click();
+    // New groups start with one rule (RAQB default).
     expect(nested.querySelectorAll('.tn-rule')).toHaveLength(1);
-    expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }] });
+    [...nested.querySelectorAll('button')].find((b) => b.textContent === '+ Rule')!.click();
+    expect(nested.querySelectorAll('.tn-rule')).toHaveLength(2);
+    expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }, { kind: 'rule', field: 'name' }] });
     const first = host.querySelector('.tn-rule')!;
     first.querySelector<HTMLButtonElement>('button[aria-label="Duplicate"]')!.click();
     expect(store.getGroup(store.rootId).children).toHaveLength(5);

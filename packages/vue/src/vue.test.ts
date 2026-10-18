@@ -74,7 +74,8 @@ describe('Vue <QueryBuilder>', () => {
     await w.findAll('button').find((b) => b.text() === '+ Group')!.trigger('click');
     expect(w.findAll('.tn-group')).toHaveLength(2);
     await w.findAll('.tn-group')[1]!.findAll('button').find((b) => b.text() === '+ Rule')!.trigger('click');
-    expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }] });
+    // New groups start with one rule (RAQB default), so this is the second.
+    expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }, { kind: 'rule', field: 'name' }] });
     await w.findAll('select.tn-operator')[1]!.setValue('between');
     expect(w.findAll('.tn-value-pair input')).toHaveLength(2);
     await w.find('.tn-not input').setValue(true);

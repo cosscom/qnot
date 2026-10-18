@@ -4,20 +4,29 @@ import {
   createDnd,
   dropIndexFromPointer,
   editorFor,
+  elementFields,
+  fieldOptions,
+  functionOptions,
+  leftDef,
   operatorOptions,
+  refOptions,
+  type Action,
+  type AnyFieldDef,
   type DndController,
   type EditorSpec,
+  type FieldOption,
   type Fields,
+  type FnCall,
   type GroupNode,
   type Issue,
   type NodeId,
   type Option,
-  type OperatorId,
+  type Quantifier,
   type QueryOf,
   type QueryStore,
   type RuleNode,
-  type RuleOf,
   type StoreNode,
+  type StoreSettings,
 } from '@trawlnet/core';
 import { getContext, setContext } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
@@ -55,17 +64,81 @@ export function createNode<F extends Fields = Fields>(store: QueryStore<F, any>,
   };
 }
 
+const RULE_ACTIONS = ['editField', 'editOperator', 'editValue', 'remove', 'clone', 'lock'] as const;
+const GROUP_ACTIONS = ['addRule', 'addGroup', 'editGroup', 'remove', 'clone', 'lock'] as const;
+type RuleAction = (typeof RULE_ACTIONS)[number];
+type GroupAction = (typeof GROUP_ACTIONS)[number];
+
+/**
+ * What the user may do to a node right now (settings, locks, limits). Follows the permissions
+ * channel only, so value edits never re-run it; the record is rebuilt only when an answer flips.
+ */
+function permissions<A extends Action>(store: QueryStore<any, any>, id: NodeId, actions: readonly A[]) {
+  const subscribe = createSubscriber((update) => store.subscribePermissions(update));
+  let bits = -1;
+  let seen = -1;
+  let record = {} as Record<A, boolean>;
+  return () => {
+    subscribe();
+    // Answers only change when the permissions channel fires, which bumps permissionsVersion.
+    if (seen === store.permissionsVersion && bits !== -1) return record;
+    seen = store.permissionsVersion;
+    let b = 0;
+    if (store.get(id)) actions.forEach((a, i) => store.can(a, id) && (b |= 1 << i));
+    if (b !== bits) {
+      bits = b;
+      record = Object.fromEntries(actions.map((a, i) => [a, (b & (1 << i)) !== 0])) as Record<A, boolean>;
+    }
+    return record;
+  };
+}
+
+/** Reactive store settings: `settings.current` updates when `setSettings` is called. */
+export function createSettings(store: QueryStore<any, any>): { readonly current: Readonly<StoreSettings> } {
+  const subscribe = createSubscriber((update) => store.subscribePermissions(update));
+  return {
+    get current() {
+      subscribe();
+      return store.settings;
+    },
+  };
+}
+
+/** Memoize `compute` on the identity of its inputs. */
+function memo<K extends readonly unknown[], V>(compute: (...k: K) => V) {
+  let keys: K | undefined;
+  let value: V;
+  return (...k: K): V => {
+    if (!keys || k.length !== keys.length || k.some((x, i) => x !== keys![i])) {
+      keys = k;
+      value = compute(...k);
+    }
+    return value;
+  };
+}
+
 export interface RuleState<F extends Fields> {
   readonly id: NodeId;
   readonly rule: RuleNode<F>;
-  readonly def: F[keyof F] | undefined;
+  /** The schema in scope: the array's element fields inside array groups. */
+  readonly fields: Fields;
+  readonly def: AnyFieldDef | undefined;
   readonly editor: EditorSpec;
-  readonly operators: Option<OperatorId>[];
+  readonly operators: Option[];
+  readonly fieldOptions: FieldOption[];
+  readonly refOptions: Option[];
+  readonly functionOptions: Option[];
+  /** Where the right side comes from: a literal, another field, or a function. */
+  readonly source: 'value' | 'field' | 'function';
+  readonly locked: boolean;
+  readonly can: Record<RuleAction, boolean>;
   readonly issues: readonly Issue[];
-  setField(field: keyof F & string): void;
-  setOperator(operator: RuleOf<F>['operator']): void;
+  setField(field: string | FnCall): void;
+  setOperator(operator: string): void;
   setValue(value: unknown): void;
-  setRef(ref: (keyof F & string) | null): void;
+  setRef(ref: string | null): void;
+  setCall(call: FnCall | null): void;
+  setLocked(locked: boolean): void;
   remove(): void;
   clone(): void;
 }
@@ -73,58 +146,106 @@ export interface RuleState<F extends Fields> {
 /** A rule's reactive state plus everything needed to render its editors. */
 export function createRule<F extends Fields = Fields>(store: QueryStore<F, any>, id: NodeId): RuleState<F> {
   const node = createNode(store, id);
-  let editorKey: unknown;
-  let editor: EditorSpec;
-  let opsDef: unknown = null;
-  let ops: Option<OperatorId>[] = [];
+  const settings = createSettings(store);
+  const can = permissions(store, id, RULE_ACTIONS);
+  const scope = memo((_parent: NodeId | null) => (store.get(id) ? store.fieldsFor(id) : (store.fields as Fields)));
+  const editorOf = memo((def: AnyFieldDef | undefined, op: string, fields: Fields) => editorFor(def, op, fields));
+  const opsOf = memo((def: AnyFieldDef | undefined, fields: Fields) => operatorOptions(def, fields));
+  const fieldsOf = memo((fields: Fields) => fieldOptions(fields).filter((o) => !o.isArray));
+  const refsOf = memo((fields: Fields, field: string | FnCall, def: AnyFieldDef | undefined, allowsRef: boolean, allow: boolean | undefined) =>
+    allowsRef && allow !== false && typeof field === 'string' ? refOptions(fields, field, def?.kind) : [],
+  );
+  const fnsOf = memo((fields: Fields, def: AnyFieldDef | undefined, allowsRef: boolean, allow: boolean | undefined) =>
+    allowsRef && allow !== false ? functionOptions(fields, def?.kind) : [],
+  );
+  const lockedSub = createSubscriber((update) => store.subscribePermissions(update));
+  const rule = () => node.current as RuleNode<F>;
+  const fields = () => scope(rule().parent);
+  const def = () => leftDef(fields(), rule().field as string | FnCall);
+  const editor = () => editorOf(def(), rule().operator, fields());
   return {
     id,
     get rule() {
-      return node.current as RuleNode<F>;
+      return rule();
+    },
+    get fields() {
+      return fields();
     },
     get def() {
-      return store.fields[(node.current as RuleNode<F>).field] as F[keyof F] | undefined;
+      return def();
     },
     get editor() {
-      const r = node.current as RuleNode<F>;
-      const def = store.fields[r.field];
-      // Same spec object while field and operator are unchanged, so {#key}/$derived stay stable.
-      if (editorKey !== `${r.field}|${r.operator}`) {
-        editorKey = `${r.field}|${r.operator}`;
-        editor = editorFor(def, r.operator);
-      }
-      return editor;
+      return editor();
     },
     get operators() {
-      const def = store.fields[(node.current as RuleNode<F>).field];
-      if (def !== opsDef) {
-        opsDef = def;
-        ops = operatorOptions(def);
-      }
-      return ops;
+      return opsOf(def(), fields());
+    },
+    get fieldOptions() {
+      return fieldsOf(fields());
+    },
+    get refOptions() {
+      return refsOf(fields(), rule().field as string | FnCall, def(), editor().allowsRef, settings.current.allowRefs);
+    },
+    get functionOptions() {
+      return fnsOf(fields(), def(), editor().allowsRef, settings.current.allowFunctions);
+    },
+    get source() {
+      const r = rule();
+      return r.ref !== undefined ? 'field' : r.call !== undefined ? 'function' : 'value';
+    },
+    get locked() {
+      lockedSub();
+      return store.isLocked(id);
+    },
+    get can() {
+      return can();
     },
     get issues() {
       node.current;
       return store.issues(id);
     },
-    setField: (field) => store.setField(id, field),
+    setField: (field) => store.setField(id, field as never),
     setOperator: (operator) => store.setOperator(id, operator),
     setValue: (value) => store.setRuleValue(id, value),
     setRef: (ref) => store.setRef(id, ref),
-    remove: () => store.remove(id),
+    setCall: (call) => store.setCall(id, call),
+    setLocked: (locked) => store.setLocked(id, locked),
+    remove: () => void store.requestRemove(id),
     clone: () => void store.clone(id),
   };
 }
 
+/** Fields visible to a group's children (element schema for array groups). */
+function innerFields(store: QueryStore<any, any>, id: NodeId): Fields {
+  const g = store.getGroup(id);
+  const outer = g.parent === null ? store.fields : store.fieldsFor(id);
+  return g.of && outer[g.of.field]?.of ? elementFields(outer, g.of.field) : outer;
+}
+
 export function createGroup<F extends Fields = Fields>(store: QueryStore<F, any>, id: NodeId) {
   const node = createNode(store, id);
+  const can = permissions(store, id, GROUP_ACTIONS);
+  const lockedSub = createSubscriber((update) => store.subscribePermissions(update));
+  const arrays = memo((_parent: NodeId | null, _of: string | undefined) => (store.get(id) ? fieldOptions(innerFields(store, id)).filter((o) => o.isArray) : []));
+  const group = () => node.current as GroupNode;
   return {
     id,
     get group() {
-      return node.current as GroupNode;
+      return group();
     },
     get isRoot() {
-      return (node.current as GroupNode).parent === null;
+      return group().parent === null;
+    },
+    /** Array fields available for "+ List condition" in this group's scope. */
+    get arrayFields(): FieldOption[] {
+      return arrays(group().parent, group().of?.field);
+    },
+    get locked() {
+      lockedSub();
+      return store.isLocked(id);
+    },
+    get can(): Record<GroupAction, boolean> {
+      return can();
     },
     get issues() {
       node.current;
@@ -132,10 +253,13 @@ export function createGroup<F extends Fields = Fields>(store: QueryStore<F, any>
     },
     setCombinator: (combinator: GroupNode['combinator']) => store.setCombinator(id, combinator),
     setNot: (not: boolean) => store.setNot(id, not),
-    addRule: (rule?: Partial<RuleOf<F>>) => store.addRule(id, rule),
+    setMatch: (match: Quantifier) => store.setMatch(id, match),
+    setLocked: (locked: boolean) => store.setLocked(id, locked),
+    addRule: (rule?: Parameters<QueryStore<F>['addRule']>[1]) => store.addRule(id, rule),
     addGroup: () => store.addGroup(id),
-    remove: () => store.remove(id),
-    clone: () => store.clone(id),
+    addArrayGroup: (field: string, match?: Quantifier) => store.addArrayGroup(id, field, match),
+    remove: () => void store.requestRemove(id),
+    clone: () => void store.clone(id),
   };
 }
 

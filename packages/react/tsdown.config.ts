@@ -5,5 +5,6 @@ export default defineConfig({
   format: 'esm',
   dts: true,
   clean: true,
+  fixedExtension: false,
   external: ['react', 'react/jsx-runtime', '@trawlnet/core'],
 });

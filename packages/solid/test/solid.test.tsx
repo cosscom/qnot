@@ -87,7 +87,8 @@ describe('Solid <QueryBuilder>', () => {
     expect(host.querySelectorAll('.tn-group')).toHaveLength(2);
     const nested = host.querySelectorAll('.tn-group')[1]!;
     [...nested.querySelectorAll('button')].find((b) => b.textContent === '+ Rule')!.click();
-    expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }] });
+    // New groups start with one rule (RAQB default), so this is the second.
+    expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }, { kind: 'rule', field: 'name' }] });
     choose(host.querySelectorAll<HTMLSelectElement>('select.tn-operator')[1]!, 'between');
     expect(host.querySelectorAll('.tn-value-pair input')).toHaveLength(2);
     const notBox = host.querySelector<HTMLInputElement>('.tn-not input')!;

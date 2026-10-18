@@ -5,17 +5,27 @@ import {
   createQueryStore,
   dropIndexFromPointer,
   editorFor,
+  elementFields,
+  fieldOptions,
+  functionOptions,
+  leftDef,
   operatorOptions,
+  refOptions,
+  type Action,
   type DndController,
+  type FieldOption,
   type Fields,
+  type FnCall,
   type GroupNode,
   type NodeId,
+  type Option,
+  type Quantifier,
   type QueryOf,
   type QueryStore,
   type RuleNode,
-  type RuleOf,
   type StoreNode,
   type StoreOptions,
+  type StoreSettings,
 } from '@trawlnet/core';
 import { createContext, createMemo, createRenderEffect, createSignal, on, onCleanup, useContext, type Accessor } from 'solid-js';
 
@@ -82,29 +92,74 @@ function nodeAccessor(store: QueryStore<any, any>, id: NodeId): Accessor<StoreNo
 
 export const useNode = <F extends Fields = Fields>(id: NodeId) => nodeAccessor(useCtx().store, id) as Accessor<StoreNode<F>>;
 
+const RULE_ACTIONS = ['editField', 'editOperator', 'editValue', 'remove', 'clone', 'lock'] as const;
+const GROUP_ACTIONS = ['addRule', 'addGroup', 'editGroup', 'remove', 'clone', 'lock'] as const;
+
+/**
+ * What the user may do to a node right now (settings, locks, limits). Follows the permissions
+ * channel only, as a bitmask signal, so value edits never re-run it and dependents update only
+ * when an answer flips.
+ */
+function permissions<A extends Action>(store: QueryStore<any, any>, id: NodeId, actions: readonly A[]): Accessor<Record<A, boolean>> {
+  const bits = track(store.subscribePermissions, () => {
+    let b = 0;
+    if (store.get(id)) actions.forEach((a, i) => store.can(a, id) && (b |= 1 << i));
+    return b;
+  });
+  return createMemo(() => Object.fromEntries(actions.map((a, i) => [a, (bits() & (1 << i)) !== 0])) as Record<A, boolean>);
+}
+
+/** Current store settings; updates when `setSettings` is called. */
+export function useSettings(): Accessor<Readonly<StoreSettings>> {
+  const store = useStore();
+  return track(store.subscribePermissions, () => store.settings);
+}
+
 /** A rule's fine-grained state plus everything needed to render its editors. */
 export function useRule<F extends Fields = Fields>(id: NodeId) {
   const store = useStore<F>();
   const rule = nodeAccessor(store, id) as Accessor<RuleNode<F>>;
-  const field = createMemo(() => rule().field as keyof F & string);
+  const settings = track(store.subscribePermissions, () => store.settings);
+  const parent = createMemo(() => rule().parent);
+  // The schema in scope: the array's element fields inside array groups.
+  const fields = createMemo(() => {
+    parent();
+    return store.get(id) ? store.fieldsFor(id) : store.fields;
+  });
+  const field = createMemo(() => rule().field as string | FnCall);
   const operator = createMemo(() => rule().operator);
-  const def = createMemo(() => store.fields[field()]);
+  const def = createMemo(() => leftDef(fields(), field()));
+  const editor = createMemo(() => editorFor(def(), operator(), fields()));
   return {
     id,
     rule,
+    fields,
     field,
     operator,
     value: () => rule().value as unknown,
-    ref: () => rule().ref as (keyof F & string) | undefined,
+    ref: () => rule().ref as string | undefined,
+    call: () => rule().call as FnCall | undefined,
     def,
-    editor: createMemo(() => editorFor(def(), operator())),
-    operators: createMemo(() => operatorOptions(def())),
+    editor,
+    operators: createMemo(() => operatorOptions(def(), fields())),
+    fieldOptions: createMemo<FieldOption[]>(() => fieldOptions(fields()).filter((o) => !o.isArray)),
+    refOptions: createMemo<Option[]>(() => {
+      const f = field();
+      return editor().allowsRef && settings().allowRefs !== false && typeof f === 'string' ? refOptions(fields(), f, def()?.kind) : [];
+    }),
+    functionOptions: createMemo<Option[]>(() => (editor().allowsRef && settings().allowFunctions !== false ? functionOptions(fields(), def()?.kind) : [])),
+    /** Where the right side comes from: a literal, another field, or a function. */
+    source: createMemo<'value' | 'field' | 'function'>(() => (rule().ref !== undefined ? 'field' : rule().call !== undefined ? 'function' : 'value')),
+    locked: track(store.subscribePermissions, () => store.isLocked(id)),
+    can: permissions(store, id, RULE_ACTIONS),
     issues: createMemo(() => store.issues(rule().id)),
-    setField: (f: keyof F & string) => store.setField(id, f),
-    setOperator: (op: RuleOf<F>['operator']) => store.setOperator(id, op),
+    setField: (f: string | FnCall) => store.setField(id, f as never),
+    setOperator: (op: string) => store.setOperator(id, op),
     setValue: (value: unknown) => store.setRuleValue(id, value),
-    setRef: (ref: (keyof F & string) | null) => store.setRef(id, ref),
-    remove: () => store.remove(id),
+    setRef: (ref: string | null) => store.setRef(id, ref),
+    setCall: (call: FnCall | null) => store.setCall(id, call),
+    setLocked: (locked: boolean) => store.setLocked(id, locked),
+    remove: () => void store.requestRemove(id),
     clone: () => void store.clone(id),
   };
 }
@@ -112,21 +167,41 @@ export function useRule<F extends Fields = Fields>(id: NodeId) {
 export function useGroup<F extends Fields = Fields>(id: NodeId) {
   const store = useStore<F>();
   const group = nodeAccessor(store, id) as Accessor<GroupNode>;
+  const scope = createMemo(() => `${group().parent}|${group().of?.field}`);
+  const inner = createMemo(() => {
+    scope();
+    return store.get(id) ? innerFields(store, id) : store.fields;
+  });
   return {
     id,
     group,
     children: createMemo(() => group().children),
     combinator: () => group().combinator,
     not: () => group().not,
+    of: () => group().of,
     isRoot: () => group().parent === null,
+    /** Array fields available for "+ List condition" in this group's scope. */
+    arrayFields: createMemo<FieldOption[]>(() => fieldOptions(inner()).filter((o) => o.isArray)),
+    locked: track(store.subscribePermissions, () => store.isLocked(id)),
+    can: permissions(store, id, GROUP_ACTIONS),
     issues: createMemo(() => store.issues(group().id)),
     setCombinator: (combinator: GroupNode['combinator']) => store.setCombinator(id, combinator),
     setNot: (not: boolean) => store.setNot(id, not),
-    addRule: (rule?: Partial<RuleOf<F>>) => store.addRule(id, rule),
+    setMatch: (match: Quantifier) => store.setMatch(id, match),
+    setLocked: (locked: boolean) => store.setLocked(id, locked),
+    addRule: (rule?: Parameters<QueryStore<F>['addRule']>[1]) => store.addRule(id, rule),
     addGroup: () => store.addGroup(id),
-    remove: () => store.remove(id),
+    addArrayGroup: (field: string, match?: Quantifier) => store.addArrayGroup(id, field, match),
+    remove: () => void store.requestRemove(id),
     clone: () => void store.clone(id),
   };
+}
+
+/** Fields visible to a group's children (element schema for array groups). */
+function innerFields(store: QueryStore<any, any>, id: NodeId): Fields {
+  const g = store.getGroup(id);
+  const outer = g.parent === null ? store.fields : store.fieldsFor(id);
+  return g.of && outer[g.of.field]?.of ? elementFields(outer, g.of.field) : outer;
 }
 
 const trackAll = <S>(store: QueryStore<any, any>, read: () => S) => track((fn) => store.subscribe(fn), read);

@@ -11,10 +11,11 @@ export {
   useQueryValue,
   useIsValid,
   useHistory,
+  useSettings,
   useDragHandle,
   useDropTarget,
   useGroupDropZone,
 } from './primitives';
 export type { UseQueryStoreOptions, QueryContextValue, DropPosition } from './primitives';
-export { QueryBuilder, QueryProvider, DefaultGroup, DefaultRule, DefaultValueEditor, DEFAULT_LABELS } from './components';
+export { QueryBuilder, QueryProvider, DefaultGroup, DefaultRule, DefaultValueEditor, FunctionEditor, defaultCall, DEFAULT_LABELS } from './components';
 export type { QueryBuilderProps, Components, ValueEditorProps, Labels } from './components';
