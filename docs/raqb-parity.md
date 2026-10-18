@@ -1,26 +1,28 @@
 # Feature parity with react-awesome-query-builder (RAQB 6.6)
 
-Source: RAQB README + CONFIG.adoc. Status: ✅ done · 🚧 in progress · ⏭ intentionally different (with reason).
+Source: RAQB README + CONFIG.adoc. Status: ✅ done · ⏭ not supported or intentionally different (with reason). Every ✅ row is covered by tests (`packages/core/src/parity.test.ts`, `packages/*/src/**/parity.test.*`, `packages/core/src/formats/*.test.ts`).
 
 ## Field types and widgets
 
 | RAQB | trawlnet | Status |
 |---|---|---|
 | text, number, boolean, date | `f.text/number/boolean/date` | ✅ |
-| time, datetime | `f.time()`, `f.datetime()` | 🚧 |
+| time, datetime | `f.time()`, `f.datetime()` | ✅ |
 | select | `f.enum([...])` | ✅ |
-| multiselect (field holds an array) | `f.multiEnum([...])` + `hasAny/hasAll/hasNone/setEq/setNeq` | 🚧 |
-| treeselect / treemultiselect | `f.enum` / `f.multiEnum` options with `children` | 🚧 |
-| `!struct` (subfields) | `f.struct({...})`, flattened to `address.city` paths, grouped in field pickers | 🚧 |
-| `!group` some/array mode, aggregation (count) | `f.array({...})` + array groups with `match: some/all/none/{count}` | 🚧 |
-| textarea, slider, rangeslider, price widgets | `widget`, `step`, `marks`, `prefix`/`suffix`, `rows` field hints | 🚧 |
-| async listValues, search, load more, allowCustomValues | `search` (async options), `allowCustom` | 🚧 |
-| `fieldName` / `tableName` (export name) | `column` | 🚧 |
-| `label2`, `tooltip` | `description` | 🚧 |
-| `hideForSelect`, `hideForCompare` | `hidden`, `comparable: false` | 🚧 |
-| `excludeOperators` | `excludeOperators` | 🚧 |
+| multiselect (field holds an array) | `f.multiEnum([...])` + `hasAny/hasAll/hasNone/setEq/setNeq` | ✅ |
+| treeselect / treemultiselect | `f.enum` / `f.multiEnum` options with `children` | ✅ |
+| `!struct` (subfields) | `f.struct({...})`, flattened to `address.city` paths, grouped in field pickers | ✅ |
+| `!group` some/array mode, aggregation (count) | `f.array({...})` + array groups with `match: some/all/none/{count}` | ✅ |
+| textarea, slider, rangeslider, price widgets | `widget: 'textarea' \| 'slider'`, `step`, `min`/`max`, `prefix`/`suffix` hints (a between on a slider field renders two sliders); slider `marks` not supported | ✅ |
+| async listValues, search, allowCustomValues | `search(query, signal)` (async options), `allowCustom` | ✅ |
+| async "load more" paging | not built: `search` returns the whole page of matches | ⏭ |
+| `fieldName` / `tableName` (export name) | `column` | ✅ |
+| `label2`, `tooltip` | `description` | ✅ |
+| `hideForSelect`, `hideForCompare` | `hidden`, `comparable: false` | ✅ |
+| `excludeOperators` | `excludeOperators` | ✅ |
 | `defaultValue`, `defaultOperator`, `operators` | same | ✅ |
-| `validateValue` (+ fixedValue) | `validate` (+ `fix`) | 🚧 |
+| `validateValue` | `validate(value) => message` | ✅ |
+| `validateValue` returning `fixedValue` | not supported; clean values with `sanitizeQuery` or your own pass | ⏭ |
 
 ## Operators
 
@@ -30,11 +32,11 @@ Source: RAQB README + CONFIG.adoc. Status: ✅ done · 🚧 in progress · ⏭ i
 | like, not_like, starts_with, ends_with | `contains notContains startsWith endsWith` | ✅ |
 | between, not_between | `between notBetween` | ✅ |
 | is_null, is_not_null | `isNull isNotNull` | ✅ |
-| is_empty, is_not_empty | `isEmpty isNotEmpty` | 🚧 |
+| is_empty, is_not_empty | `isEmpty isNotEmpty` | ✅ |
 | select_any_in, select_not_any_in | `in notIn` | ✅ |
-| multiselect_contains/not_contains/equals/not_equals | `hasAll hasNone setEq setNeq` (+ `hasAny`) | 🚧 |
-| proximity, custom operators with per-format output | `defineOperator()` registry with `evaluate` + per-codec `formats` | 🚧 |
-| reversedOp / reverseOperatorsForNot | operator `inverse` | 🚧 |
+| multiselect_contains/not_contains/equals/not_equals | `hasAll hasNone setEq setNeq` (+ `hasAny`) | ✅ |
+| proximity, custom operators with per-format output | `defineOperator()` registry with `evaluate` + per-codec `formats` | ✅ |
+| reversedOp / reverseOperatorsForNot | operator `inverse` | ✅ |
 
 ## Values
 
@@ -42,9 +44,9 @@ Source: RAQB README + CONFIG.adoc. Status: ✅ done · 🚧 in progress · ⏭ i
 |---|---|---|
 | valueSources: value | `value` | ✅ |
 | valueSources: field | `ref` | ✅ |
-| valueSources: func (RHS functions, nested) | `call: { fn, args }` | 🚧 |
-| fieldSources: func (LHS functions) | `field: { fn, args }` | 🚧 |
-| funcs config (LOWER, NOW, RELATIVE_DATETIME, …) | `defineFunction()` + `builtinFunctions` | 🚧 |
+| valueSources: func (RHS functions, nested) | `call: { fn, args }` | ✅ |
+| fieldSources: func (LHS functions) | `field: { fn, args }` | ✅ |
+| funcs config (LOWER, NOW, RELATIVE_DATETIME, …) | `defineFunction()` + `builtinFunctions` | ✅ |
 
 ## Structure and behaviour
 
@@ -52,18 +54,18 @@ Source: RAQB README + CONFIG.adoc. Status: ✅ done · 🚧 in progress · ⏭ i
 |---|---|---|
 | AND / OR conjunctions, NOT | `combinator`, `not` | ✅ |
 | custom conjunctions (NOR, XOR…) | ⏭ NOR = NOT+OR; XOR has no portable SQL/Mongo meaning | ⏭ |
-| drag and drop, canReorder, canRegroup | DnD + `canReorder`/`canRegroup` settings | 🚧 |
-| lock rules/groups, showLock, canDeleteLocked | `locked` on nodes + settings | 🚧 |
-| read-only / immutable{Groups,Fields,Ops,Values}Mode | `readOnly` + `immutable` settings | 🚧 |
-| maxNesting, maxNumberOfRules | `maxDepth`, `maxRules` | 🚧 |
-| canLeaveEmptyGroup, shouldCreateEmptyGroup | same names | 🚧 |
-| clearValueOnChangeField/Op, setOpOnChangeField | `onFieldChange`, `onOperatorChange` | 🚧 |
-| canCompareFieldWithField | `allowRefs` | 🚧 |
-| removeIncomplete/Empty/InvalidRulesOnLoad, removeEmptyGroupsOnLoad | `sanitizeQuery()` + store `sanitize` option | 🚧 |
-| ternary / switch-case mode | `CasesOf<F, V>` + `compileCases()` + SQL CASE export | 🚧 |
-| showErrorMessage, i18n validation messages | per-node `issues` + schema `messages` overrides | 🚧 |
-| renderConfirm / useConfirm | store `confirmRemove` hook | 🚧 |
-| compressConfig / decompressConfig | `fieldsToJSON()` / `fieldsFromJSON()` | 🚧 |
+| drag and drop, canReorder, canRegroup | DnD + `canReorder`/`canRegroup` settings | ✅ |
+| lock rules/groups, showLock, canDeleteLocked | `locked` on nodes + settings | ✅ |
+| read-only / immutable{Groups,Fields,Ops,Values}Mode | `readOnly` + `immutable` settings | ✅ |
+| maxNesting, maxNumberOfRules | `maxDepth`, `maxRules` | ✅ |
+| canLeaveEmptyGroup, shouldCreateEmptyGroup | `canLeaveEmptyGroup`, `emptyNewGroups` (new groups start with one rule by default, like RAQB) | ✅ |
+| clearValueOnChangeField/Op, setOpOnChangeField | settings `valueOnFieldChange`, `valueOnOperatorChange`, `operatorOnFieldChange` (`'keep' \| 'reset'`) | ✅ |
+| canCompareFieldWithField | `allowRefs` | ✅ |
+| removeIncomplete/Empty/InvalidRulesOnLoad, removeEmptyGroupsOnLoad | `sanitizeQuery()` / store `sanitize`: `removeIncompleteRules`, `removeInvalidRules`, `removeEmptyGroups`, `removeInvalidListValues`, `removeUnknown` (all opt-in) | ✅ |
+| ternary / switch-case mode | `CasesOf<F, V>` + `compileCases()` + SQL CASE export | ✅ |
+| showErrorMessage, i18n validation messages | per-node `issues` + schema `messages` overrides | ✅ |
+| renderConfirm / useConfirm | `settings.confirmRemove(node)` (sync or async) + `store.requestRemove(id)` | ✅ |
+| compressConfig / decompressConfig | `fieldsToJSON()` / `fieldsFromJSON()` | ✅ |
 | undo/redo | ✅ (RAQB doesn't have it) | ✅ |
 | `compile()`/`matches()` evaluation in JS | ✅ (RAQB doesn't have it) | ✅ |
 
