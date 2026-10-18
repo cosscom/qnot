@@ -6,14 +6,17 @@
   --tn-danger: #dc2626;
   --tn-radius: 6px;
   --tn-gap: 6px;
+  --tn-fg: #18181b;
   font: 14px/1.4 system-ui, sans-serif;
+  color: var(--tn-fg);
 }
 @media (prefers-color-scheme: dark) {
-  .tn {
+  .tn:not([data-theme='light']) {
     --tn-border: #3f3f46;
     --tn-bg: #18181b;
     --tn-accent: #60a5fa;
     --tn-danger: #f87171;
+    --tn-fg: #f4f4f5;
   }
 }
 .tn-group {
@@ -75,4 +78,28 @@
 }
 .tn-drop-inside {
   outline: 2px dashed var(--tn-accent);
+}
+.tn :is(input:not([type='checkbox']), select, button) {
+  font: inherit;
+  color: inherit;
+  background: var(--tn-bg);
+  border: 1px solid var(--tn-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  min-height: 26px;
+}
+.tn button {
+  cursor: pointer;
+}
+.tn button:hover {
+  border-color: var(--tn-accent);
+}
+.tn select[multiple] {
+  min-height: 0;
+  padding: 2px;
+}
+.tn-not {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
 }
