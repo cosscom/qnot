@@ -64,6 +64,7 @@ export type {
   StrictQueryOf,
   RowOf,
   FieldsWithOperator,
+  AnyFieldName,
 } from './types';
 
 export { coerceValue, makeRule, changeField, changeOperator } from './normalize';

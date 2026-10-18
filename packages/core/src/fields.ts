@@ -121,8 +121,11 @@ export type IsoDateTime = string;
 
 // Builders' public signatures carry the precise types; this helper only assembles the object.
 function build(kind: string, allOps: readonly string[], opts: object, defaultValue: unknown): any {
-  const { label, operators, excludeOperators, defaultOperator, defaultValue: dv, required, ...rest } = opts as CommonOptions<any, string>;
-  const ops = (operators ?? allOps).filter((o) => !excludeOperators?.includes(o as OperatorId));
+  const { label, operators, excludeOperators, extraOperators, defaultOperator, defaultValue: dv, required, ...rest } = opts as CommonOptions<any, string> & {
+    /** Custom operators (registered via `defineFields(…, { operators })`) offered as well. */
+    extraOperators?: readonly string[];
+  };
+  const ops = [...(operators ?? allOps).filter((o) => !excludeOperators?.includes(o as OperatorId)), ...(extraOperators ?? [])];
   if (!ops.length) throw new Error(`trawlnet: a ${kind} field needs at least one operator`);
   return {
     ...rest,
@@ -173,47 +176,55 @@ export type FieldsInput = Readonly<Record<string, AnyFieldDef | StructDef<any>>>
 
 /** Field schema builders. */
 export const f = {
-  text<const Op extends TextOperator = TextOperator>(
-    opts: CommonOptions<string, Op> & { minLength?: number; maxLength?: number; pattern?: RegExp; caseSensitive?: boolean } = {},
-  ): FieldDef<'text', string, Op> {
+  text<const Op extends TextOperator = TextOperator, const X extends string = never>(
+    opts: CommonOptions<string, Op> & { extraOperators?: readonly X[] } & { minLength?: number; maxLength?: number; pattern?: RegExp; caseSensitive?: boolean } = {},
+  ): FieldDef<'text', string, Op | NoInfer<X>> {
     return build('text', TEXT_OPERATORS, opts, '');
   },
 
-  number<const Op extends NumberOperator = NumberOperator>(
-    opts: CommonOptions<number, Op> & { min?: number; max?: number; step?: number; integer?: boolean } = {},
-  ): FieldDef<'number', number, Op> {
+  number<const Op extends NumberOperator = NumberOperator, const X extends string = never>(
+    opts: CommonOptions<number, Op> & { extraOperators?: readonly X[] } & { min?: number; max?: number; step?: number; integer?: boolean } = {},
+  ): FieldDef<'number', number, Op | NoInfer<X>> {
     return build('number', NUMBER_OPERATORS, opts, null);
   },
 
-  boolean<const Op extends BooleanOperator = BooleanOperator>(opts: CommonOptions<boolean, Op> = {}): FieldDef<'boolean', boolean, Op> {
+  boolean<const Op extends BooleanOperator = BooleanOperator, const X extends string = never>(
+    opts: CommonOptions<boolean, Op> & { extraOperators?: readonly X[] } = {},
+  ): FieldDef<'boolean', boolean, Op | NoInfer<X>> {
     return build('boolean', BOOLEAN_OPERATORS, opts, true);
   },
 
-  date<const Op extends DateOperator = DateOperator>(opts: CommonOptions<IsoDate, Op> = {}): FieldDef<'date', IsoDate, Op> {
+  date<const Op extends DateOperator = DateOperator, const X extends string = never>(
+    opts: CommonOptions<IsoDate, Op> & { extraOperators?: readonly X[] } = {},
+  ): FieldDef<'date', IsoDate, Op | NoInfer<X>> {
     return build('date', DATE_OPERATORS, opts, null);
   },
 
-  time<const Op extends DateOperator = DateOperator>(opts: CommonOptions<IsoTime, Op> = {}): FieldDef<'time', IsoTime, Op> {
+  time<const Op extends DateOperator = DateOperator, const X extends string = never>(
+    opts: CommonOptions<IsoTime, Op> & { extraOperators?: readonly X[] } = {},
+  ): FieldDef<'time', IsoTime, Op | NoInfer<X>> {
     return build('time', DATE_OPERATORS, opts, null);
   },
 
-  datetime<const Op extends DateOperator = DateOperator>(opts: CommonOptions<IsoDateTime, Op> = {}): FieldDef<'datetime', IsoDateTime, Op> {
+  datetime<const Op extends DateOperator = DateOperator, const X extends string = never>(
+    opts: CommonOptions<IsoDateTime, Op> & { extraOperators?: readonly X[] } = {},
+  ): FieldDef<'datetime', IsoDateTime, Op | NoInfer<X>> {
     return build('datetime', DATE_OPERATORS, opts, null);
   },
 
   /** One value from a list (or tree, via `children`). */
-  enum<const V extends string | number, const Op extends EnumOperator = EnumOperator>(
+  enum<const V extends string | number, const Op extends EnumOperator = EnumOperator, const X extends string = never>(
     values: readonly (V | EnumOption<V>)[],
-    opts: EnumOptions<NoInfer<V>, Op> = {},
-  ): FieldDef<'enum', V, Op> {
+    opts: EnumOptions<NoInfer<V>, Op> & { extraOperators?: readonly X[] } = {},
+  ): FieldDef<'enum', V, Op | NoInfer<X>> {
     return { ...build('enum', ENUM_OPERATORS, opts, null), options: toOptions(values) };
   },
 
   /** A field holding several values from a list (tags, roles…). RAQB multiselect. */
-  multiEnum<const V extends string | number, const Op extends MultiEnumOperator = MultiEnumOperator>(
+  multiEnum<const V extends string | number, const Op extends MultiEnumOperator = MultiEnumOperator, const X extends string = never>(
     values: readonly (V | EnumOption<V>)[],
-    opts: EnumOptions<NoInfer<V>[], Op> = {},
-  ): FieldDef<'multiEnum', V[], Op> {
+    opts: EnumOptions<NoInfer<V>[], Op> & { extraOperators?: readonly X[] } = {},
+  ): FieldDef<'multiEnum', V[], Op | NoInfer<X>> {
     return { ...build('multiEnum', MULTI_ENUM_OPERATORS, opts, null), options: toOptions(values) };
   },
 

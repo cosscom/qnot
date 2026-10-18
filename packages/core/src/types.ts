@@ -117,6 +117,11 @@ export interface FnRule extends RuleMeta {
   readonly call?: FnCall;
 }
 
+/** Every field name a rule can use: root fields plus the element fields of array fields (up to 4 levels deep). */
+export type AnyFieldName<F extends Fields, Depth extends unknown[] = []> = Depth['length'] extends 4
+  ? never
+  : (keyof F & string) | { [K in ArrayKeys<F>]: AnyFieldName<ElementFields<F[K]>, [...Depth, 0]> }[ArrayKeys<F>];
+
 type ArrayKeys<F extends Fields> = { [K in keyof F & string]: F[K] extends { readonly of: Fields } ? K : never }[keyof F & string];
 type ElementFields<D> = D extends { readonly of: infer S extends Fields } ? S : never;
 

@@ -5,7 +5,7 @@ import { changeField, changeOperator, coerceValue, makeRule, type ChangeOptions 
 import { operatorInfo } from './operators';
 import { sanitizeQuery, type SanitizeOptions } from './sanitize';
 import { elementFields, leftDef } from './scope';
-import type { ArrayScope, Combinator, Group, Quantifier, Query, QueryNode, QueryOf, Rule, RuleOf } from './types';
+import type { AnyFieldName, ArrayScope, Combinator, Group, Quantifier, Query, QueryNode, QueryOf, Rule, RuleOf } from './types';
 import { validateGroup, validateRule, type Issue } from './validate';
 
 export type NodeId = string;
@@ -117,6 +117,13 @@ export interface QueryStore<F extends Fields = Fields, T = QueryOf<F>> {
   subscribe(id: NodeId, fn: () => void): () => void;
   /** Calls `fn` after every committed change. */
   subscribe(fn: () => void): () => void;
+  /**
+   * Calls `fn` when anything that can change `can()` results changed: settings, locks, and (only
+   * when limits are set) the rule count or tree shape. Value edits never fire it.
+   */
+  subscribePermissions(fn: () => void): () => void;
+  /** Increments whenever `subscribePermissions` listeners fire. */
+  readonly permissionsVersion: number;
 
   /** Native query, structurally shared: unchanged subtrees keep their object identity. */
   getQuery(): QueryOf<F>;
@@ -144,7 +151,8 @@ export interface QueryStore<F extends Fields = Fields, T = QueryOf<F>> {
   canMove(id: NodeId, parentId: NodeId): boolean;
   clone(id: NodeId): NodeId | null;
 
-  setField(id: NodeId, field: (keyof F & string) | FnCall): void;
+  /** Accepts root fields and, for rules inside array groups, the array's element fields. */
+  setField(id: NodeId, field: AnyFieldName<F> | FnCall): void;
   setOperator(id: NodeId, operator: string): void;
   setRuleValue(id: NodeId, value: unknown): void;
   /** Compare against another field (`ref`), or pass null to go back to a literal value. */
@@ -218,6 +226,9 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
   const nodes = new Map<NodeId, INode>();
   const subs = new Map<NodeId, Set<() => void>>();
   const allSubs = new Set<() => void>();
+  const permSubs = new Set<() => void>();
+  let permVersion = 0;
+  let lockOrShapeChanged = false;
   const json = new Map<NodeId, QueryNode>();
   const origin = new WeakMap<object, NodeId>();
   const issueCache = new WeakMap<INode, readonly Issue[]>();
@@ -246,7 +257,9 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
     if (tx && !tx.before.has(id)) tx.before.set(id, nodes.get(id));
   };
   const write = (node: INode) => {
-    if (sameNode(nodes.get(node.id), node)) return;
+    const prev = nodes.get(node.id);
+    if (sameNode(prev, node)) return;
+    if (!prev || prev.locked !== node.locked || prev.parent !== node.parent || (prev.kind === 'group' && (node as GroupNode).children !== prev.children)) lockOrShapeChanged = true;
     record(node.id);
     put(node.id, node);
   };
@@ -254,6 +267,7 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
     const n = nodes.get(id);
     if (!n) return;
     if (n.kind === 'group') n.children.forEach(erase);
+    lockOrShapeChanged = true;
     record(id);
     put(id, undefined);
   };
@@ -330,6 +344,7 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
       return fn();
     }
     tx = { before: new Map(), history: opts.history ?? true, merge: opts.merge, all: !!opts.all };
+    lockOrShapeChanged = false;
     try {
       fn();
     } finally {
@@ -360,6 +375,12 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
     version++;
     if (done.all) subs.forEach((set) => set.forEach((fn) => fn()));
     else for (const id of touched) subs.get(id)?.forEach((fn) => fn());
+    const limits = settings.maxRules !== undefined || settings.maxDepth !== undefined;
+    // Locks always matter (they cascade to descendants); shape only matters under limits.
+    if (done.all || (lockOrShapeChanged && (limits || touched.some((id) => done.before.get(id)?.locked || nodes.get(id)?.locked)))) {
+      permVersion++;
+      permSubs.forEach((fn) => fn());
+    }
     allSubs.forEach((fn) => fn());
   }
 
@@ -594,6 +615,13 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
     get ruleCount() {
       return ruleCount;
     },
+    get permissionsVersion() {
+      return permVersion;
+    },
+    subscribePermissions(fn) {
+      permSubs.add(fn);
+      return () => void permSubs.delete(fn);
+    },
 
     get: (id) => nodes.get(id) as StoreNode<F> | undefined,
     getRule: (id) => getRule(id) as unknown as RuleNode<F>,
@@ -714,7 +742,7 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
 
     setField(id, field) {
       if (!can('editField', id)) return;
-      updateRule(id, changeField(fieldsFor(id), toJSON(id) as Rule, field, settings));
+      updateRule(id, changeField(fieldsFor(id), toJSON(id) as Rule, field as unknown as string | FnCall, settings));
     },
     setOperator(id, op) {
       if (!can('editOperator', id)) return;
@@ -814,6 +842,7 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
     dispose() {
       subs.clear();
       allSubs.clear();
+      permSubs.clear();
     },
   };
   return store;

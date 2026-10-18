@@ -30,7 +30,7 @@ const fields = defineFields(
   {
     name: f.text(),
     bio: f.text({ widget: 'textarea', required: false }),
-    distance: f.number({ operators: ['eq', 'near'] }),
+    distance: f.number({ operators: ['eq'], extraOperators: ['near'] }),
     tags: f.multiEnum(['vip', 'beta', 'churned']),
     region: f.enum([
       { value: 'emea', label: 'EMEA', children: [{ value: 'de', label: 'Germany' }, { value: 'fr', label: 'France' }] },
@@ -101,7 +101,7 @@ describe('evaluation', () => {
   });
 
   it('runs custom operators', () => {
-    expect(names(and({ kind: 'rule', field: 'distance', operator: 'near', value: 5 } as never))).toEqual(['Ada']);
+    expect(names(and({ kind: 'rule', field: 'distance', operator: 'near', value: 5 }))).toEqual(['Ada']);
   });
 
   it('evaluates functions on either side', () => {
@@ -299,5 +299,23 @@ describe('store settings and locking', () => {
     expect(store.ruleCount).toBe(1);
     store.undo();
     expect(store.ruleCount).toBe(2);
+  });
+});
+
+describe('permission notifications', () => {
+  it('fire on locks and settings, not on value edits', () => {
+    const store = createQueryStore({ fields, initial: { kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'name', operator: 'eq', value: 'a' }] } });
+    const id = store.getGroup(store.rootId).children[0]!;
+    const onPerm = vi.fn();
+    store.subscribePermissions(onPerm);
+    store.setRuleValue(id, 'b');
+    store.addRule(store.rootId);
+    expect(onPerm).not.toHaveBeenCalled();
+    store.setLocked(id, true);
+    expect(onPerm).toHaveBeenCalledTimes(1);
+    store.setSettings({ maxRules: 5 });
+    expect(onPerm).toHaveBeenCalledTimes(2);
+    store.addRule(store.rootId);
+    expect(onPerm).toHaveBeenCalledTimes(3);
   });
 });
