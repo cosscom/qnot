@@ -2,15 +2,24 @@ import {
   createDnd,
   createQueryStore,
   editorFor,
+  elementFields,
+  fieldOptions,
+  functionOptions,
+  leftDef,
   operatorOptions,
+  refOptions,
+  type Action,
   type DndController,
+  type FieldOption,
   type Fields,
+  type FnCall,
   type GroupNode,
   type NodeId,
+  type Option,
+  type Quantifier,
   type QueryOf,
   type QueryStore,
   type RuleNode,
-  type RuleOf,
   type StoreNode,
   type StoreOptions,
 } from '@trawlnet/core';
@@ -47,7 +56,8 @@ export interface UseQueryStoreOptions<F extends Fields, T> extends StoreOptions<
 
 /**
  * Create a store for the component's lifetime. Options are read once, except `value` (synced into
- * the store, reconciled node by node) and `onChange` (always the latest callback).
+ * the store, reconciled node by node), `onChange` (always the latest callback) and `settings`
+ * (applied when the object changes).
  */
 export function useQueryStore<const F extends Fields, T = QueryOf<F>>(options: UseQueryStoreOptions<F, T>): QueryStore<F, T> {
   const [store] = useState(() =>
@@ -59,6 +69,11 @@ export function useQueryStore<const F extends Fields, T = QueryOf<F>>(options: U
   useLayoutEffect(() => {
     if (options.value !== undefined) store.setValue(options.value);
   }, [store, options.value]);
+  const first = useRef(true);
+  useLayoutEffect(() => {
+    if (first.current) first.current = false;
+    else if (options.settings) store.setSettings(options.settings);
+  }, [store, options.settings]);
 
   useEffect(() => store.subscribe(() => onChange.current?.(store.getValue())), [store]);
   useEffect(() => () => store.dispose(), [store]);
@@ -80,42 +95,112 @@ function useNodeSnapshot(store: QueryStore<any, any>, id: NodeId): StoreNode | u
 /** Subscribe to one node. Re-renders only when that node changes. */
 export const useNode = <F extends Fields = Fields>(id: NodeId): StoreNode<F> | undefined => useNodeSnapshot(useCtx().store, id) as StoreNode<F> | undefined;
 
+/**
+ * What the user may do to a node right now (settings, locks, limits), as a bitmask snapshot so
+ * components re-render only when an answer flips. Value edits never trigger it.
+ */
+function usePermissions<A extends Action>(store: QueryStore<any, any>, id: NodeId, actions: readonly A[]): Record<A, boolean> {
+  const bits = useSyncExternalStore(store.subscribePermissions, () => {
+    let b = 0;
+    if (store.get(id)) actions.forEach((a, i) => store.can(a, id) && (b |= 1 << i));
+    return b;
+  });
+  return useMemo(() => Object.fromEntries(actions.map((a, i) => [a, (bits & (1 << i)) !== 0])) as Record<A, boolean>, [bits, actions]);
+}
+
+const RULE_ACTIONS = ['editField', 'editOperator', 'editValue', 'remove', 'clone', 'lock'] as const;
+const GROUP_ACTIONS = ['addRule', 'addGroup', 'editGroup', 'remove', 'clone', 'lock'] as const;
+
 /** A rule's state plus everything needed to render its editors. */
 export function useRule<F extends Fields = Fields>(id: NodeId) {
   const store = useStore<F>();
   const rule = useNodeSnapshot(store, id) as RuleNode<F>;
-  const def = store.fields[rule.field];
-  const editor = useMemo(() => editorFor(def, rule.operator), [def, rule.operator]);
-  const operators = useMemo(() => operatorOptions(def), [def]);
+  // The schema in scope: the array's element fields inside array groups.
+  const fields = useMemo(() => (store.get(id) ? store.fieldsFor(id) : store.fields), [store, id, rule.parent]);
+  const def = leftDef(fields, rule.field);
+  const editor = useMemo(() => editorFor(def, rule.operator, fields), [def, rule.operator, fields]);
+  const operators = useMemo(() => operatorOptions(def, fields), [def, fields]);
+  const fieldChoices = useMemo<FieldOption[]>(() => fieldOptions(fields).filter((o) => !o.isArray), [fields]);
+  const refs = useMemo<Option[]>(
+    () => (editor.allowsRef && store.settings.allowRefs !== false && typeof rule.field === 'string' ? refOptions(fields, rule.field, def?.kind) : []),
+    [store, fields, editor.allowsRef, rule.field, def],
+  );
+  const functions = useMemo<Option[]>(
+    () => (editor.allowsRef && store.settings.allowFunctions !== false ? functionOptions(fields, def?.kind) : []),
+    [store, fields, editor.allowsRef, def],
+  );
+  const can = usePermissions(store, id, RULE_ACTIONS);
   const actions = useMemo(
     () => ({
-      setField: (field: keyof F & string) => store.setField(id, field),
-      setOperator: (operator: RuleOf<F>['operator']) => store.setOperator(id, operator),
+      setField: (field: string | FnCall) => store.setField(id, field as never),
+      setOperator: (operator: string) => store.setOperator(id, operator),
       setValue: (value: unknown) => store.setRuleValue(id, value),
-      setRef: (ref: (keyof F & string) | null) => store.setRef(id, ref),
-      remove: () => store.remove(id),
+      setRef: (ref: string | null) => store.setRef(id, ref),
+      setCall: (call: FnCall | null) => store.setCall(id, call),
+      setLocked: (locked: boolean) => store.setLocked(id, locked),
+      remove: () => void store.requestRemove(id),
       clone: () => store.clone(id),
     }),
     [store, id],
   );
-  return { id, rule, def, editor, operators, issues: store.issues(id), ...actions };
+  /** Where the right side comes from: a literal, another field, or a function. */
+  const source: 'value' | 'field' | 'function' = rule.ref !== undefined ? 'field' : rule.call !== undefined ? 'function' : 'value';
+  return {
+    id,
+    rule,
+    fields,
+    def,
+    editor,
+    operators,
+    fieldOptions: fieldChoices,
+    refOptions: refs,
+    functionOptions: functions,
+    source,
+    locked: store.isLocked(id),
+    can,
+    issues: store.issues(id),
+    ...actions,
+  };
 }
 
 export function useGroup<F extends Fields = Fields>(id: NodeId) {
   const store = useStore<F>();
   const group = useNodeSnapshot(store, id) as GroupNode;
+  const can = usePermissions(store, id, GROUP_ACTIONS);
+  const inner = useMemo(() => (store.get(id) ? innerFields(store, id) : store.fields), [store, id, group.of, group.parent]);
+  const arrayFields = useMemo<FieldOption[]>(() => fieldOptions(inner).filter((o) => o.isArray), [inner]);
   const actions = useMemo(
     () => ({
       setCombinator: (combinator: GroupNode['combinator']) => store.setCombinator(id, combinator),
       setNot: (not: boolean) => store.setNot(id, not),
-      addRule: (rule?: Partial<RuleOf<F>>) => store.addRule(id, rule),
+      setMatch: (match: Quantifier) => store.setMatch(id, match),
+      setLocked: (locked: boolean) => store.setLocked(id, locked),
+      addRule: (rule?: Parameters<QueryStore<F>['addRule']>[1]) => store.addRule(id, rule),
       addGroup: () => store.addGroup(id),
-      remove: () => store.remove(id),
+      addArrayGroup: (field: string, match?: Quantifier) => store.addArrayGroup(id, field, match),
+      remove: () => void store.requestRemove(id),
       clone: () => store.clone(id),
     }),
     [store, id],
   );
-  return { id, group, isRoot: group.parent === null, issues: store.issues(id), ...actions };
+  return {
+    id,
+    group,
+    isRoot: group.parent === null,
+    /** Array fields available for "+ List condition" in this group's scope. */
+    arrayFields,
+    locked: store.isLocked(id),
+    can,
+    issues: store.issues(id),
+    ...actions,
+  };
+}
+
+/** Fields visible to a group's children (element schema for array groups). */
+function innerFields(store: QueryStore<any, any>, id: NodeId): Fields {
+  const g = store.getGroup(id);
+  const outer = g.parent === null ? store.fields : store.fieldsFor(id);
+  return g.of && outer[g.of.field]?.of ? elementFields(outer, g.of.field) : outer;
 }
 
 const useAll = <S>(store: QueryStore<any, any>, snapshot: () => S): S => useSyncExternalStore(store.subscribe as (fn: () => void) => () => void, snapshot);
@@ -141,4 +226,10 @@ export function useHistory() {
   const store = useStore();
   const key = useAll(store, () => (store.canUndo() ? 1 : 0) | (store.canRedo() ? 2 : 0));
   return { canUndo: (key & 1) !== 0, canRedo: (key & 2) !== 0, undo: store.undo, redo: store.redo };
+}
+
+/** Current store settings, re-rendering when they change. */
+export function useSettings() {
+  const store = useStore();
+  return useSyncExternalStore(store.subscribePermissions, () => store.settings);
 }

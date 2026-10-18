@@ -10,9 +10,10 @@ export {
   useQueryValue,
   useIsValid,
   useHistory,
+  useSettings,
 } from './hooks';
 export type { UseQueryStoreOptions } from './hooks';
 export { useDragHandle, useDropTarget, useGroupDropZone } from './dnd';
 export type { DropPosition } from './dnd';
-export { QueryBuilder, DefaultGroup, DefaultRule, DefaultValueEditor, DEFAULT_LABELS } from './components';
+export { QueryBuilder, DefaultGroup, DefaultRule, DefaultValueEditor, FunctionEditor, DEFAULT_LABELS } from './components';
 export type { QueryBuilderProps, QueryBuilderUIProps, Components, ValueEditorProps, Labels } from './components';

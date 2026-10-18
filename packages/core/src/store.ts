@@ -88,7 +88,7 @@ export interface BatchOptions {
   merge?: string;
 }
 
-export type Action = 'addRule' | 'addGroup' | 'remove' | 'move' | 'editField' | 'editOperator' | 'editValue' | 'editGroup' | 'lock';
+export type Action = 'addRule' | 'addGroup' | 'remove' | 'clone' | 'move' | 'editField' | 'editOperator' | 'editValue' | 'editGroup' | 'lock';
 
 export interface QueryStore<F extends Fields = Fields, T = QueryOf<F>> {
   readonly fields: F;
@@ -548,6 +548,8 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
         );
       case 'remove':
         return n.parent !== null && !s.immutable?.groups && (!locked || !!s.canDeleteLocked) && !isLocked(n.parent);
+      case 'clone':
+        return n.parent !== null && can(n.kind === 'rule' ? 'addRule' : 'addGroup', n.parent);
       case 'move': {
         if (n.parent === null || locked || s.immutable?.groups || target === undefined) return false;
         const same = target === n.parent;
@@ -736,6 +738,7 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
     clone(id) {
       const n = getNode(id);
       if (n.parent === null) throw new Error('trawlnet: cannot clone the root group');
+      if (!can('clone', id)) return null;
       const p = getGroup(n.parent);
       return store.insert(p.id, toJSON(id), p.children.indexOf(id) + 1);
     },
