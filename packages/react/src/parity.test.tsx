@@ -26,14 +26,24 @@ const initial: Q = {
 
 afterEach(cleanup);
 
+// Like a user: interacting with a control (focus) before changing it, which also expands lazy selects.
+function change(el: Element, init: { target: { value: string } }) {
+  fireEvent.focus(el);
+  fireEvent.change(el, init);
+}
+
 describe('parity UI', () => {
   it('groups struct fields, hides array fields from rule pickers, and indents tree options', () => {
     const { container } = render(<QueryBuilder fields={fields} initial={initial} />);
     const fieldSelect = container.querySelector<HTMLSelectElement>('select.tn-field')!;
+    // Lazy until the user reaches for it: only the chosen option is in the DOM.
+    expect([...fieldSelect.options].map((o) => o.value)).toEqual(['name']);
+    fireEvent.focus(fieldSelect);
     expect([...fieldSelect.querySelectorAll('optgroup')].map((g) => g.label)).toEqual(['Address']);
     expect([...fieldSelect.options].map((o) => o.value)).not.toContain('orders');
-    fireEvent.change(fieldSelect, { target: { value: 'region' } });
+    change(fieldSelect, { target: { value: 'region' } });
     const region = container.querySelector<HTMLSelectElement>('.tn-rule select.tn-value')!;
+    fireEvent.focus(region);
     expect([...region.options].map((o) => [o.textContent, o.disabled])).toEqual([
       ['—', false],
       ['EMEA', true],
@@ -46,11 +56,13 @@ describe('parity UI', () => {
     const { container } = render(<QueryBuilder store={store} />);
     const arrayGroup = container.querySelector('.tn-array-group')!;
     expect(arrayGroup.textContent).toContain('of Orders where');
-    expect([...arrayGroup.querySelector<HTMLSelectElement>('select.tn-field')!.options].map((o) => o.value)).toEqual(['product', 'qty']);
-    fireEvent.change(arrayGroup.querySelector('select.tn-match-mode')!, { target: { value: 'count' } });
-    fireEvent.change(arrayGroup.querySelector('input.tn-match-count')!, { target: { value: '3' } });
+    const scoped = arrayGroup.querySelector<HTMLSelectElement>('select.tn-field')!;
+    fireEvent.focus(scoped);
+    expect([...scoped.options].map((o) => o.value)).toEqual(['product', 'qty']);
+    change(arrayGroup.querySelector('select.tn-match-mode')!, { target: { value: 'count' } });
+    change(arrayGroup.querySelector('input.tn-match-count')!, { target: { value: '3' } });
     expect(store.getQuery().children[1]).toMatchObject({ of: { field: 'orders', match: { count: 'gte', value: 3 } } });
-    fireEvent.change(container.querySelector('select.tn-add-array')!, { target: { value: 'orders' } });
+    change(container.querySelector('select.tn-add-array')!, { target: { value: 'orders' } });
     expect(store.getQuery().children[2]).toMatchObject({ of: { field: 'orders', match: 'some' } });
   });
 
@@ -58,10 +70,10 @@ describe('parity UI', () => {
     const store = createQueryStore({ fields, initial });
     const { container } = render(<QueryBuilder store={store} />);
     const rule = container.querySelector('.tn-rule')!;
-    fireEvent.change(rule.querySelector('select.tn-source')!, { target: { value: 'function' } });
+    change(rule.querySelector('select.tn-source')!, { target: { value: 'function' } });
     expect(store.getQuery().children[0]).toMatchObject({ field: 'name', call: { fn: 'lower' } });
-    fireEvent.change(rule.querySelector('select.tn-function-name')!, { target: { value: 'upper' } });
-    fireEvent.change(rule.querySelector('.tn-function-arg input')!, { target: { value: 'ada' } });
+    change(rule.querySelector('select.tn-function-name')!, { target: { value: 'upper' } });
+    change(rule.querySelector('.tn-function-arg input')!, { target: { value: 'ada' } });
     expect(store.getQuery().children[0]).toMatchObject({ call: { fn: 'upper', args: { text: { value: 'ada' } } } });
     fireEvent.click(rule.querySelector('button.tn-lhs-toggle')!);
     expect(store.getQuery().children[0]).toMatchObject({ field: { fn: 'lower' } });
@@ -101,10 +113,21 @@ describe('async search input', () => {
     expect(input().value).toBe('berlin');
     act(() => store.setRuleValue(id, 'paris'));
     expect(input().value).toBe('paris');
-    fireEvent.change(input(), { target: { value: 'pa' } });
+    change(input(), { target: { value: 'pa' } });
     expect(store.getRule(id)).toMatchObject({ value: 'pa' });
     expect(input().value).toBe('pa');
     act(() => void store.undo());
     expect(input().value).toBe('berlin');
+  });
+
+  it('updates offered value sources live when allowRefs / allowFunctions change', () => {
+    const store = createQueryStore({ fields, initial });
+    const { container } = render(<QueryBuilder store={store} />);
+    const sourceOptions = () => [...container.querySelector<HTMLSelectElement>('.tn-rule select.tn-source')!.options].map((o) => o.value);
+    expect(sourceOptions()).toEqual(['value', 'field', 'function']);
+    act(() => store.setSettings({ allowFunctions: false }));
+    expect(sourceOptions()).toEqual(['value', 'field']);
+    act(() => store.setSettings({ allowRefs: false }));
+    expect(container.querySelector('.tn-rule select.tn-source')).toBeNull();
   });
 });

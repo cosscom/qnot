@@ -84,12 +84,25 @@ function DraftInput({ type, value, parse, format, onChange, invalid, disabled, .
   );
 }
 
+/**
+ * Selects render only their chosen option until the user reaches for them (hover, focus, press),
+ * then the full list. Option elements are most of a rule's DOM, so a 1000-rule query mounts with
+ * a fraction of the nodes. React commits the expansion inside the pointerdown/focus event, before
+ * the browser opens the native list or handles arrow keys.
+ */
+function useLazyOptions() {
+  const [expanded, setExpanded] = useState(false);
+  const expand = useMemo(() => (expanded ? undefined : () => setExpanded(true)), [expanded]);
+  return { expanded, triggers: { onFocus: expand, onPointerDown: expand, onMouseEnter: expand } };
+}
+
 const indent = (depth: number) => '  '.repeat(depth);
 
-function OptionList({ editor }: { editor: EditorSpec }) {
+function OptionList({ editor, only }: { editor: EditorSpec; only?: string }) {
+  const options = only === undefined ? editor.options : editor.options?.filter((o) => String(o.value) === only);
   return (
     <>
-      {editor.options?.map((o) => (
+      {options?.map((o) => (
         <option key={String(o.value)} value={String(o.value)} disabled={o.disabled}>
           {indent(o.depth) + o.label}
         </option>
@@ -161,12 +174,7 @@ function ScalarEditor({ editor, def, value, onChange, invalid, disabled, labels 
         </select>
       );
     case 'select':
-      return (
-        <select className={CLASS.value} value={formatInput(value)} {...aria} onChange={(e) => onChange(parseInput(def, e.target.value))}>
-          <option value="">{labels.empty}</option>
-          <OptionList editor={editor} />
-        </select>
-      );
+      return <EnumSelect editor={editor} def={def} value={value} onChange={onChange} aria={aria} labels={labels} />;
     case 'number':
       return <DraftInput type="number" value={value} min={def?.min} max={def?.max} step={def?.step} placeholder={def?.placeholder} parse={(raw) => parseInput(def, raw)} format={formatInput} onChange={onChange} invalid={invalid} disabled={disabled} />;
     case 'slider':
@@ -228,11 +236,24 @@ export function DefaultValueEditor(props: ValueEditorProps) {
   }
 }
 
-function Select({ value, options, onChange, className, disabled, placeholder }: { value: string; options: readonly Option[]; onChange: (v: string) => void; className?: string; disabled?: boolean; placeholder?: string }) {
+function EnumSelect({ editor, def, value, onChange, aria, labels }: { editor: EditorSpec; def: AnyFieldDef | undefined; value: unknown; onChange: (v: unknown) => void; aria: { 'aria-invalid'?: true; disabled?: boolean }; labels: Labels }) {
+  const { expanded, triggers } = useLazyOptions();
+  const current = formatInput(value);
   return (
-    <select className={className} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+    <select className={CLASS.value} value={current} {...aria} {...triggers} onChange={(e) => onChange(parseInput(def, e.target.value))}>
+      <option value="">{labels.empty}</option>
+      <OptionList editor={editor} only={expanded ? undefined : current} />
+    </select>
+  );
+}
+
+function Select({ value, options, onChange, className, disabled, placeholder }: { value: string; options: readonly Option[]; onChange: (v: string) => void; className?: string; disabled?: boolean; placeholder?: string }) {
+  const { expanded, triggers } = useLazyOptions();
+  const shown = expanded ? options : options.filter((o) => o.value === value);
+  return (
+    <select className={className} value={value} disabled={disabled} {...triggers} onChange={(e) => onChange(e.target.value)}>
       {placeholder !== undefined && <option value="">{placeholder}</option>}
-      {options.map((o) => (
+      {shown.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
         </option>
@@ -248,14 +269,16 @@ function FieldSelect({ value, options, onChange, disabled }: { value: string; op
     for (const o of options) out.set(o.group, [...(out.get(o.group) ?? []), o]);
     return [...out];
   }, [options]);
+  const { expanded, triggers } = useLazyOptions();
   const render = (o: FieldOption) => (
     <option key={o.value} value={o.value} title={o.description}>
       {o.label}
     </option>
   );
+  const selected = expanded ? undefined : options.find((o) => o.value === value);
   return (
-    <select className={CLASS.field} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
-      {groups.map(([group, opts]) =>
+    <select className={CLASS.field} value={value} disabled={disabled} {...triggers} onChange={(e) => onChange(e.target.value)}>
+      {selected ? render(selected) : groups.map(([group, opts]) =>
         group === undefined ? (
           opts.map(render)
         ) : (

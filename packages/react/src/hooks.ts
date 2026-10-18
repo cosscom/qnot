@@ -121,14 +121,14 @@ export function useRule<F extends Fields = Fields>(id: NodeId) {
   const editor = useMemo(() => editorFor(def, rule.operator, fields), [def, rule.operator, fields]);
   const operators = useMemo(() => operatorOptions(def, fields), [def, fields]);
   const fieldChoices = useMemo<FieldOption[]>(() => fieldOptions(fields).filter((o) => !o.isArray), [fields]);
+  // Settings that change which sources are offered; read through the permissions channel so they
+  // update live without subscribing rows to every edit.
+  const sources = useSyncExternalStore(store.subscribePermissions, () => (store.settings.allowRefs !== false ? 1 : 0) | (store.settings.allowFunctions !== false ? 2 : 0));
   const refs = useMemo<Option[]>(
-    () => (editor.allowsRef && store.settings.allowRefs !== false && typeof rule.field === 'string' ? refOptions(fields, rule.field, def?.kind) : []),
-    [store, fields, editor.allowsRef, rule.field, def],
+    () => (editor.allowsRef && sources & 1 && typeof rule.field === 'string' ? refOptions(fields, rule.field, def?.kind) : []),
+    [fields, editor.allowsRef, rule.field, def, sources],
   );
-  const functions = useMemo<Option[]>(
-    () => (editor.allowsRef && store.settings.allowFunctions !== false ? functionOptions(fields, def?.kind) : []),
-    [store, fields, editor.allowsRef, def],
-  );
+  const functions = useMemo<Option[]>(() => (editor.allowsRef && sources & 2 ? functionOptions(fields, def?.kind) : []), [fields, editor.allowsRef, def, sources]);
   const can = usePermissions(store, id, RULE_ACTIONS);
   const actions = useMemo(
     () => ({

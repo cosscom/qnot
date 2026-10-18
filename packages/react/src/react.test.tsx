@@ -24,12 +24,18 @@ const initial: Q = {
 
 afterEach(cleanup);
 
+// Like a user: interacting with a control (focus) before changing it, which also expands lazy selects.
+function change(el: Element, init: { target: { value: string } }) {
+  fireEvent.focus(el);
+  fireEvent.change(el, init);
+}
+
 describe('<QueryBuilder>', () => {
   it('renders and edits an uncontrolled query', () => {
     const onChange = vi.fn();
     const { container } = render(<QueryBuilder fields={fields} initial={initial} onChange={onChange} />);
     expect(container.querySelectorAll('.tn-rule')).toHaveLength(3);
-    fireEvent.change(container.querySelector('input.tn-value[type="text"]')!, { target: { value: 'Grace' } });
+    change(container.querySelector('input.tn-value[type="text"]')!, { target: { value: 'Grace' } });
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange.mock.calls[0]![0].children[0]).toEqual({ kind: 'rule', field: 'name', operator: 'eq', value: 'Grace' });
   });
@@ -45,7 +51,7 @@ describe('<QueryBuilder>', () => {
     const { container } = render(<QueryBuilder store={store} components={{ Rule: CountingRule }} />);
     const [a, b, c] = store.getGroup(store.rootId).children;
     renders.clear();
-    fireEvent.change(container.querySelector('input.tn-value[type="text"]')!, { target: { value: 'Grace' } });
+    change(container.querySelector('input.tn-value[type="text"]')!, { target: { value: 'Grace' } });
     expect(renders.get(a!)).toBe(1);
     expect(renders.get(b!)).toBeUndefined();
     expect(renders.get(c!)).toBeUndefined();
@@ -59,7 +65,7 @@ describe('<QueryBuilder>', () => {
       return <QueryBuilder fields={fields} value={q} onChange={setQ} />;
     }
     const { container } = render(<App />);
-    fireEvent.change(container.querySelector('input.tn-value[type="number"]')!, { target: { value: '41' } });
+    change(container.querySelector('input.tn-value[type="number"]')!, { target: { value: '41' } });
     expect(latest.children[1]).toEqual({ kind: 'rule', field: 'age', operator: 'gt', value: 41 });
     expect(container.querySelector<HTMLInputElement>('input.tn-value[type="number"]')!.value).toBe('41');
   });
@@ -94,7 +100,7 @@ describe('<QueryBuilder>', () => {
     fireEvent.click(getAllByText('+ Group')[0]!);
     expect(container.querySelectorAll('.tn-group')).toHaveLength(2);
     const op = container.querySelectorAll<HTMLSelectElement>('select.tn-operator')[1]!;
-    fireEvent.change(op, { target: { value: 'between' } });
+    change(op, { target: { value: 'between' } });
     expect(container.querySelectorAll('.tn-value-pair')).toHaveLength(1);
     expect(getByText('undo')).not.toHaveProperty('disabled', true);
     act(() => void store.undo());
