@@ -29,7 +29,8 @@ const DEFAULT_LABELS = {
   addRule: 'Rule',
   addGroup: 'Group',
   field: 'Select a field',
-  value: 'Enter a value',
+  value: 'Choose…',
+  valueText: 'Enter a value',
   sentenceBefore: 'If',
   sentenceAfter: 'of these rules are met',
   empty: 'Empty group: add a rule or drag one here.',
@@ -53,19 +54,21 @@ const Rule = memo(function Rule({ id }: { id: NodeId }) {
   const { rule, def, editor, operators, issues, setField, setOperator, setValue, setRef, remove, clone } = useRule(id);
   const { isDragging, handleProps } = useDragHandle(id);
   const { position, dropProps } = useDropTarget(id);
-  const refs = useMemo(() => (editor.allowsRef && !compact ? refOptions(store.fields, rule.field) : []), [store, editor.allowsRef, rule.field, compact]);
+  // Left-hand function calls (RAQB fieldSources: func) aren't editable in this recipe; show them as unset.
+  const field = typeof rule.field === 'string' ? rule.field : null;
+  const refs = useMemo(() => (editor.allowsRef && !compact && field ? refOptions(store.fields, field) : []), [store, editor.allowsRef, field, compact]);
   const errors = issues.filter((i) => i.severity === 'error');
   const invalid = errors.length > 0;
 
   if (compact) {
     return (
       <div className={cn('grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.55fr)_minmax(0,1.1fr)_auto] items-center gap-2', dropLine(position))} {...dropProps}>
-        <CossSelect className="w-full" items={fields} value={rule.field} onChange={(f) => setField(f)} placeholder={labels.field} />
+        <CossSelect className="w-full" items={fields} value={field} onChange={(f) => setField(f)} placeholder={labels.field} />
         <CossSelect className="w-full min-w-0" items={operators} value={rule.operator} onChange={(op) => setOperator(op as typeof rule.operator)} />
         {editor.arity === 'none' ? (
           <span />
         ) : (
-          <ValueEditor fluid editor={editor} def={def} value={rule.value} onChange={setValue} invalid={invalid} placeholder={labels.value} />
+          <ValueEditor fluid editor={editor} def={def} value={rule.value} onChange={setValue} invalid={invalid} placeholder={labels.value} textPlaceholder={labels.valueText} />
         )}
         <Tip label="Remove rule">
           <Button size="icon-sm" variant="ghost" aria-label="Remove rule" onClick={remove}>
@@ -84,7 +87,7 @@ const Rule = memo(function Rule({ id }: { id: NodeId }) {
             <GripVerticalIcon className="size-4" />
           </span>
         </Tip>
-        <CossSelect items={fields} value={rule.field} onChange={(f) => setField(f)} />
+        <CossSelect items={fields} value={field} onChange={(f) => setField(f)} />
         <CossSelect items={operators} value={rule.operator} onChange={(op) => setOperator(op as typeof rule.operator)} />
         {rule.ref !== undefined ? (
           <CossSelect items={refs} value={rule.ref} onChange={(r) => setRef(r)} />

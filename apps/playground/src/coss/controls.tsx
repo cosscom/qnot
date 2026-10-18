@@ -56,7 +56,7 @@ function ListInput({ def, value, onChange, invalid, fluid }: { def: AnyFieldDef 
   );
 }
 
-function ScalarEditor({ editor, def, value, onChange, invalid, fluid, placeholder }: ValueEditorProps) {
+function ScalarEditor({ editor, def, value, onChange, invalid, fluid, placeholder, textPlaceholder }: ValueEditorProps) {
   switch (editor.type) {
     case 'boolean':
       return (
@@ -80,7 +80,7 @@ function ScalarEditor({ editor, def, value, onChange, invalid, fluid, placeholde
     case 'date':
       return <Input size="sm" type="date" className={fluid ? 'w-full' : 'w-40'} value={typeof value === 'string' ? value : ''} aria-invalid={invalid || undefined} onChange={(e) => onChange(e.target.value || null)} />;
     default:
-      return <Input size="sm" className={fluid ? 'w-full' : 'w-48'} placeholder={placeholder} value={typeof value === 'string' ? value : ''} aria-invalid={invalid || undefined} onChange={(e) => onChange(e.target.value)} />;
+      return <Input size="sm" className={fluid ? 'w-full' : 'w-48'} placeholder={textPlaceholder} value={typeof value === 'string' ? value : ''} aria-invalid={invalid || undefined} onChange={(e) => onChange(e.target.value)} />;
   }
 }
 
@@ -92,7 +92,10 @@ export interface ValueEditorProps {
   invalid: boolean;
   /** Stretch inputs to fill the row instead of using fixed widths. */
   fluid?: boolean;
+  /** Placeholder for pickers (selects, multi-selects). */
   placeholder?: string;
+  /** Placeholder for free-text inputs. */
+  textPlaceholder?: string;
 }
 
 export function ValueEditor(props: ValueEditorProps) {
