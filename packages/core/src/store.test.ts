@@ -161,4 +161,12 @@ describe('store', () => {
     store.setRef(id, null);
     expect(store.getNodeJSON(id)).toEqual({ kind: 'rule', field: 'age', operator: 'gt', value: null });
   });
+
+  it('resets to a fresh baseline without undo history', () => {
+    const { store, ruleId } = setup();
+    store.setRuleValue(ruleId, 'x');
+    store.reset({ kind: 'group', combinator: 'or', children: [] });
+    expect(store.getQuery()).toEqual({ kind: 'group', combinator: 'or', children: [] });
+    expect(store.canUndo()).toBe(false);
+  });
 });

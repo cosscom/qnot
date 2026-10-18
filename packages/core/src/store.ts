@@ -134,6 +134,8 @@ export interface QueryStore<F extends Fields = Fields, T = QueryOf<F>> {
   /** Load a value in the store's `format`. Reconciles node-by-node, keeping ids of unchanged nodes. */
   setValue(value: T, options?: BatchOptions): void;
   setQuery(query: QueryOf<F>, options?: BatchOptions): void;
+  /** Load a query as a fresh baseline: replaces the tree and clears undo history (saved views, "discard changes"). */
+  reset(query?: QueryOf<F>): void;
   setSettings(settings: StoreSettings): void;
 
   addRule(parentId: NodeId, rule?: Partial<RuleOf<F>> | Partial<Rule>, index?: number): NodeId | null;
@@ -666,6 +668,11 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
       setQuery(format.decode(value, { fields }), opts);
     },
     setQuery: (q, opts) => setQuery(q as Query, opts),
+    reset(q) {
+      setQuery((q as Query | undefined) ?? EMPTY_ROOT, { history: false });
+      undoStack.length = 0;
+      redoStack.length = 0;
+    },
     setSettings(next) {
       settings = { ...settings, ...next };
       // Permissions can change for every node, so everyone re-reads.

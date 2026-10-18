@@ -2,7 +2,7 @@ import * as esbuild from 'esbuild';
 import { gzipSync } from 'node:zlib';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 
-export const ADAPTERS = ['proto', 'proto-vanilla', 'rqb', 'raqb', 'jqqb', 'syncfusion', 'devextreme'];
+export const ADAPTERS = ['trawlnet', 'proto', 'proto-vanilla', 'rqb', 'raqb', 'jqqb', 'syncfusion', 'devextreme'];
 mkdirSync('dist', { recursive: true });
 
 // Reference bundle: React + ReactDOM rendering one element, to subtract from React-based libraries.

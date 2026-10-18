@@ -22,7 +22,9 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-querybuilder": "8.25.0",
-    "sql-parser-mistic": "^1.2.3"
+    "sql-parser-mistic": "^1.2.3",
+    "@trawlnet/core": "workspace:*",
+    "@trawlnet/react": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
