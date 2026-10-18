@@ -31,8 +31,10 @@ function discover(): FormatEntry[] {
       if (isCodec(value) && !out.has(value.name)) out.set(value.name, { id: value.name, label: LABELS[value.name] ?? value.name, codec: value });
     }
     if (typeof mod.sqlFormat === 'function') {
-      const codec = (mod.sqlFormat as (o: object) => Codec<unknown>)({ dialect: 'postgres', params: 'numbered', quoteIdentifiers: true });
-      out.set('sql+params', { id: 'sql+params', label: LABELS['sql+params']!, codec });
+      // Postgres for both SQL tabs: the default ANSI dialect has no array operators.
+      const sqlFormat = mod.sqlFormat as (o: object) => Codec<unknown>;
+      out.set('sql', { id: 'sql', label: 'SQL (Postgres)', codec: sqlFormat({ dialect: 'postgres' }) });
+      out.set('sql+params', { id: 'sql+params', label: LABELS['sql+params']!, codec: sqlFormat({ dialect: 'postgres', params: 'numbered', quoteIdentifiers: true }) });
     }
   }
   return [...out.values()].sort((a, b) => (ORDER.indexOf(a.id) + 1 || 99) - (ORDER.indexOf(b.id) + 1 || 99));

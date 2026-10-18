@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTab } from '@/components/ui/tabs';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ExamplesPage } from '@/examples/ExamplesPage';
 import { PlaygroundPage } from '@/pages/Playground';
+import { ParityRoute } from '@/pages/parity/route.vite';
 
 /** `#/examples/routing-forms` -> ['examples', 'routing-forms']. */
 function useHashRoute(): string[] {
@@ -20,7 +21,7 @@ function useHashRoute(): string[] {
 
 export function App() {
   const route = useHashRoute();
-  const page = route[0] === 'examples' ? 'examples' : 'playground';
+  const page = route[0] === 'examples' ? 'examples' : route[0] === 'parity' ? 'parity' : 'playground';
   return (
     <TooltipProvider delay={300}>
       <div className="min-h-screen bg-background text-foreground">
@@ -31,15 +32,16 @@ export function App() {
             </span>
             trawlnet
           </a>
-          <Tabs value={page} onValueChange={(v) => (window.location.hash = v === 'examples' ? '#/examples' : '#/')}>
+          <Tabs value={page} onValueChange={(v) => (window.location.hash = v === 'playground' ? '#/' : `#/${v}`)}>
             <TabsList>
               <TabsTab value="playground">Playground</TabsTab>
               <TabsTab value="examples">Examples</TabsTab>
+              <TabsTab value="parity">Parity</TabsTab>
             </TabsList>
           </Tabs>
           <span className="ms-auto hidden text-muted-foreground text-xs sm:block">Fast, typed, framework-agnostic query builder</span>
         </header>
-        {page === 'examples' ? <ExamplesPage exampleId={route[1]} /> : <PlaygroundPage />}
+        {page === 'examples' ? <ExamplesPage exampleId={route[1]} /> : page === 'parity' ? <ParityRoute demoId={route[1]} /> : <PlaygroundPage />}
       </div>
     </TooltipProvider>
   );
