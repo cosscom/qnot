@@ -62,7 +62,7 @@ const Rule = memo(function Rule({ id }: { id: NodeId }) {
 
   if (compact) {
     return (
-      <div className={cn('grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.55fr)_minmax(0,1.1fr)_auto] items-center gap-2', dropLine(position))} {...dropProps}>
+      <div className={cn('grid grid-cols-[minmax(0,1.1fr)_minmax(8.5rem,0.6fr)_minmax(0,1.1fr)_auto] items-center gap-2', dropLine(position))} {...dropProps}>
         <CossSelect className="w-full" items={fields} value={field} onChange={(f) => setField(f)} placeholder={labels.field} />
         <CossSelect className="w-full min-w-0" items={operators} value={rule.operator} onChange={(op) => setOperator(op as typeof rule.operator)} />
         {editor.arity === 'none' ? (
@@ -81,20 +81,22 @@ const Rule = memo(function Rule({ id }: { id: NodeId }) {
 
   return (
     <div className={cn('group/rule flex flex-col gap-1 rounded-lg', isDragging && 'opacity-40', dropLine(position))} {...dropProps}>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-start gap-2">
         <Tip label="Drag to move">
-          <span {...handleProps} className="cursor-grab text-muted-foreground/60 hover:text-foreground">
+          <span {...handleProps} className="mt-2 cursor-grab text-muted-foreground/60 hover:text-foreground">
             <GripVerticalIcon className="size-4" />
           </span>
         </Tip>
-        <CossSelect items={fields} value={field} onChange={(f) => setField(f)} />
-        <CossSelect items={operators} value={rule.operator} onChange={(op) => setOperator(op as typeof rule.operator)} />
-        {rule.ref !== undefined ? (
-          <CossSelect items={refs} value={rule.ref} onChange={(r) => setRef(r)} />
-        ) : (
-          <ValueEditor editor={editor} def={def} value={rule.value} onChange={setValue} invalid={invalid} />
-        )}
-        <div className="ms-auto flex items-center gap-0.5 opacity-60 transition-opacity group-hover/rule:opacity-100">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <CossSelect items={fields} value={field} onChange={(f) => setField(f)} />
+          <CossSelect items={operators} value={rule.operator} onChange={(op) => setOperator(op as typeof rule.operator)} />
+          {rule.ref !== undefined ? (
+            <CossSelect items={refs} value={rule.ref} onChange={(r) => setRef(r)} />
+          ) : (
+            <ValueEditor editor={editor} def={def} value={rule.value} onChange={setValue} invalid={invalid} />
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-0.5 opacity-60 transition-opacity group-hover/rule:opacity-100">
           {refs.length > 0 && (
             <Tip label={rule.ref === undefined ? 'Compare with another field' : 'Compare with a value'}>
               <Button size="icon-sm" variant="ghost" aria-label={rule.ref === undefined ? 'Compare with another field' : 'Compare with a value'} onClick={() => setRef(rule.ref === undefined ? refs[0]!.value : null)}>

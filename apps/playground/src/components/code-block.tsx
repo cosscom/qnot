@@ -4,7 +4,7 @@ import { Tip } from '@/components/tip';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export function CodeBlock({ code, className, label }: { code: string; className?: string; label?: string }) {
+export function CodeBlock({ code, className, label, wrap }: { code: string; className?: string; label?: string; wrap?: boolean }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className={cn('relative min-w-0 rounded-xl border bg-muted/50 dark:bg-muted/30', className)}>
@@ -24,7 +24,7 @@ export function CodeBlock({ code, className, label }: { code: string; className?
           {copied ? <CheckIcon /> : <CopyIcon />}
         </Button>
       </Tip>
-      <pre className="max-h-[420px] overflow-auto p-3 pe-10 font-mono text-[12px] leading-relaxed">{code}</pre>
+      <pre className={cn('max-h-[420px] overflow-auto p-3 pe-10 font-mono text-[12px] leading-relaxed', wrap && 'whitespace-pre-wrap break-words')}>{code}</pre>
     </div>
   );
 }
