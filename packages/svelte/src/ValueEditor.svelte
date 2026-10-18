@@ -2,6 +2,7 @@
   import { CLASS, formatInput, formatList, parseInput, parseList } from '@trawlnet/core';
   import AsyncInput from './AsyncInput.svelte';
   import DraftInput from './DraftInput.svelte';
+  import LazySelect from './LazySelect.svelte';
   import { indent, type ValueEditorProps } from './ui';
 
   let { editor, def, value, onChange, invalid, disabled, labels }: ValueEditorProps = $props();
@@ -25,12 +26,7 @@
       <option value="false">{labels.no}</option>
     </select>
   {:else if editor.type === 'select'}
-    <select class={CLASS.value} value={formatInput(v)} {disabled} aria-invalid={invalid || undefined} onchange={(e) => set(parse(e.currentTarget.value))}>
-      <option value="">{labels.empty}</option>
-      {#each editor.options ?? [] as o (o.value)}
-        <option value={String(o.value)} disabled={o.disabled}>{indent(o.depth) + o.label}</option>
-      {/each}
-    </select>
+    <LazySelect class={CLASS.value} value={formatInput(v)} options={editor.options ?? []} empty={labels.empty} {disabled} {invalid} onChange={(raw) => set(parse(raw))} />
   {:else if editor.type === 'number'}
     <DraftInput type="number" value={v} min={def?.min} max={def?.max} step={def?.step} placeholder={def?.placeholder} {parse} format={formatInput} onChange={set} {invalid} {disabled} />
   {:else if editor.type === 'slider'}

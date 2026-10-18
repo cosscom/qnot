@@ -39,6 +39,7 @@ import {
   useNode,
   useQueryStore,
   useRule,
+  useSettings,
   useStore,
 } from './primitives';
 
@@ -227,10 +228,15 @@ function Scalar(props: ValueEditorProps) {
         </select>
       </Match>
       <Match when={props.editor.type === 'select'}>
-        <select class={CLASS.value} value={formatInput(props.value)} disabled={props.disabled} aria-invalid={props.invalid || undefined} onChange={(e) => props.onChange(parse(e.currentTarget.value))}>
-          <option value="">{props.labels.empty}</option>
-          <OptionList options={props.editor.options ?? []} />
-        </select>
+        <Select
+          class={CLASS.value}
+          value={formatInput(props.value)}
+          options={props.editor.options ?? []}
+          empty={props.labels.empty}
+          disabled={props.disabled}
+          invalid={props.invalid}
+          onChange={(v) => props.onChange(parse(v))}
+        />
       </Match>
       <Match when={props.editor.type === 'number'}>
         <DraftInput
@@ -323,28 +329,76 @@ export function DefaultValueEditor(props: ValueEditorProps) {
   );
 }
 
-function Select(props: { class: string; value: string | undefined; options: readonly OptionLike[]; onChange: (v: string) => void; disabled?: boolean }) {
+/**
+ * Selects render only their chosen option until the user reaches for them (hover, focus, press),
+ * then the full list for good. Option elements are most of a rule's DOM, so large queries mount
+ * with a fraction of the nodes. Solid applies the signal write synchronously, so the full list is
+ * in the DOM before the browser opens the native list or handles arrow keys.
+ */
+function createLazy(el: () => HTMLSelectElement | undefined, value: () => string | undefined) {
+  const [expanded, setExpanded] = createSignal(false);
+  const expand = () => {
+    if (expanded()) return;
+    setExpanded(true);
+    const sel = el();
+    if (sel) sel.value = value() ?? '';
+  };
+  return { expanded, triggers: { onFocus: expand, onPointerDown: expand, onMouseEnter: expand } };
+}
+
+function Select(props: {
+  class: string;
+  value: string | undefined;
+  options: readonly OptionLike[];
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  /** Placeholder option with value '' (always rendered). */
+  empty?: string;
+  invalid?: boolean;
+  'aria-label'?: string;
+}) {
+  let el: HTMLSelectElement | undefined;
+  const lazy = createLazy(() => el, () => props.value);
+  const shown = createMemo(() => (lazy.expanded() ? props.options : props.options.filter((o) => String(o.value) === props.value)));
+  // Re-assert the selection once the option list changes (it may have been inserted after `value`).
+  createEffect(on(shown, () => el && (el.value = props.value ?? '')));
   return (
-    <select class={props.class} value={props.value} disabled={props.disabled} onChange={(e) => props.onChange(e.currentTarget.value)}>
-      <OptionList options={props.options} />
+    <select
+      ref={el}
+      class={props.class}
+      value={props.value}
+      disabled={props.disabled}
+      aria-label={props['aria-label']}
+      aria-invalid={props.invalid || undefined}
+      {...lazy.triggers}
+      onChange={(e) => props.onChange(e.currentTarget.value)}
+    >
+      <Show when={props.empty !== undefined}>
+        <option value="">{props.empty}</option>
+      </Show>
+      <OptionList options={shown()} />
     </select>
   );
 }
 
-/** Field picker with struct fields grouped under their struct label. */
+/** Field picker with struct fields grouped under their struct label (lazy like `Select`). */
 function FieldSelect(props: { value: string; options: readonly FieldOption[]; onChange: (v: string) => void; disabled?: boolean }) {
+  let el: HTMLSelectElement | undefined;
+  const lazy = createLazy(() => el, () => props.value);
   const groups = createMemo(() => {
     const out = new Map<string | undefined, FieldOption[]>();
-    for (const o of props.options) out.set(o.group, [...(out.get(o.group) ?? []), o]);
+    const list = lazy.expanded() ? props.options : props.options.filter((o) => o.value === props.value).map((o) => ({ ...o, group: undefined }));
+    for (const o of list) out.set(o.group, [...(out.get(o.group) ?? []), o]);
     return [...out];
   });
+  createEffect(on(groups, () => el && (el.value = props.value)));
   const render = (o: FieldOption) => (
     <option value={o.value} title={o.description}>
       {o.label}
     </option>
   );
   return (
-    <select class={CLASS.field} value={props.value} disabled={props.disabled} onChange={(e) => props.onChange(e.currentTarget.value)}>
+    <select ref={el} class={CLASS.field} value={props.value} disabled={props.disabled} {...lazy.triggers} onChange={(e) => props.onChange(e.currentTarget.value)}>
       <For each={groups()}>
         {([group, opts]) => (
           <Show when={group !== undefined} fallback={<For each={opts}>{render}</For>}>
@@ -395,26 +449,23 @@ function OperandEditor(props: { operand: Operand; def: AnyFieldDef; fields: Fiel
   const refs = createMemo(() => refOptions(props.fields, '', props.def.kind));
   const nested = createMemo(() => functionOptions(props.fields, props.def.kind));
   const source = () => (isFnCall(props.operand) ? 'function' : 'ref' in props.operand ? 'field' : 'value');
+  const sources = createMemo(() => [
+    { value: 'value', label: props.label },
+    ...(refs().length ? [{ value: 'field', label: `${props.label}: field` }] : []),
+    ...(nested().length ? [{ value: 'function', label: `${props.label}: ƒ` }] : []),
+  ]);
   return (
     <span class="tn-operand" title={props.label}>
       <Show when={refs().length > 0 || nested().length > 0}>
-        <select
+        <Select
           class="tn-source"
           value={source()}
+          options={sources()}
           disabled={props.disabled}
-          onChange={(e) => {
-            const v = e.currentTarget.value;
-            props.onChange(v === 'field' ? { ref: refs()[0]!.value } : v === 'function' ? defaultCall(props.fields, nested()[0]!.value) : { value: props.def.defaultValue ?? null });
-          }}
-        >
-          <option value="value">{props.label}</option>
-          <Show when={refs().length > 0}>
-            <option value="field">{props.label}: field</option>
-          </Show>
-          <Show when={nested().length > 0}>
-            <option value="function">{props.label}: ƒ</option>
-          </Show>
-        </select>
+          onChange={(v) =>
+            props.onChange(v === 'field' ? { ref: refs()[0]!.value } : v === 'function' ? defaultCall(props.fields, nested()[0]!.value) : { value: props.def.defaultValue ?? null })
+          }
+        />
       </Show>
       <Switch
         fallback={
@@ -441,7 +492,6 @@ function OperandEditor(props: { operand: Operand; def: AnyFieldDef; fields: Fiel
 }
 
 export function DefaultRule(props: { id: NodeId }) {
-  const store = useStore();
   const ui = useUI();
   // Node ids never change for a mounted component.
   const id = props.id;
@@ -449,8 +499,14 @@ export function DefaultRule(props: { id: NodeId }) {
   const drag = useDragHandle(id);
   const drop = useDropTarget(id);
   const invalid = createMemo(() => r.issues().some((i) => i.severity === 'error'));
-  const lhsFunctions = createMemo(() => (store.settings.allowFunctions !== false ? functionOptions(r.fields()) : []));
+  const settings = useSettings();
+  const lhsFunctions = createMemo(() => (settings().allowFunctions !== false ? functionOptions(r.fields()) : []));
   const fieldIsFn = () => isFnCall(r.field());
+  const sources = createMemo(() => [
+    { value: 'value', label: ui.labels.compareValue },
+    ...(r.refOptions().length ? [{ value: 'field', label: ui.labels.compareField }] : []),
+    ...(r.functionOptions().length ? [{ value: 'function', label: ui.labels.compareFunction }] : []),
+  ]);
 
   return (
     <div
@@ -485,24 +541,14 @@ export function DefaultRule(props: { id: NodeId }) {
       </Show>
       <Select class={CLASS.operator} value={r.operator()} options={r.operators()} disabled={!r.can().editOperator} onChange={r.setOperator} />
       <Show when={r.refOptions().length > 0 || r.functionOptions().length > 0}>
-        <select
+        <Select
           class="tn-source"
           value={r.source()}
+          options={sources()}
           disabled={!r.can().editValue}
           aria-label={ui.labels.compareWith}
-          onChange={(e) => {
-            const v = e.currentTarget.value;
-            v === 'field' ? r.setRef(r.refOptions()[0]!.value) : v === 'function' ? r.setCall(defaultCall(r.fields(), r.functionOptions()[0]!.value)) : r.setRef(null);
-          }}
-        >
-          <option value="value">{ui.labels.compareValue}</option>
-          <Show when={r.refOptions().length > 0}>
-            <option value="field">{ui.labels.compareField}</option>
-          </Show>
-          <Show when={r.functionOptions().length > 0}>
-            <option value="function">{ui.labels.compareFunction}</option>
-          </Show>
-        </select>
+          onChange={(v) => (v === 'field' ? r.setRef(r.refOptions()[0]!.value) : v === 'function' ? r.setCall(defaultCall(r.fields(), r.functionOptions()[0]!.value)) : r.setRef(null))}
+        />
       </Show>
       <Switch
         fallback={
@@ -561,6 +607,7 @@ function NodeView(props: { id: NodeId }) {
 /** "some / all / none / at least N of Orders where …" for array groups. */
 function MatchEditor(props: { match: Quantifier; label: string; onChange: (m: Quantifier) => void; disabled?: boolean; labels: Labels }) {
   const counted = () => (typeof props.match === 'object' && props.match.count !== 'between' ? (props.match as { count: 'gte'; value: number }) : null);
+  const counts = createMemo(() => countOptions(props.labels));
   return (
     <span class="tn-match">
       <select
@@ -577,7 +624,7 @@ function MatchEditor(props: { match: Quantifier; label: string; onChange: (m: Qu
       <Show when={counted()}>
         {(m) => (
           <>
-            <Select class="tn-match-op" value={m().count} options={countOptions(props.labels)} disabled={props.disabled} onChange={(count) => props.onChange({ count: count as 'gte', value: m().value })} />
+            <Select class="tn-match-op" value={m().count} options={counts()} disabled={props.disabled} onChange={(count) => props.onChange({ count: count as 'gte', value: m().value })} />
             <input
               class="tn-match-count"
               type="number"

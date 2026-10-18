@@ -1,6 +1,7 @@
 <script lang="ts">
   // Editor for a function call: pick the function, then each argument (literal, field, or nested call).
   import { defaultCall, fieldLabel, functionOf, functionOptions, type Fields, type FnCall } from '@trawlnet/core';
+  import LazySelect from './LazySelect.svelte';
   import OperandEditor from './OperandEditor.svelte';
   import type { Labels } from './ui';
 
@@ -18,11 +19,7 @@
 </script>
 
 <span class="tn-function">
-  <select class="tn-function-name" value={call.fn} {disabled} onchange={(e) => onChange(defaultCall(fields, e.currentTarget.value))}>
-    {#each fns as o (o.value)}
-      <option value={o.value}>{o.label}</option>
-    {/each}
-  </select>
+  <LazySelect class="tn-function-name" value={call.fn} options={fns} {disabled} onChange={(fn) => onChange(defaultCall(fields, fn))} />
   {#if args.length > 0}
     <span class="tn-function-args"
       >({#each args as [name, argDef], i (name)}<span class="tn-function-arg"

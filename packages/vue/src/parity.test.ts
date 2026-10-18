@@ -25,6 +25,12 @@ const initial: Q = {
   ],
 };
 
+// Like a user: interacting with a control (focus) before changing it, which also expands lazy selects.
+async function change(w: { trigger(e: string): Promise<void>; setValue(v: unknown): Promise<void> }, value: unknown) {
+  await w.trigger('focus');
+  await w.setValue(value);
+}
+
 const wrappers: { unmount(): void }[] = [];
 afterEach(() => wrappers.splice(0).forEach((w) => w.unmount()));
 const render = (props: Record<string, unknown>) => {
@@ -37,10 +43,16 @@ describe('Vue parity UI', () => {
   it('groups struct fields, hides array fields from rule pickers, and indents tree options', async () => {
     const w = render({ fields, initial });
     const fieldSelect = w.find('select.tn-field');
+    // Lazy until the user reaches for it: only the chosen option is in the DOM.
+    expect([...(fieldSelect.element as HTMLSelectElement).options].map((o) => o.value)).toEqual(['name']);
+    await fieldSelect.trigger('focus');
+    expect((fieldSelect.element as HTMLSelectElement).value).toBe('name');
     expect(fieldSelect.findAll('optgroup').map((g) => g.attributes('label'))).toEqual(['Address']);
     expect(fieldSelect.findAll('option').map((o) => (o.element as HTMLOptionElement).value)).not.toContain('orders');
-    await fieldSelect.setValue('region');
+    await change(fieldSelect, 'region');
     const region = w.find('.tn-rule select.tn-value').element as HTMLSelectElement;
+    expect([...region.options].map((o) => o.value)).toEqual(['']);
+    await w.find('.tn-rule select.tn-value').trigger('focus');
     expect([...region.options].map((o) => [o.textContent, o.disabled])).toEqual([
       ['—', false],
       ['EMEA', true],
@@ -53,11 +65,12 @@ describe('Vue parity UI', () => {
     const w = render({ store });
     const arrayGroup = w.find('.tn-array-group');
     expect(arrayGroup.text()).toContain('of Orders where');
+    await arrayGroup.find('select.tn-field').trigger('focus');
     expect(arrayGroup.find('select.tn-field').findAll('option').map((o) => (o.element as HTMLOptionElement).value)).toEqual(['product', 'qty']);
-    await arrayGroup.find('select.tn-match-mode').setValue('count');
-    await w.find('.tn-array-group input.tn-match-count').setValue('3');
+    await change(arrayGroup.find('select.tn-match-mode'), 'count');
+    await change(w.find('.tn-array-group input.tn-match-count'), '3');
     expect(store.getQuery().children[1]).toMatchObject({ of: { field: 'orders', match: { count: 'gte', value: 3 } } });
-    await w.find('select.tn-add-array').setValue('orders');
+    await change(w.find('select.tn-add-array'), 'orders');
     expect(store.getQuery().children[2]).toMatchObject({ of: { field: 'orders', match: 'some' } });
   });
 
@@ -65,10 +78,10 @@ describe('Vue parity UI', () => {
     const store = createQueryStore({ fields, initial });
     const w = render({ store });
     const rule = () => w.find('.tn-rule');
-    await rule().find('select.tn-source').setValue('function');
+    await change(rule().find('select.tn-source'), 'function');
     expect(store.getQuery().children[0]).toMatchObject({ field: 'name', call: { fn: 'lower' } });
-    await rule().find('select.tn-function-name').setValue('upper');
-    await rule().find('.tn-function-arg input').setValue('ada');
+    await change(rule().find('select.tn-function-name'), 'upper');
+    await change(rule().find('.tn-function-arg input'), 'ada');
     expect(store.getQuery().children[0]).toMatchObject({ call: { fn: 'upper', args: { text: { value: 'ada' } } } });
     await rule().find('button.tn-lhs-toggle').trigger('click');
     expect(store.getQuery().children[0]).toMatchObject({ field: { fn: 'lower' } });
@@ -93,6 +106,40 @@ describe('Vue parity UI', () => {
     await add().trigger('click');
     expect((add().element as HTMLButtonElement).disabled).toBe(true);
     expect(w.findAll('.tn-rule')).toHaveLength(3);
+  });
+
+  it('renders only chosen options until a select is hovered, pressed or focused', async () => {
+    const w = render({ fields, initial });
+    const op = w.find('.tn-rule select.tn-operator');
+    const source = w.find('.tn-rule select.tn-source');
+    const values = (x: typeof op) => [...(x.element as HTMLSelectElement).options].map((o) => o.value);
+    expect(values(op)).toEqual(['eq']);
+    expect(values(source)).toEqual(['value']);
+    await op.trigger('mouseenter');
+    expect(values(op).length).toBeGreaterThan(1);
+    expect((op.element as HTMLSelectElement).value).toBe('eq');
+    // Expansion lands in the DOM inside the event, not on the next render.
+    source.element.dispatchEvent(new Event('pointerdown'));
+    expect(values(source)).toEqual(['value', 'field', 'function']);
+    expect((source.element as HTMLSelectElement).value).toBe('value');
+  });
+
+  it('updates offered value sources live when allowRefs / allowFunctions change', async () => {
+    const store = createQueryStore({ fields, initial });
+    const w = render({ store });
+    const sourceOptions = async () => {
+      const sel = w.find('.tn-rule select.tn-source');
+      if (!sel.exists()) return null;
+      await sel.trigger('focus');
+      return [...(sel.element as HTMLSelectElement).options].map((o) => o.value);
+    };
+    expect(await sourceOptions()).toEqual(['value', 'field', 'function']);
+    store.setSettings({ allowFunctions: false });
+    await nextTick();
+    expect(await sourceOptions()).toEqual(['value', 'field']);
+    store.setSettings({ allowRefs: false });
+    await nextTick();
+    expect(await sourceOptions()).toBeNull();
   });
 
   it('hides NOT with showNot: false', () => {

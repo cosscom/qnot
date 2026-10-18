@@ -140,6 +140,53 @@ const fillFieldOptions = (sel: HTMLSelectElement, options: readonly FieldOption[
   sel.replaceChildren(...els);
 };
 
+/**
+ * Selects render only their chosen option until the user reaches for them (hover, focus, press),
+ * then the full list for good. Option elements are most of a rule's DOM, so large queries mount
+ * with a fraction of the nodes. Expansion happens inside the event, before the browser opens the
+ * native list or handles arrow keys.
+ */
+export interface LazySelect {
+  /** Pass a stable `options` array; a new identity re-renders the (expanded) list. */
+  update(options: readonly OptionLike[], value: string): void;
+}
+
+export function lazySelect(sel: HTMLSelectElement, opts: { empty?: string; grouped?: boolean } = {}): LazySelect {
+  let options: readonly OptionLike[] = [];
+  let value = '';
+  let expanded = false;
+  let shown: unknown = null;
+  const renderAll = () => {
+    if (opts.grouped) fillFieldOptions(sel, options as readonly FieldOption[]);
+    else fillOptions(sel, options, opts.empty);
+    shown = options;
+  };
+  const expand = () => {
+    if (expanded) return;
+    expanded = true;
+    renderAll();
+    sel.value = value;
+  };
+  sel.addEventListener('focus', expand);
+  sel.addEventListener('pointerdown', expand);
+  sel.addEventListener('mouseenter', expand);
+  return {
+    update(next, v) {
+      const changed = next !== options;
+      options = next;
+      value = v;
+      if (expanded) {
+        if (changed) renderAll();
+      } else if (changed || shown !== v) {
+        const chosen = options.find((o) => String(o.value) === v);
+        fillOptions(sel, chosen ? [chosen] : [], opts.empty);
+        shown = v;
+      }
+      sel.value = v;
+    },
+  };
+}
+
 const setInvalid = (el: HTMLElement, invalid: boolean) => (invalid ? el.setAttribute('aria-invalid', 'true') : el.removeAttribute('aria-invalid'));
 
 /** Bitmask of `store.can(action, id)` answers, cheap to compare between permission events. */
@@ -242,8 +289,17 @@ function scalarControl(spec: EditorSpec, def: AnyFieldDef | undefined, labels: L
         fillOptions(sel, [{ value: 'true', label: labels.yes }, { value: 'false', label: labels.no }], labels.empty);
         sel.onchange = () => emit(sel.value === '' ? null : sel.value === 'true');
       } else {
-        fillOptions(sel, spec.options ?? [], labels.empty);
+        const lazy = lazySelect(sel, { empty: labels.empty });
+        const options = spec.options ?? [];
         sel.onchange = () => emit(parse(sel.value));
+        return {
+          el: sel,
+          set(v, invalid, disabled) {
+            lazy.update(options, formatInput(v));
+            setInvalid(sel, invalid);
+            sel.disabled = disabled;
+          },
+        };
       }
       return {
         el: sel,
@@ -368,7 +424,7 @@ export function functionEditor(fields: Fields, kind: string | undefined, initial
   let call = initial;
   const fns = functionOptions(fields, kind);
   const name = h('select', { className: 'tn-function-name', onchange: () => onChange(defaultCall(fields, name.value)) });
-  fillOptions(name, fns);
+  const nameLazy = lazySelect(name);
   const argsEl = h('span', { className: 'tn-function-args' });
   const el = h('span', { className: 'tn-function' }, name, argsEl);
   let builtFor: string | null = null;
@@ -396,7 +452,7 @@ export function functionEditor(fields: Fields, kind: string | undefined, initial
 
   const update = (next: FnCall, disabled: boolean) => {
     call = next;
-    name.value = call.fn;
+    nameLazy.update(fns, call.fn);
     name.disabled = disabled;
     if (builtFor !== call.fn) {
       builtFor = call.fn;
@@ -426,11 +482,12 @@ function operandEditor(fields: Fields, def: AnyFieldDef, label: string, initial:
     onchange: () =>
       onChange(sourceSel.value === 'field' ? { ref: refs[0]!.value } : sourceSel.value === 'function' ? defaultCall(fields, nested[0]!.value) : { value: def.defaultValue ?? null }),
   });
-  fillOptions(sourceSel, [
+  const sources = [
     { value: 'value', label },
     ...(refs.length ? [{ value: 'field', label: `${label}: field` }] : []),
     ...(nested.length ? [{ value: 'function', label: `${label}: ƒ` }] : []),
-  ]);
+  ];
+  const sourceLazy = lazySelect(sourceSel);
   if (refs.length || nested.length) el.append(sourceSel);
   el.append(host);
 
@@ -438,7 +495,7 @@ function operandEditor(fields: Fields, def: AnyFieldDef, label: string, initial:
   const update = (operand: Operand, disabled: boolean) => {
     current = operand;
     const next = isFnCall(operand) ? 'function' : 'ref' in operand ? 'field' : 'value';
-    sourceSel.value = next;
+    sourceLazy.update(sources, next);
     sourceSel.disabled = disabled;
     if (next !== source) {
       source = next;
@@ -448,10 +505,10 @@ function operandEditor(fields: Fields, def: AnyFieldDef, label: string, initial:
         host.replaceChildren(fe.el);
       } else if (next === 'field') {
         const sel = h('select', { className: CLASS.value, onchange: () => onChange({ ref: sel.value }) });
-        fillOptions(sel, refs);
+        const refLazy = lazySelect(sel);
         inner = {
           update(o, d) {
-            sel.value = (o as { ref: string }).ref;
+            refLazy.update(refs, (o as { ref: string }).ref);
             sel.disabled = d;
           },
         };
@@ -492,10 +549,16 @@ export function DefaultRule(ctx: MountContext, id: NodeId): NodeView {
   const valueHost = h('span');
   valueHost.style.display = 'contents';
   const refSel = h('select', { className: CLASS.value, onchange: () => store.setRef(id, refSel.value) });
+  const fieldLazy = lazySelect(fieldSel, { grouped: true });
+  const opLazy = lazySelect(opSel);
+  const sourceLazy = lazySelect(sourceSel);
+  const refLazy = lazySelect(refSel);
+  let ops: Option[] = [];
+  let sources: Option[] = [];
   const lockBtn = button('🔓', () => store.setLocked(id, !store.getRule(id).locked));
   const cloneBtn = button('⧉', () => store.clone(id), labels.clone);
   const removeBtn = button('×', () => void store.requestRemove(id), labels.remove);
-  row.append(handle, lhsToggle, lhsHost, opSel, sourceSel, valueHost);
+  row.append(handle, lhsHost, opSel, valueHost);
   if (ctx.showLock) row.append(lockBtn);
   row.append(cloneBtn, removeBtn);
 
@@ -530,7 +593,6 @@ export function DefaultRule(ctx: MountContext, id: NodeId): NodeView {
       fieldsFor = r.parent;
       fields = store.fieldsFor(id);
       fieldChoices = fieldOptions(fields).filter((o) => !o.isArray);
-      fillFieldOptions(fieldSel, fieldChoices);
       lhsFunctions = store.settings.allowFunctions !== false ? functionOptions(fields) : [];
       opsKey = null;
       lhsFn = null;
@@ -539,7 +601,8 @@ export function DefaultRule(ctx: MountContext, id: NodeId): NodeView {
     const spec = editorFor(def, r.operator, fields);
 
     // Left side: a field or a function call.
-    lhsToggle.hidden = lhsFunctions.length === 0;
+    // Controls that don't apply are detached rather than hidden: fewer nodes in big queries.
+    attach(lhsToggle, lhsFunctions.length > 0, lhsHost);
     lhsToggle.disabled = !can('editField');
     const fieldIsFn = isFnCall(r.field);
     lhsToggle.title = fieldIsFn ? labels.useField : labels.useFunction;
@@ -553,15 +616,15 @@ export function DefaultRule(ctx: MountContext, id: NodeId): NodeView {
     } else {
       lhsFn = null;
       if (lhsHost.firstChild !== fieldSel) lhsHost.replaceChildren(fieldSel);
-      if (fieldSel.value !== r.field) fieldSel.value = r.field as string;
+      fieldLazy.update(fieldChoices, r.field as string);
       fieldSel.disabled = !can('editField');
     }
 
     if (opsKey !== def) {
-      fillOptions(opSel, operatorOptions(def, fields));
+      ops = operatorOptions(def, fields);
       opsKey = def;
     }
-    opSel.value = r.operator;
+    opLazy.update(ops, r.operator);
     opSel.disabled = !can('editOperator');
 
     const issues = store.issues(id);
@@ -577,23 +640,22 @@ export function DefaultRule(ctx: MountContext, id: NodeId): NodeView {
       sourceKey = key;
       refs = spec.allowsRef && store.settings.allowRefs !== false && typeof r.field === 'string' ? refOptions(fields, r.field, def?.kind) : [];
       functions = spec.allowsRef && store.settings.allowFunctions !== false ? functionOptions(fields, def?.kind) : [];
-      fillOptions(refSel, refs);
-      fillOptions(sourceSel, [
+      sources = [
         { value: 'value', label: labels.compareValue },
         ...(refs.length ? [{ value: 'field', label: labels.compareField }] : []),
         ...(functions.length ? [{ value: 'function', label: labels.compareFunction }] : []),
-      ]);
+      ];
       rhsFn = null;
     }
     const source = r.ref !== undefined ? 'field' : r.call !== undefined ? 'function' : 'value';
-    sourceSel.hidden = refs.length === 0 && functions.length === 0;
-    sourceSel.value = source;
+    attach(sourceSel, refs.length > 0 || functions.length > 0, valueHost);
+    sourceLazy.update(sources, source);
     sourceSel.disabled = !can('editValue');
 
     if (r.ref !== undefined) {
       dropEditor();
       rhsFn = null;
-      refSel.value = r.ref;
+      refLazy.update(refs, r.ref);
       refSel.disabled = !can('editValue');
       if (valueHost.firstChild !== refSel) valueHost.replaceChildren(refSel);
     } else if (r.call !== undefined) {
@@ -659,6 +721,12 @@ export function DefaultRule(ctx: MountContext, id: NodeId): NodeView {
   };
 }
 
+/** Insert `el` before `anchor` when `on`, otherwise take it out of the DOM. */
+function attach(el: HTMLElement, on: boolean, anchor: Node) {
+  if (on && !el.parentNode) anchor.parentNode!.insertBefore(el, anchor);
+  else if (!on && el.parentNode) el.remove();
+}
+
 function toggleDrop(el: HTMLElement, p: DropPosition) {
   el.classList.toggle(CLASS.dropBefore, p === 'before');
   el.classList.toggle(CLASS.dropAfter, p === 'after');
@@ -680,7 +748,8 @@ function matchEditor(labels: Labels, onChange: (m: Quantifier) => void) {
     { value: 'count', label: labels.count },
   ]);
   const op = h('select', { className: 'tn-match-op', onchange: () => typeof match === 'object' && onChange({ count: op.value as 'gte', value: match.value as number }) });
-  fillOptions(op, countOptions(labels));
+  const opLazy = lazySelect(op);
+  const counts = countOptions(labels);
   const count = h('input', { className: 'tn-match-count', type: 'number', min: '0', oninput: () => typeof match === 'object' && onChange({ count: match.count as 'gte', value: Number(count.value) }) });
   const strong = h('strong');
   const el = h('span', { className: 'tn-match' }, mode, op, count, h('span', {}, `${labels.matchOf} `, strong, ` ${labels.matchWhere}`));
@@ -692,7 +761,7 @@ function matchEditor(labels: Labels, onChange: (m: Quantifier) => void) {
       const showCount = typeof next === 'object' && next.count !== 'between';
       op.hidden = count.hidden = !showCount;
       if (showCount) {
-        op.value = next.count;
+        opLazy.update(counts, next.count);
         if (Number(count.value) !== next.value || count.value === '') count.value = String(next.value);
       }
       strong.textContent = label;

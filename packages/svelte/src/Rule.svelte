@@ -2,6 +2,7 @@
   import { CLASS, defaultCall, functionOptions, isFnCall, type FnCall, type NodeId } from '@trawlnet/core';
   import FieldSelect from './FieldSelect.svelte';
   import FunctionEditor from './FunctionEditor.svelte';
+  import LazySelect from './LazySelect.svelte';
   import { createDragHandle, createDropTarget, createRule, createSettings, getDndController, getQueryStore } from './reactive';
   import { cx, getUI } from './ui';
 
@@ -27,6 +28,11 @@
   const lhsFunctions = $derived(settings.current.allowFunctions !== false ? functionOptions(fields) : []);
   const refs = $derived(r.refOptions);
   const fns = $derived(r.functionOptions);
+  const sources = $derived([
+    { value: 'value', label: ui.labels.compareValue },
+    ...(refs.length > 0 ? [{ value: 'field', label: ui.labels.compareField }] : []),
+    ...(fns.length > 0 ? [{ value: 'function', label: ui.labels.compareFunction }] : []),
+  ]);
   const ValueEditor = $derived(ui.components.ValueEditor);
 </script>
 
@@ -59,35 +65,23 @@
   {:else}
     <FieldSelect value={rule.field as string} options={r.fieldOptions} disabled={!can.editField} onChange={r.setField} />
   {/if}
-  <select class={CLASS.operator} value={rule.operator} disabled={!can.editOperator} onchange={(e) => r.setOperator(e.currentTarget.value)}>
-    {#each r.operators as o (o.value)}
-      <option value={o.value}>{o.label}</option>
-    {/each}
-  </select>
+  <LazySelect class={CLASS.operator} value={rule.operator} options={r.operators} disabled={!can.editOperator} onChange={r.setOperator} />
   {#if refs.length > 0 || fns.length > 0}
-    <select
+    <LazySelect
       class="tn-source"
       value={r.source}
+      options={sources}
       disabled={!can.editValue}
       aria-label={ui.labels.compareWith}
-      onchange={(e) => {
-        const v = e.currentTarget.value;
+      onChange={(v) => {
         if (v === 'field') r.setRef(refs[0]!.value);
         else if (v === 'function') r.setCall(defaultCall(fields, fns[0]!.value));
         else r.setRef(null);
       }}
-    >
-      <option value="value">{ui.labels.compareValue}</option>
-      {#if refs.length > 0}<option value="field">{ui.labels.compareField}</option>{/if}
-      {#if fns.length > 0}<option value="function">{ui.labels.compareFunction}</option>{/if}
-    </select>
+    />
   {/if}
   {#if rule.ref !== undefined}
-    <select class={CLASS.value} value={rule.ref} disabled={!can.editValue} onchange={(e) => r.setRef(e.currentTarget.value)}>
-      {#each refs as o (o.value)}
-        <option value={o.value}>{o.label}</option>
-      {/each}
-    </select>
+    <LazySelect class={CLASS.value} value={rule.ref} options={refs} disabled={!can.editValue} onChange={r.setRef} />
   {:else if rule.call !== undefined}
     <FunctionEditor call={rule.call} {fields} kind={r.def?.kind} onChange={r.setCall} disabled={!can.editValue} labels={ui.labels} />
   {:else}

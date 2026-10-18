@@ -28,11 +28,14 @@ const mountIt = (ui: () => any) => {
   disposers.push(render(ui, host));
   return host;
 };
+// Like a user: interacting with a control (focus) before changing it, which also expands lazy selects.
 const type = (el: HTMLInputElement, value: string) => {
+  el.dispatchEvent(new FocusEvent('focus'));
   el.value = value;
   el.dispatchEvent(new Event('input', { bubbles: true }));
 };
 const choose = (el: HTMLSelectElement, value: string) => {
+  el.dispatchEvent(new FocusEvent('focus'));
   el.value = value;
   el.dispatchEvent(new Event('change', { bubbles: true }));
 };

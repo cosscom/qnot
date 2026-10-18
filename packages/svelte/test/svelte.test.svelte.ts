@@ -30,12 +30,15 @@ const render = (component: any, props: Record<string, unknown>) => {
   flushSync();
   return target;
 };
+// Like a user: interacting with a control (focus) before changing it, which also expands lazy selects.
 const type = (el: HTMLInputElement, value: string) => {
+  el.dispatchEvent(new FocusEvent('focus'));
   el.value = value;
   el.dispatchEvent(new Event('input', { bubbles: true }));
   flushSync();
 };
 const choose = (el: HTMLSelectElement, value: string) => {
+  el.dispatchEvent(new FocusEvent('focus'));
   el.value = value;
   el.dispatchEvent(new Event('change', { bubbles: true }));
   flushSync();

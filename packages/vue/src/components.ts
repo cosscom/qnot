@@ -36,8 +36,10 @@ import {
   useNode,
   useQueryStore,
   useRule,
+  useSettings,
   useStore,
 } from './composables';
+import { LazySelect, type OptionLike } from './lazy';
 
 export { DEFAULT_LABELS, defaultCall };
 export type Labels = typeof DEFAULT_LABELS;
@@ -73,15 +75,6 @@ const useUI = () => inject(UI_KEY)!;
 
 const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' ');
 const target = <T = HTMLInputElement>(e: Event) => e.target as T;
-
-interface OptionLike {
-  readonly value: unknown;
-  readonly label: string;
-  readonly depth?: number;
-  readonly disabled?: boolean;
-}
-const options = (list: readonly OptionLike[]) =>
-  list.map((o) => h('option', { key: String(o.value), value: String(o.value), disabled: o.disabled }, '  '.repeat(o.depth ?? 0) + o.label));
 
 const anyProp = { type: null as unknown as PropType<unknown> };
 
@@ -207,10 +200,7 @@ function scalar(p: ValueEditorProps): VNode {
         [h('option', { value: '' }, p.labels.empty), h('option', { value: 'true' }, p.labels.yes), h('option', { value: 'false' }, p.labels.no)],
       );
     case 'select':
-      return h('select', { class: CLASS.value, value: formatInput(p.value), ...attrs, onChange: (e: Event) => p.onChange(parse(target<HTMLSelectElement>(e).value)) }, [
-        h('option', { value: '' }, p.labels.empty),
-        ...options(editor.options ?? []),
-      ]);
+      return h(LazySelect, { class: CLASS.value, ...attrs, options: editor.options ?? NO_OPTIONS, value: formatInput(p.value), empty: p.labels.empty, onChange: (v: string) => p.onChange(parse(v)) });
     case 'number':
       return h(DraftInput, { type: 'number', value: p.value, min: def?.min, max: def?.max, step: def?.step, placeholder: def?.placeholder, parse, format: formatInput, onChange: p.onChange, invalid: p.invalid, disabled: p.disabled });
     case 'slider':
@@ -291,20 +281,21 @@ export const DefaultValueEditor = defineComponent({
   },
 });
 
+const NO_OPTIONS: readonly OptionLike[] = [];
+
 const select = (cls: string, value: string, opts: readonly OptionLike[], onChange: (v: string) => void, disabled?: boolean) =>
-  h('select', { class: cls, value, disabled, onChange: (e: Event) => onChange(target<HTMLSelectElement>(e).value) }, options(opts));
+  h(LazySelect, { class: cls, value, options: opts, disabled, onChange });
 
 /** Field picker with struct fields grouped under their struct label. */
-function fieldSelect(value: string, opts: readonly FieldOption[], onChange: (v: string) => void, disabled?: boolean) {
-  const groups = new Map<string | undefined, FieldOption[]>();
-  for (const o of opts) groups.set(o.group, [...(groups.get(o.group) ?? []), o]);
-  const render = (o: FieldOption) => h('option', { key: o.value, value: o.value, title: o.description }, o.label);
-  return h(
-    'select',
-    { class: CLASS.field, value, disabled, onChange: (e: Event) => onChange(target<HTMLSelectElement>(e).value) },
-    [...groups].flatMap(([group, items]) => (group === undefined ? items.map(render) : [h('optgroup', { key: group, label: group }, items.map(render))])),
-  );
-}
+const fieldSelect = (value: string, opts: readonly FieldOption[], onChange: (v: string) => void, disabled?: boolean) =>
+  h(LazySelect, { class: CLASS.field, value, options: opts, grouped: true, disabled, onChange });
+
+const countsByLabels = new WeakMap<Labels, ReturnType<typeof countOptions>>();
+const counts = (labels: Labels) => {
+  let c = countsByLabels.get(labels);
+  if (!c) countsByLabels.set(labels, (c = countOptions(labels)));
+  return c;
+};
 
 /** Editor for a function call: pick the function, then each argument (literal, field, or nested call). */
 export const FunctionEditor: Component = defineComponent({
@@ -363,28 +354,20 @@ const OperandEditor: Component = defineComponent({
   setup(props) {
     const refs = computed(() => refOptions(props.fields, '', props.def.kind));
     const nested = computed(() => functionOptions(props.fields, props.def.kind));
+    const sources = computed(() => [
+      { value: 'value', label: props.label },
+      ...(refs.value.length ? [{ value: 'field', label: `${props.label}: field` }] : []),
+      ...(nested.value.length ? [{ value: 'function', label: `${props.label}: ƒ` }] : []),
+    ]);
     return (): VNode => {
-      const { operand, def, fields, label } = props;
+      const { operand, def, fields } = props;
+      const label = props.label;
       const source = isFnCall(operand) ? 'function' : 'ref' in operand ? 'field' : 'value';
       const sourceSelect =
         refs.value.length || nested.value.length
-          ? h(
-              'select',
-              {
-                class: 'tn-source',
-                value: source,
-                disabled: props.disabled,
-                onChange: (e: Event) => {
-                  const v = target<HTMLSelectElement>(e).value;
-                  props.onChange(v === 'field' ? { ref: refs.value[0]!.value } : v === 'function' ? defaultCall(fields, nested.value[0]!.value) : { value: def.defaultValue ?? null });
-                },
-              },
-              [
-                h('option', { value: 'value' }, label),
-                refs.value.length ? h('option', { value: 'field' }, `${label}: field`) : null,
-                nested.value.length ? h('option', { value: 'function' }, `${label}: ƒ`) : null,
-              ],
-            )
+          ? select('tn-source', source, sources.value, (v) =>
+              props.onChange(v === 'field' ? { ref: refs.value[0]!.value } : v === 'function' ? defaultCall(fields, nested.value[0]!.value) : { value: def.defaultValue ?? null }),
+            props.disabled)
           : null;
       const body: VNode = isFnCall(operand)
         ? h(FunctionEditor, { call: operand, fields, kind: def.kind, onChange: props.onChange, disabled: props.disabled, labels: props.labels })
@@ -422,7 +405,13 @@ export const DefaultRule = defineComponent({
     const r = useRule(props.id);
     const { isDragging, handleProps } = useDragHandle(props.id);
     const { position, dropProps } = useDropTarget(props.id);
-    const lhsFunctions = computed(() => (store.settings.allowFunctions !== false ? functionOptions(r.fields.value) : []));
+    const settings = useSettings();
+    const lhsFunctions = computed(() => (settings.value.allowFunctions !== false ? functionOptions(r.fields.value) : []));
+    const sources = computed(() => [
+      { value: 'value', label: labels.compareValue },
+      ...(r.refOptions.value.length ? [{ value: 'field', label: labels.compareField }] : []),
+      ...(r.functionOptions.value.length ? [{ value: 'function', label: labels.compareFunction }] : []),
+    ]);
     return () => {
       const rule = r.rule.value;
       const fields = r.fields.value;
@@ -454,24 +443,14 @@ export const DefaultRule = defineComponent({
             : fieldSelect(rule.field as string, r.fieldOptions.value, r.setField, !can.editField),
           select(CLASS.operator, rule.operator, r.operators.value, r.setOperator, !can.editOperator),
           refs.length || fns.length
-            ? h(
-                'select',
-                {
-                  class: 'tn-source',
-                  value: r.source.value,
-                  disabled: !can.editValue,
-                  'aria-label': labels.compareWith,
-                  onChange: (e: Event) => {
-                    const v = target<HTMLSelectElement>(e).value;
-                    v === 'field' ? r.setRef(refs[0]!.value) : v === 'function' ? r.setCall(defaultCall(fields, fns[0]!.value)) : r.setRef(null);
-                  },
-                },
-                [
-                  h('option', { value: 'value' }, labels.compareValue),
-                  refs.length ? h('option', { value: 'field' }, labels.compareField) : null,
-                  fns.length ? h('option', { value: 'function' }, labels.compareFunction) : null,
-                ],
-              )
+            ? h(LazySelect, {
+                class: 'tn-source',
+                value: r.source.value,
+                options: sources.value,
+                disabled: !can.editValue,
+                'aria-label': labels.compareWith,
+                onChange: (v: string) => (v === 'field' ? r.setRef(refs[0]!.value) : v === 'function' ? r.setCall(defaultCall(fields, fns[0]!.value)) : r.setRef(null)),
+              })
             : null,
           rule.ref !== undefined
             ? select(CLASS.value, rule.ref, refs, r.setRef, !can.editValue)
@@ -519,7 +498,7 @@ function matchEditor(match: Quantifier, label: string, onChange: (m: Quantifier)
     ),
     ...(typeof match === 'object' && match.count !== 'between'
       ? [
-          select('tn-match-op', match.count, countOptions(labels), (count) => onChange({ count: count as 'gte', value: match.value }), disabled),
+          select('tn-match-op', match.count, counts(labels), (count) => onChange({ count: count as 'gte', value: match.value }), disabled),
           h('input', { class: 'tn-match-count', type: 'number', min: 0, value: match.value, disabled, onInput: (e: Event) => onChange({ count: match.count, value: Number(target(e).value) }) }),
         ]
       : []),
