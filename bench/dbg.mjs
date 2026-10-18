@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { join, extname } from 'node:path';
+const dir = process.argv[2], file = process.argv[3], script = process.argv[4] ?? '';
+const server = createServer(async (req, res) => { try { const b = await readFile(join(dir, new URL(req.url,'http://x').pathname)); res.writeHead(200, {'content-type': {'.js':'text/javascript','.css':'text/css','.html':'text/html'}[extname(req.url)] ?? 'application/octet-stream'}).end(b);} catch { res.writeHead(404).end(); } }).listen(0);
+const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1400, height: 900 } });
+p.on('pageerror', e => console.log('PAGEERROR', e.stack?.split('\n').slice(0,6).join('\n')));
+p.on('console', m => console.log('console:', m.text().slice(0,300)));
+await p.goto(`http://127.0.0.1:${server.address().port}/${file}`); await p.waitForTimeout(1500);
+if (script) console.log('RESULT', await p.evaluate(script).catch(e => 'ERR ' + e.message));
+if (process.argv[5]) await p.screenshot({ path: process.argv[5] });
+await b.close(); server.close();

@@ -1,0 +1,23 @@
+{
+  "name": "@trawlnet/core",
+  "version": "0.0.0",
+  "description": "Framework-agnostic, fully typed query builder core: schema, store, validation, evaluation and format codecs.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./formats/*": "./src/formats/*.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+      "./formats/*": { "types": "./dist/formats/*.d.ts", "default": "./dist/formats/*.js" }
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p ."
+  }
+}

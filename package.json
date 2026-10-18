@@ -1,0 +1,17 @@
+{
+  "name": "trawlnet-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.0.9",
+  "scripts": {
+    "build": "pnpm -r --filter './packages/*' build",
+    "test": "vitest run",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "dev": "pnpm --filter playground dev"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "tsdown": "^0.23.1",
+    "vitest": "^5.0.5"
+  }
+}
