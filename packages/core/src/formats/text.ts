@@ -8,6 +8,11 @@ export interface TextOptions {
   labels?: boolean;
   /** Words for AND / OR / NOT (default `AND`, `OR`, `NOT`). */
   words?: { and?: string; or?: string; not?: string };
+  /**
+   * Accepted for symmetry with the other export codecs. Text can render every valid rule
+   * (functions and custom operators without a text format fall back to a generic rendering).
+   */
+  unsupported?: 'throw' | 'skip';
 }
 
 export interface TextFragment {

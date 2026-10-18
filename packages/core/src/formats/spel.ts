@@ -3,7 +3,35 @@ import { columnOf, registryOf, type AnyFieldDef, type Fields } from '../fields';
 import type { ComparableOp } from '../operators';
 import { elementFields } from '../scope';
 import type { Group, Quantifier, Query, QueryNode, Rule } from '../types';
-import { coerceScalar, encodeCall, encodeIn, group, groupScope, infoOf, isArrayGroupIn, isCompleteRule, isFnCall, negated, ruleDef, type FnCall, type Operand } from './_util';
+import {
+  caseCondition,
+  coerceScalar,
+  encodeCall,
+  encodeIn,
+  finishRoot,
+  group,
+  groupScope,
+  infoOf,
+  isArrayGroupIn,
+  isCompleteRule,
+  isFnCall,
+  liftChildren,
+  negated,
+  ruleDef,
+  Unsupported,
+  unsupportedReason,
+  type EmptyQueryMode,
+  type FnCall,
+  type Operand,
+  type UnsupportedMode,
+} from './_util';
+
+export interface SpelOptions {
+  /** A valid rule with no SpEL form (a function or custom operator without a spel format): `throw` (default) or `skip`. */
+  unsupported?: UnsupportedMode;
+  /** Output for a query with no rules: `''` (`all`, default, as RAQB), `false` (`none`), or `throw`. */
+  emptyQuery?: EmptyQueryMode;
+}
 
 export interface SpelFragment {
   readonly text: string;
@@ -35,8 +63,12 @@ function literal(def: AnyFieldDef | undefined, v: unknown): string {
 
 const list = (def: AnyFieldDef | undefined, vs: unknown) => `{${(vs as unknown[]).map((x) => literal(def, x)).join(', ')}}`;
 
-function encodeRule(rule: Rule, { fields }: CodecContext): SpelFragment | undefined {
-  if (!isCompleteRule(fields, rule)) return undefined;
+function encodeRule(rule: Rule, ctx: CodecContext): SpelFragment | Unsupported | undefined {
+  if (!isCompleteRule(ctx.fields, rule)) return undefined;
+  return expressRule(rule, ctx) ?? new Unsupported(rule, unsupportedReason('spel', ctx.fields, rule));
+}
+
+function expressRule(rule: Rule, { fields }: CodecContext): SpelFragment | undefined {
   const def = ruleDef(fields, rule);
   const arg = (o: Operand, d?: AnyFieldDef): string | undefined => (isFnCall(o) ? encodeCall('spel', fields, o, arg) : 'ref' in o ? columnOf(fields, o.ref) : literal(d, o.value));
   const x = isFnCall(rule.field) ? arg(rule.field) : columnOf(fields, rule.field);
@@ -116,13 +148,19 @@ function quantify(col: string, cond: string, m: Quantifier): string {
   return `${size} ${CMP[m.count]} ${m.value}`;
 }
 
-function encodeGroup(g: Group, children: SpelFragment[], ctx: CodecContext): SpelFragment | undefined {
+function encodeGroup(g: Group, children: SpelFragment[], ctx: CodecContext, codec: Format<string, SpelFragment>, mode: UnsupportedMode): SpelFragment | Unsupported | undefined {
   let out: SpelFragment | undefined;
   if (g.of) {
     if (!isArrayGroupIn(ctx.fields, g)) return undefined;
-    const inner = join(g, encodeIn(spel, g.children, { fields: groupScope(ctx.fields, g) }));
+    const lifted = liftChildren<SpelFragment>(g, encodeIn(codec, g.children, { fields: groupScope(ctx.fields, g) }), mode);
+    if ('bad' in lifted) return lifted.bad;
+    const inner = join(g, lifted.kids);
     out = { text: quantify(columnOf(ctx.fields, g.of.field), inner?.text ?? 'true', g.of.match), compound: false };
-  } else out = join(g, children);
+  } else {
+    const lifted = liftChildren<SpelFragment>(g, children, mode);
+    if ('bad' in lifted) return lifted.bad;
+    out = join(g, lifted.kids);
+  }
   if (!out) return undefined;
   return g.not ? { text: `!(${out.text})`, compound: false } : out;
 }
@@ -485,24 +523,34 @@ function toQuery(ast: Ast, fields: Fields): QueryNode {
 }
 
 function decode(input: string, fields: Fields): Query {
-  if (!input.trim()) return group('and', []);
+  if (!input.trim() || input.trim() === 'true') return group('and', []);
   const node = toQuery(parse(input), fields);
   return node.kind === 'group' && !node.of ? node : group('and', [node]);
 }
 
 /**
  * Spring Expression Language, compatible with react-awesome-query-builder's spelFormat /
- * loadFromSpel. Two-way for what it emits. Incomplete rules are left out; the empty query is ''.
+ * loadFromSpel. Two-way for what it emits. Incomplete rules are left out; a valid rule with no SpEL
+ * form throws unless `unsupported: 'skip'`. The empty query is '' by default.
  */
-export const spel: Format<string, SpelFragment> = {
-  name: 'spel',
-  encodeRule: (rule, ctx) => encodeRule(rule, ctx),
-  encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx),
-  finish: (root) => (!root ? '' : root.compound ? `(${root.text})` : root.text),
-  decode: (input, ctx) => decode(input, ctx.fields),
-  encodeCases: (whens, otherwise) =>
-    whens.reduceRight<string>(
-      (rest, { when, then }, i) => `${when ? (when.compound ? `(${when.text})` : when.text) : 'true'} ? ${literal(undefined, then)} : ${i < whens.length - 1 ? `(${rest})` : rest}`,
-      literal(undefined, otherwise ?? null),
-    ),
-};
+export function spelFormat(options: SpelOptions = {}): Format<string, SpelFragment> {
+  const modes = { unsupported: options.unsupported ?? 'throw', emptyQuery: options.emptyQuery ?? 'all' } as const;
+  const wrap = (f: SpelFragment) => (f.compound ? `(${f.text})` : f.text);
+  const codec: Format<string, SpelFragment> = {
+    name: 'spel',
+    // Unsupported markers travel as nodes until a group or `finish` resolves them.
+    encodeRule: (rule, ctx) => encodeRule(rule, ctx) as SpelFragment | undefined,
+    encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx, codec, modes.unsupported) as SpelFragment | undefined,
+    finish: (root) => finishRoot('spel', root, modes, { all: () => '', none: () => 'false', some: wrap }),
+    decode: (input, ctx) => decode(input, ctx.fields),
+    encodeCases: (whens, otherwise) =>
+      whens.reduceRight<string>((rest, { when, then }, i) => {
+        const c = caseCondition('spel', when);
+        return `${c ? wrap(c) : 'true'} ? ${literal(undefined, then)} : ${i < whens.length - 1 ? `(${rest})` : rest}`;
+      }, literal(undefined, otherwise ?? null)),
+  };
+  return codec;
+}
+
+/** SpEL with the default options (throws on unsupported rules). */
+export const spel = spelFormat();

@@ -15,10 +15,24 @@ import {
   isArrayGroupIn,
   isCompleteRule,
   isFnCall,
+  caseCondition,
+  finishRoot,
+  liftChildren,
   negated,
+  Unsupported,
+  unsupportedReason,
+  type EmptyQueryMode,
   type FnCall,
   type Operand,
+  type UnsupportedMode,
 } from './_util';
+
+export interface JsonLogicOptions {
+  /** A valid rule with no JsonLogic form (a function or custom operator without a jsonlogic format): `throw` (default) or `skip`. */
+  unsupported?: UnsupportedMode;
+  /** Output for a query with no rules: `true` (`all`, default), `false` (`none`), or `throw`. */
+  emptyQuery?: EmptyQueryMode;
+}
 
 /** A JsonLogic expression. `true` is the empty query. */
 export type JsonLogic = boolean | { readonly [operator: string]: unknown };
@@ -28,9 +42,13 @@ const CMP: Record<ComparableOp, string> = { eq: '==', neq: '!=', lt: '<', lte: '
 
 const count = (arr: unknown, inner: unknown) => ({ reduce: [{ filter: [arr, inner] }, { '+': [1, { var: 'accumulator' }] }, 0] });
 
-function encodeRule(rule: Rule, ctx: CodecContext): Expr | undefined {
+function encodeRule(rule: Rule, ctx: CodecContext): Expr | Unsupported | undefined {
+  if (!isCompleteRule(ctx.fields, rule)) return undefined;
+  return expressRule(rule, ctx) ?? new Unsupported(rule, unsupportedReason('jsonlogic', ctx.fields, rule));
+}
+
+function expressRule(rule: Rule, ctx: CodecContext): Expr | undefined {
   const { fields } = ctx;
-  if (!isCompleteRule(fields, rule)) return undefined;
   const v = (name: string) => ({ var: columnOf(fields, name) });
   const arg = (o: Operand): unknown => (isFnCall(o) ? encodeCall('jsonlogic', fields, o, arg) : 'ref' in o ? v(o.ref) : o.value);
   const left = isFnCall(rule.field) ? arg(rule.field) : v(rule.field);
@@ -109,14 +127,19 @@ function quantify(arr: unknown, inner: unknown, match: Quantifier): Expr {
   return { [CMP[match.count]]: [n, match.value] };
 }
 
-function encodeGroup(g: Group, children: Expr[], ctx: CodecContext): Expr | undefined {
+function encodeGroup(g: Group, all: Expr[], ctx: CodecContext, codec: Format<JsonLogic, Expr>, mode: UnsupportedMode): Expr | Unsupported | undefined {
   if (g.of) {
     if (!isArrayGroupIn(ctx.fields, g)) return undefined;
-    const kids = encodeIn(jsonlogic, g.children, { fields: groupScope(ctx.fields, g) });
+    const lifted = liftChildren<Expr>(g, encodeIn(codec, g.children, { fields: groupScope(ctx.fields, g) }), mode);
+    if ('bad' in lifted) return lifted.bad;
+    const kids = lifted.kids;
     const inner = !kids.length ? true : kids.length === 1 ? kids[0] : { [g.combinator]: kids };
     const q = quantify({ var: columnOf(ctx.fields, g.of.field) }, inner, g.of.match);
     return g.not ? { '!': q } : q;
   }
+  const lifted = liftChildren<Expr>(g, all, mode);
+  if ('bad' in lifted) return lifted.bad;
+  const children = lifted.kids;
   if (!children.length) return undefined;
   const joined = { [g.combinator]: children };
   return g.not ? { '!': joined } : joined;
@@ -301,14 +324,22 @@ function decode(logic: JsonLogic, fields: Fields): Query {
 /**
  * JsonLogic, following react-querybuilder / RAQB conventions (custom `startsWith`/`endsWith`
  * operations, `{"<=": [a, {var}, b]}` for between, `some`/`none` + `reduce`/`filter` counts for
- * array groups). Incomplete rules are left out; an empty query encodes as `true`.
- * Note json-logic-js comparisons are case-sensitive and coerce null like JS.
+ * array groups). Incomplete rules are left out; a valid rule with no JsonLogic form throws unless
+ * `unsupported: 'skip'`. Note json-logic-js comparisons are case-sensitive and coerce null like JS.
  */
-export const jsonlogic: Format<JsonLogic, Expr> = {
-  name: 'jsonlogic',
-  encodeRule: (rule, ctx) => encodeRule(rule, ctx),
-  encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx),
-  finish: (root) => root ?? true,
-  decode: (logic, ctx) => decode(logic, ctx.fields),
-  encodeCases: (whens, otherwise) => ({ if: [...whens.flatMap(({ when, then }) => [when ?? true, then]), otherwise ?? null] }),
-};
+export function jsonlogicFormat(options: JsonLogicOptions = {}): Format<JsonLogic, Expr> {
+  const modes = { unsupported: options.unsupported ?? 'throw', emptyQuery: options.emptyQuery ?? 'all' } as const;
+  const codec: Format<JsonLogic, Expr> = {
+    name: 'jsonlogic',
+    // Unsupported markers travel as nodes until a group or `finish` resolves them.
+    encodeRule: (rule, ctx) => encodeRule(rule, ctx) as Expr | undefined,
+    encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx, codec, modes.unsupported) as Expr | undefined,
+    finish: (root) => finishRoot<Expr, JsonLogic>('jsonlogic', root, modes, { all: () => true, none: () => false, some: (r) => r }),
+    decode: (logic, ctx) => decode(logic, ctx.fields),
+    encodeCases: (whens, otherwise) => ({ if: [...whens.flatMap(({ when, then }) => [caseCondition('jsonlogic', when) ?? true, then]), otherwise ?? null] }),
+  };
+  return codec;
+}
+
+/** JsonLogic with the default options (throws on unsupported rules). */
+export const jsonlogic = jsonlogicFormat();

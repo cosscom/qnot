@@ -3,14 +3,38 @@
 Every codec lives at `@trawlnet/core/formats/<name>` and works with `encode(codec, query, fields)`,
 `decode(codec, value, fields)` and (where noted) `encodeCases(codec, cases, fields)`.
 
-**Export codecs** (sql, mongo, jsonlogic, spel, text, elasticsearch) skip rules that are incomplete
-or invalid, the same way `compile()` does. They also skip rules the target can't express: a function
-with no format for that codec, or an operator the dialect lacks. A query whose rules are all skipped
-becomes the target's "match everything" (`1 = 1`, `{}`, `true`, `''`, `match_all`).
+**Export codecs** (sql, mongo, jsonlogic, spel, text, elasticsearch) skip *incomplete or invalid*
+rules (missing values), as `compile()` does. A *valid rule the target can't express* throws by
+default, so an export never silently matches more than the query. Examples: a function with no
+format for the codec, array operators on ANSI SQL, array groups outside Postgres, counts in
+Elasticsearch. The error names the rule's path, field, operator and the reason, e.g.
+``trawlnet/sql: can't express the rule at [1] (field "tags", operator "hasAny"): the ansi dialect has no array operators (use postgres, mysql, sqlite or mssql)``.
 
 **UI-state codecs** (rqb, raqb, jqqb) are faithful: they keep incomplete rules so they can serve as
-a store `format`. When the target library has no equivalent of something, they throw a clear error
-instead of dropping it.
+a store `format`. When the target library has no equivalent of something, they throw the same kind
+of path-naming error instead of dropping it.
+
+## Options
+
+Each codec has a factory with options; the ready-made instance (`sql`, `mongo`, …) uses the defaults.
+
+| Option | Codecs | Values | Default |
+|---|---|---|---|
+| `unsupported` | `sqlFormat`, `mongoFormat`, `jsonlogicFormat`, `spelFormat`, `elasticsearchFormat`, `textFormat` | `'throw'` / `'skip'` (drop the rule, widening the query) | `'throw'` |
+| `emptyQuery` | sql, mongo, jsonlogic, spel, elasticsearch | `'all'`: `1 = 1` / `{}` / `true` / `''` / `match_all`<br>`'none'`: `1 = 0` / `{ _id: { $exists: false } }` / `false` / `'false'` / `match_none`<br>`'throw'` | `'all'` |
+| `dialect`, `params`, `quoteIdentifiers`, `caseInsensitive` | `sqlFormat` | see below | `ansi`, inline, off, off |
+| `labels`, `words` | `textFormat` | field/option labels or raw keys; AND/OR/NOT words | labels on |
+
+- **`emptyQuery`** also applies when `unsupported: 'skip'` dropped every rule.
+- **Cases:** a case whose condition can't be expressed always throws, even with
+  `unsupported: 'skip'`; it never becomes `WHEN 1 = 1`.
+- **`text`** renders every valid rule (functions without a text format fall back to `fn(args)`), so
+  its `unsupported` option never triggers.
+
+Build schemas with `defineFields` and extend them with `extendFields(base, more, options)`.
+Spreading (`{ ...fields }`) drops the registry of functions, custom operators and messages, so
+those rules then look unknown. In development, `createQueryStore` warns once per schema when that
+happens.
 
 Fields render under their `column` when one is set (SQL column, Mongo path, JsonLogic var,
 Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment when
@@ -24,9 +48,9 @@ Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment wh
 | functions (left / right) | ✅ via `formats.sql` | ✅ `$expr` | ✅ | ✅ | ✅ | right only (date math) | ✅ BasicFuncs mapping | throws | throws |
 | custom operators | `formats.sql` | `formats.mongo` | `formats.jsonlogic` | `formats.spel` | `formats.text` | `formats.elasticsearch` | by id | by id | by id |
 | isEmpty / isNotEmpty | ✅ | ✅ | ✅ `!` / `!!` | ✅ `<= ''` / `> ''` | ✅ | ✅ | ✅ `is_empty` | by id | ✅ `is_empty` |
-| multiEnum hasAny/All/None, setEq/Neq | pg arrays, mysql JSON, sqlite/mssql json_each; ansi skips | ✅ | ✅ | ✅ | ✅ | all except setEq/setNeq | ✅ (hasAll by id) | by id | by id |
+| multiEnum hasAny/All/None, setEq/Neq | pg arrays, mysql JSON, sqlite/mssql json_each; ansi unsupported | ✅ | ✅ | ✅ | ✅ | all except setEq/setNeq | ✅ (hasAll by id) | by id | by id |
 | array groups some/all/none | Postgres jsonb only | ✅ `$elemMatch` | ✅ | ✅ | ✅ | ✅ `nested` | ✅ `rule_group` | throws | throws |
-| array group counts | Postgres jsonb only | ✅ `$expr` + `$filter` | ✅ `reduce` | ✅ `.size()` | ✅ | skipped | ✅ | throws | throws |
+| array group counts | Postgres jsonb only | ✅ `$expr` + `$filter` | ✅ `reduce` | ✅ `.size()` | ✅ | unsupported | ✅ | throws | throws |
 | `locked` | — | — | — | — | — | — | ✅ `isLocked` | dropped | dropped |
 | cases (`encodeCases`) | `CASE WHEN` | `$switch` | `if` | ternary | sentence | — | — | — | — |
 
@@ -40,12 +64,12 @@ Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment wh
   `@> AND <@` (setEq). Inside array elements it uses jsonb `?|` / `?&`, which only work for string
   members.
 - **multiEnum on other dialects:** MySQL uses `JSON_OVERLAPS` / `JSON_CONTAINS`. SQLite uses
-  `json_each` and MSSQL `OPENJSON` subqueries. ANSI skips these rules.
+  `json_each` and MSSQL `OPENJSON` subqueries. ANSI can't express them.
 - **Array groups:** Postgres only, and the column must be jsonb. Output is
   `EXISTS (SELECT 1 FROM jsonb_array_elements(col) AS e1 WHERE …)`, with element fields read as
   `e1->>'key'` and cast per kind (`::numeric`, `::boolean`, `::date`, `::timestamptz`, `::time`).
   `all` is `NOT EXISTS (… WHERE NOT COALESCE(cond, FALSE))`; counts use `(SELECT COUNT(*) …) op n`.
-  Other dialects skip array groups.
+  Other dialects throw (or skip with `unsupported: 'skip'`).
 - **Function arguments** are always inlined, even in `params` mode, since a format may reorder
   them. Custom operators get inlined literals too.
 - **Dates and times** are string literals; the database casts them.
@@ -121,7 +145,7 @@ Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment wh
   side only, through their `elasticsearch` format (date math such as `now-7d/d`).
 - **Array groups** become `nested` queries (map the field as `nested`): none = `must_not nested`,
   all = `must_not nested(must_not cond)`.
-- **Skipped:** counts, setEq/setNeq and functions on the left side.
+- **Unsupported:** counts, setEq/setNeq and functions on the left side.
 
 ### raqb (two-way, faithful)
 - **Array groups** become `rule_group` (`mode: 'array'`): operator `some`/`all`/`none` or a count
@@ -141,3 +165,10 @@ Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment wh
 - Function calls and array groups throw, since neither library can represent them.
 - `locked` isn't mapped.
 - jqqb carries field refs in `data.trawlnetRef`.
+
+## Known gaps
+
+- **Array groups aren't memoized.** `encode()` caches results per node, but it only knows the
+  top-level schema. So codecs encode array-group subtrees themselves (in the element scope), and
+  those subtrees are re-encoded whenever the array group itself is re-encoded. Passing scope
+  through the generic encoder (a `ctx.scope` hook) would let them share the cache.

@@ -159,3 +159,86 @@ export const isArrayGroupIn = (fields: Fields, g: Group): boolean => !!g.of && !
 
 /** Human/RAQB-style comparison words for count quantifiers. */
 export const COUNT_OPS = { eq: '==', neq: '!=', lt: '<', lte: '<=', gt: '>', gte: '>=' } as const;
+
+// --- unsupported rules -------------------------------------------------------------------------
+
+/** What an export codec does with a valid rule it can't express. */
+export type UnsupportedMode = 'throw' | 'skip';
+/** What an export codec emits for a query with no (expressible) rules. */
+export type EmptyQueryMode = 'all' | 'none' | 'throw';
+
+/**
+ * Stand-in for a node the codec can't express. Groups lift it to their own level (prepending the
+ * child index), so by the time it reaches `finish` it knows its full path.
+ */
+export class Unsupported {
+  constructor(
+    readonly subject: Rule | Group,
+    readonly reason: string,
+    readonly path: readonly number[] = [],
+    readonly node: QueryNode = subject,
+  ) {}
+}
+
+export const isUnsupported = (x: unknown): x is Unsupported => x instanceof Unsupported;
+
+/** Why a rule can't be expressed by `codec`: a function without a format, else the operator. */
+export function unsupportedReason(codec: string, fields: Fields, rule: Rule, fallback?: string): string {
+  const missing = (call: FnCall): string | undefined => {
+    const def = functionOf(fields, call);
+    if (!def) return `unknown function "${call.fn}"`;
+    if (!def.formats?.[codec]) return `function "${call.fn}" has no ${codec} format`;
+    for (const a of Object.values(call.args)) {
+      const inner = isFnCall(a) ? missing(a) : undefined;
+      if (inner) return inner;
+    }
+    return undefined;
+  };
+  const fn = (isFnCall(rule.field) ? missing(rule.field) : undefined) ?? (rule.call ? missing(rule.call) : undefined);
+  return fn ?? fallback ?? `operator "${rule.operator}" has no ${codec} format`;
+}
+
+/**
+ * Split encoded children into usable ones and unsupported markers. In `throw` mode any marker
+ * becomes the group's result; in `skip` mode markers are dropped unless nothing else is left.
+ */
+export function liftChildren<N>(g: Group, children: readonly unknown[], mode: UnsupportedMode): { kids: N[] } | { bad: Unsupported } {
+  const bad = children.filter(isUnsupported);
+  if (!bad.length) return { kids: children as N[] };
+  const first = bad[0]!;
+  const lifted = new Unsupported(first.subject, first.reason, [g.children.indexOf(first.node), ...first.path], g);
+  if (mode === 'throw') return { bad: lifted };
+  const kids = children.filter((c) => !isUnsupported(c)) as N[];
+  return kids.length ? { kids } : { bad: lifted };
+}
+
+export function unsupportedError(codec: string, u: Unsupported, skippable = true): Error {
+  const s = u.subject;
+  const what =
+    s.kind === 'rule'
+      ? `the rule at [${u.path.join(', ')}] (field "${typeof s.field === 'string' ? s.field : `${s.field.fn}()`}", operator "${s.operator}")`
+      : `the array group at [${u.path.join(', ')}] (field "${s.of?.field ?? ''}")`;
+  const hint = skippable ? ". Pass `unsupported: 'skip'` to drop it instead (this widens the query)" : '';
+  return new Error(`trawlnet/${codec}: can't express ${what}: ${u.reason}${hint}`);
+}
+
+/** Resolve the root of an export: an unsupported marker throws, an empty query follows `emptyQuery`. */
+export function finishRoot<N, T>(
+  codec: string,
+  root: N | Unsupported | undefined,
+  modes: { unsupported: UnsupportedMode; emptyQuery: EmptyQueryMode },
+  outputs: { all: () => T; none: () => T; some: (root: N) => T },
+): T {
+  if (isUnsupported(root) && modes.unsupported === 'throw') throw unsupportedError(codec, root);
+  if (root === undefined || isUnsupported(root)) {
+    if (modes.emptyQuery === 'throw') throw new Error(`trawlnet/${codec}: the query has no rules to export (pass \`emptyQuery: 'all' | 'none'\` to allow it)`);
+    return modes.emptyQuery === 'none' ? outputs.none() : outputs.all();
+  }
+  return outputs.some(root);
+}
+
+/** A case condition must be expressible: never let an unsupported condition become "always". */
+export function caseCondition<N>(codec: string, when: N | Unsupported | undefined): N | undefined {
+  if (isUnsupported(when)) throw unsupportedError(codec, when);
+  return when;
+}

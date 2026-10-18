@@ -1,7 +1,7 @@
 import type { Format } from '../codec';
 import type { AnyFieldDef, Fields } from '../fields';
 import type { Group, Query, QueryNode, Rule } from '../types';
-import { coerceScalar, group, infoOf, isFnCall, negated, operatorInfo, toList } from './_util';
+import { coerceScalar, group, infoOf, isFnCall, isUnsupported, liftChildren, negated, operatorInfo, toList, Unsupported, unsupportedError } from './_util';
 
 /** A rule in jQuery QueryBuilder's `getRules()` output. */
 export interface JQQBRule {
@@ -45,9 +45,7 @@ const TO_JQQB: Record<string, string> = {
 };
 const FROM_JQQB: Record<string, string> = Object.fromEntries(Object.entries(TO_JQQB).map(([k, v]) => [v, k]));
 
-const unsupported = (what: string): never => {
-  throw new Error(`trawlnet/jqqb: jQuery QueryBuilder has no equivalent for ${what}`);
-};
+const unsupported = (subject: Rule | Group, what: string) => new Unsupported(subject, `jQuery QueryBuilder has no equivalent for ${what}`);
 
 function typeAndInput(def: AnyFieldDef | undefined): { type: string; input: string } {
   switch (def?.kind) {
@@ -70,15 +68,18 @@ function typeAndInput(def: AnyFieldDef | undefined): { type: string; input: stri
 
 // Operators jQuery QueryBuilder lacks (hasAny…, custom ones) travel under their trawlnet id; register
 // matching custom operators in jQuery QueryBuilder to edit them there.
-function encodeRule(rule: Rule, fields: Fields): JQQBRule {
-  if (isFnCall(rule.field) || rule.call !== undefined) return unsupported('function calls');
+function encodeRule(rule: Rule, fields: Fields): JQQBRule | Unsupported {
+  if (isFnCall(rule.field) || rule.call !== undefined) return unsupported(rule, 'function calls');
   const base = { id: rule.field, field: rule.field, ...typeAndInput(fields[rule.field]), operator: TO_JQQB[rule.operator] ?? rule.operator };
   if (rule.ref !== undefined) return { ...base, value: null, data: { trawlnetRef: rule.ref } };
   return { ...base, value: infoOf(fields, rule.operator).arity === 'none' ? null : (rule.value ?? null) };
 }
 
-function encodeGroup(g: Group, children: (JQQBRule | JQQBGroup)[]): JQQBGroup {
-  if (g.of) return unsupported(`array groups (${g.of.field})`);
+function encodeGroup(g: Group, children: (JQQBRule | JQQBGroup)[]): JQQBGroup | Unsupported {
+  if (g.of) return unsupported(g, 'array groups');
+  const lifted = liftChildren<JQQBRule | JQQBGroup>(g, children, 'throw');
+  if ('bad' in lifted) return lifted.bad;
+  children = lifted.kids;
   return g.not ? { condition: g.combinator.toUpperCase(), not: true, rules: children } : { condition: g.combinator.toUpperCase(), rules: children };
 }
 
@@ -131,7 +132,12 @@ function decodeGroup(g: JQQBGroup, fields: Fields): Group {
  */
 export const jqqb: Format<JQQBGroup, JQQBRule | JQQBGroup> = {
   name: 'jqqb',
-  encodeRule: (rule, ctx) => encodeRule(rule, ctx.fields),
-  encodeGroup: (g, children) => encodeGroup(g, children),
+  // Unsupported markers travel as nodes until a group or `finish` throws them with their path.
+  encodeRule: (rule, ctx) => encodeRule(rule, ctx.fields) as JQQBRule,
+  encodeGroup: (g, children) => encodeGroup(g, children) as JQQBGroup,
+  finish: (root) => {
+    if (isUnsupported(root)) throw unsupportedError('jqqb', root, false);
+    return root as JQQBGroup;
+  },
   decode: (input, ctx): Query => decodeGroup(input, ctx.fields),
 };

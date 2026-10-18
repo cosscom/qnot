@@ -299,6 +299,9 @@ function flatten(input: FieldsInput, prefix = '', group?: string, out: Record<st
 /**
  * Pin the schema's literal types, flatten `f.struct` fields into dotted paths, and attach custom
  * operators / functions / messages so every consumer of these fields sees them.
+ *
+ * Don't spread a schema (`{ ...fields, extra }`): the registry lives on a hidden property and is
+ * lost. Use `extendFields(fields, { extra })` to add or override fields.
  */
 export function defineFields<const F extends FieldsInput>(fields: F, options?: SchemaOptions): FlattenFields<F> {
   const flat = flatten(fields);
@@ -316,6 +319,73 @@ export function defineFields<const F extends FieldsInput>(fields: F, options?: S
 }
 
 const EMPTY_REGISTRY: SchemaRegistry = { operators: new Map(), functions: {}, messages: undefined };
+
+/**
+ * A new schema with `more`'s fields added to (or replacing) `base`'s, and their registries merged:
+ * custom operators, functions and messages from `base`, then `more` (if it was made by
+ * `defineFields`), then `options`; later ones win. Use this instead of spreading a schema.
+ */
+export function extendFields<B extends Fields, const M extends FieldsInput>(
+  base: B,
+  more: M,
+  options?: SchemaOptions,
+): Simplify<Omit<B, keyof FlattenFields<M>> & FlattenFields<M>> {
+  const flat = { ...base, ...flatten(more) };
+  const regs = [registryOf(base), registryOf(more as unknown as Fields)];
+  const operators = new Map<string, OperatorDef>();
+  for (const r of regs) for (const [id, op] of r.operators) operators.set(id, op);
+  for (const op of options?.operators ?? []) operators.set(op.id, op);
+  const functions = Object.assign({}, ...regs.map((r) => r.functions), options?.functions);
+  const messageSets = [...regs.map((r) => r.messages), options?.messages].filter(Boolean);
+  const merged: SchemaRegistry = { operators, functions, messages: messageSets.length ? Object.assign({}, ...messageSets) : undefined };
+  if (operators.size || Object.keys(functions).length || merged.messages) {
+    Object.defineProperty(flat, REGISTRY, { value: merged, enumerable: false });
+  }
+  return flat as never;
+}
+
+declare const process: { env: Record<string, string | undefined> } | undefined;
+const warnedSchemas = new WeakSet<object>();
+
+/**
+ * Development aid: warn once per schema when a query uses functions or custom operators that the
+ * schema has no registry for (usually a `defineFields` result that was spread). No-op in production.
+ */
+export function warnMissingRegistry(fields: Fields, query: unknown): void {
+  if (typeof process === 'undefined' || process.env.NODE_ENV === 'production') return;
+  if ((fields as Record<symbol, unknown>)[REGISTRY] || warnedSchemas.has(fields)) return;
+  const used = new Set<string>();
+  const visitCall = (c: unknown) => {
+    if (!c || typeof c !== 'object' || !('fn' in c)) return;
+    used.add(`function "${String((c as { fn: unknown }).fn)}"`);
+    for (const a of Object.values((c as { args?: Record<string, unknown> }).args ?? {})) visitCall(a);
+  };
+  const visit = (n: unknown) => {
+    if (!n || typeof n !== 'object') return;
+    const node = n as { kind?: string; field?: unknown; operator?: unknown; call?: unknown; children?: unknown[] };
+    if (node.kind === 'group') node.children?.forEach(visit);
+    else if (node.kind === 'rule') {
+      visitCall(node.field);
+      visitCall(node.call);
+      if (typeof node.operator === 'string' && !BUILTIN_OPERATORS.has(node.operator)) used.add(`operator "${node.operator}"`);
+    }
+  };
+  visit(query);
+  if (!used.size) return;
+  warnedSchemas.add(fields);
+  console.warn(
+    `trawlnet: the query uses ${[...used].join(', ')}, but these fields have no function/operator registry. ` +
+      'Was a defineFields() result spread (`{ ...fields }`)? Use extendFields(base, more) to keep the registry.',
+  );
+}
+
+// Kept here (not imported from operators.ts) to avoid a module cycle; formats/options.test checks they match.
+const BUILTIN_OPERATORS = new Set([
+  'eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'contains', 'notContains', 'startsWith', 'endsWith', 'between', 'notBetween',
+  'in', 'notIn', 'hasAny', 'hasAll', 'hasNone', 'setEq', 'setNeq', 'isEmpty', 'isNotEmpty', 'isNull', 'isNotNull',
+]);
+/** @internal For tests: the operator ids `warnMissingRegistry` treats as built-in. */
+export const builtinOperatorIds: ReadonlySet<string> = BUILTIN_OPERATORS;
 
 /** Custom operators, functions and messages attached to a field set by `defineFields`. */
 export const registryOf = (fields: Fields): SchemaRegistry => (fields as Record<symbol, SchemaRegistry>)[REGISTRY] ?? EMPTY_REGISTRY;

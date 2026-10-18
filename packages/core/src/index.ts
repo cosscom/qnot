@@ -9,6 +9,8 @@ export {
   flattenOptions,
   registryOf,
   withRegistry,
+  extendFields,
+  warnMissingRegistry,
   TEXT_OPERATORS,
   MULTI_ENUM_OPERATORS,
   ARRAY_OPERATORS,

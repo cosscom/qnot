@@ -1,5 +1,5 @@
 import { encode, type Format } from './codec';
-import type { Fields } from './fields';
+import { warnMissingRegistry, type Fields } from './fields';
 import type { FnCall } from './functions';
 import { changeField, changeOperator, coerceValue, makeRule, type ChangeOptions } from './normalize';
 import { operatorInfo } from './operators';
@@ -320,7 +320,9 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
   const scopeOfParent = (parent: NodeId | null): Fields => (parent === null ? fields : innerScope(parent));
 
   const load = (input: Query) => (options.sanitize ? (sanitizeQuery(fields, input as QueryOf<F>, options.sanitize) as Query) : input);
-  const rootId = create(load(options.initial === undefined ? EMPTY_ROOT : format ? format.decode(options.initial, { fields }) : (options.initial as Query)), null);
+  const initialQuery = options.initial === undefined ? EMPTY_ROOT : format ? format.decode(options.initial, { fields }) : (options.initial as Query);
+  warnMissingRegistry(fields, initialQuery);
+  const rootId = create(load(initialQuery), null);
 
   const getNode = (id: NodeId) => {
     const n = nodes.get(id);

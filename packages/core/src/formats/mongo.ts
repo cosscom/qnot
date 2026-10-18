@@ -16,11 +16,30 @@ import {
   isArrayGroupIn,
   isCompleteRule,
   isFnCall,
+  caseCondition,
+  finishRoot,
+  liftChildren,
   negated,
   ruleDef,
+  Unsupported,
+  unsupportedReason,
+  type EmptyQueryMode,
   type FnCall,
   type Operand,
+  type UnsupportedMode,
 } from './_util';
+
+export interface MongoOptions {
+  /** A valid rule with no Mongo form (a function or custom operator without a mongo format): `throw` (default) or `skip`. */
+  unsupported?: UnsupportedMode;
+  /** Output for a query with no rules: `{}` (`all`, default), a never-matching filter (`none`), or `throw`. */
+  emptyQuery?: EmptyQueryMode;
+}
+
+interface Env {
+  readonly codec: Format<MongoFilter, MongoNode>;
+  readonly unsupported: UnsupportedMode;
+}
 
 /** A MongoDB query filter document. */
 export type MongoFilter = { readonly [key: string]: unknown };
@@ -174,11 +193,11 @@ function filterRule(rule: Rule, ctx: MongoContext): MongoFilter | undefined {
   return undefined;
 }
 
-function encodeRule(rule: Rule, ctx: MongoContext): MongoNode | undefined {
+function encodeRule(rule: Rule, ctx: MongoContext): MongoNode | Unsupported | undefined {
   if (!isCompleteRule(ctx.fields, rule)) return undefined;
   const x = infoOf(ctx.fields, rule.operator).formats?.mongo ? undefined : exprRule(rule, ctx);
   const f = filterRule(rule, ctx) ?? (x === undefined ? undefined : { $expr: x });
-  return f === undefined && x === undefined ? undefined : { f, x };
+  return f === undefined && x === undefined ? new Unsupported(rule, unsupportedReason('mongo', ctx.fields, rule)) : { f, x };
 }
 
 const joinFilters = (g: Pick<Group, 'combinator'>, fs: MongoFilter[]): MongoFilter => ({ [g.combinator === 'and' ? '$and' : '$or']: fs });
@@ -195,11 +214,13 @@ function countExpr(path: string, as: string, cond: unknown, match: Quantifier): 
   return { [CMP[match.count]]: [size, match.value] };
 }
 
-function arrayGroup(g: Group, ctx: MongoContext): MongoNode | undefined {
+function arrayGroup(g: Group, ctx: MongoContext, env: Env): MongoNode | Unsupported | undefined {
   if (!isArrayGroupIn(ctx.fields, g)) return undefined;
   const depth = (ctx.depth ?? 0) + 1;
   const as = `e${depth}`;
-  const kids = encodeIn(mongo, g.children, { fields: groupScope(ctx.fields, g), prefix: `$$${as}.`, depth } satisfies MongoContext);
+  const lifted = liftChildren<MongoNode>(g, encodeIn(env.codec, g.children, { fields: groupScope(ctx.fields, g), prefix: `$$${as}.`, depth } satisfies MongoContext), env.unsupported);
+  if ('bad' in lifted) return lifted.bad;
+  const kids = lifted.kids;
   const col = columnOf(ctx.fields, g.of!.field);
   const match = g.of!.match;
   const xs = kids.map((k) => k.x);
@@ -212,12 +233,15 @@ function arrayGroup(g: Group, ctx: MongoContext): MongoNode | undefined {
     else if (match === 'none') f = { [col]: { $not: { $elemMatch: inner } } };
     else f = { [col]: { $not: { $elemMatch: { $nor: [inner] } } } };
   } else if (x !== undefined) f = { $expr: x };
-  if (f === undefined) return undefined;
+  if (f === undefined) return new Unsupported(g, 'counting needs every element condition as an aggregation expression, and a custom operator here has only a filter format');
   return g.not ? { f: { $nor: [f] }, x: x === undefined ? undefined : { $not: [x] } } : { f, x };
 }
 
-function encodeGroup(g: Group, children: MongoNode[], ctx: MongoContext): MongoNode | undefined {
-  if (g.of) return arrayGroup(g, ctx);
+function encodeGroup(g: Group, all: MongoNode[], ctx: MongoContext, env: Env): MongoNode | Unsupported | undefined {
+  if (g.of) return arrayGroup(g, ctx, env);
+  const lifted = liftChildren<MongoNode>(g, all, env.unsupported);
+  if ('bad' in lifted) return lifted.bad;
+  const children = lifted.kids;
   if (!children.length) return undefined;
   const fs = children.map((c) => c.f).filter((f): f is MongoFilter => f !== undefined);
   const xs = children.map((c) => c.x);
@@ -512,21 +536,32 @@ function decode(filter: MongoFilter, fields: Fields): Query {
 }
 
 /**
- * MongoDB query filters. Incomplete rules are left out. Regex operators are case-insensitive unless
- * the field sets `caseSensitive`; dates/times stay ISO strings (convert them yourself if you store
- * BSON Dates). Function calls, field refs and count quantifiers use `$expr`.
+ * MongoDB query filters. Incomplete rules are left out; a valid rule with no Mongo form throws
+ * unless `unsupported: 'skip'`. Regex operators are case-insensitive unless the field sets
+ * `caseSensitive`; dates/times stay ISO strings (convert them yourself if you store BSON Dates).
+ * Function calls, field refs and count quantifiers use `$expr`.
  */
-export const mongo: Format<MongoFilter, MongoNode> = {
-  name: 'mongo',
-  encodeRule: (rule, ctx) => encodeRule(rule, ctx),
-  encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx),
-  finish: (root) => root?.f ?? {},
-  decode: (filter, ctx) => decode(filter, ctx.fields),
-  encodeCases(whens, otherwise) {
-    const branches = whens.map(({ when, then }) => {
-      if (when && when.x === undefined) throw new Error('trawlnet/mongo: a case uses an operator with no aggregation-expression form');
-      return { case: when?.x ?? true, then: lit(then) };
-    });
-    return { $switch: otherwise === undefined ? { branches } : { branches, default: lit(otherwise) } };
-  },
-};
+export function mongoFormat(options: MongoOptions = {}): Format<MongoFilter, MongoNode> {
+  const modes = { unsupported: options.unsupported ?? 'throw', emptyQuery: options.emptyQuery ?? 'all' } as const;
+  const codec: Format<MongoFilter, MongoNode> = {
+    name: 'mongo',
+    // Unsupported markers travel as nodes until a group or `finish` resolves them.
+    encodeRule: (rule, ctx) => encodeRule(rule, ctx) as MongoNode | undefined,
+    encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx, env) as MongoNode | undefined,
+    finish: (root) => finishRoot('mongo', root, modes, { all: () => ({}), none: () => ({ _id: { $exists: false } }), some: (r) => r.f ?? { $expr: r.x } }),
+    decode: (filter, ctx) => decode(filter, ctx.fields),
+    encodeCases(whens, otherwise) {
+      const branches = whens.map(({ when, then }) => {
+        const c = caseCondition('mongo', when);
+        if (c && c.x === undefined) throw new Error('trawlnet/mongo: a case uses an operator with no aggregation-expression form');
+        return { case: c?.x ?? true, then: lit(then) };
+      });
+      return { $switch: otherwise === undefined ? { branches } : { branches, default: lit(otherwise) } };
+    },
+  };
+  const env: Env = { codec, unsupported: modes.unsupported };
+  return codec;
+}
+
+/** MongoDB filters with the default options (throws on unsupported rules). */
+export const mongo = mongoFormat();

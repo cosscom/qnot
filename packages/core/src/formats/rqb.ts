@@ -1,7 +1,7 @@
 import type { Format } from '../codec';
 import type { Fields } from '../fields';
 import type { Group, Query, QueryNode, Rule } from '../types';
-import { coerceScalar, group, infoOf, isFnCall, negated, operatorInfo, toList } from './_util';
+import { coerceScalar, group, infoOf, isFnCall, isUnsupported, liftChildren, negated, operatorInfo, toList, Unsupported, unsupportedError } from './_util';
 
 /** react-querybuilder's `RuleType` (the subset trawlnet reads and writes). */
 export interface RQBRule {
@@ -50,22 +50,23 @@ const TO_RQB: Record<string, string> = {
 };
 const FROM_RQB: Record<string, string> = { ...Object.fromEntries(Object.entries(TO_RQB).map(([k, v]) => [v, k])), '==': 'eq', '<>': 'neq' };
 
-const unsupported = (what: string): never => {
-  throw new Error(`trawlnet/rqb: react-querybuilder has no equivalent for ${what}`);
-};
+const unsupported = (subject: Rule | Group, what: string) => new Unsupported(subject, `react-querybuilder has no equivalent for ${what}`);
 
 // Operators react-querybuilder lacks (isEmpty, hasAny…, custom ones) travel under their trawlnet id,
 // which react-querybuilder accepts as a custom operator.
-function encodeRule(rule: Rule, fields: Fields): RQBRule {
-  if (isFnCall(rule.field) || rule.call !== undefined) return unsupported('function calls');
+function encodeRule(rule: Rule, fields: Fields): RQBRule | Unsupported {
+  if (isFnCall(rule.field) || rule.call !== undefined) return unsupported(rule, 'function calls');
   const operator = TO_RQB[rule.operator] ?? rule.operator;
   if (rule.ref !== undefined) return { field: rule.field, operator, value: rule.ref, valueSource: 'field' };
   const value = infoOf(fields, rule.operator).arity === 'none' ? null : (rule.value ?? null);
   return { field: rule.field, operator, value };
 }
 
-function encodeGroup(g: Group, children: (RQBRule | RQBRuleGroup)[]): RQBRuleGroup {
-  if (g.of) return unsupported(`array groups (${g.of.field})`);
+function encodeGroup(g: Group, children: (RQBRule | RQBRuleGroup)[]): RQBRuleGroup | Unsupported {
+  if (g.of) return unsupported(g, 'array groups');
+  const lifted = liftChildren<RQBRule | RQBRuleGroup>(g, children, 'throw');
+  if ('bad' in lifted) return lifted.bad;
+  children = lifted.kids;
   return g.not ? { combinator: g.combinator, not: true, rules: children } : { combinator: g.combinator, rules: children };
 }
 
@@ -139,8 +140,13 @@ function decodeGroup(g: RQBRuleGroup | RQBRuleGroupIC, fields: Fields): Group {
  */
 export const rqb: Format<RQBRuleGroup, RQBRule | RQBRuleGroup> = {
   name: 'rqb',
-  encodeRule: (rule, ctx) => encodeRule(rule, ctx.fields),
-  encodeGroup: (g, children) => encodeGroup(g, children),
+  // Unsupported markers travel as nodes until a group or `finish` throws them with their path.
+  encodeRule: (rule, ctx) => encodeRule(rule, ctx.fields) as RQBRule,
+  encodeGroup: (g, children) => encodeGroup(g, children) as RQBRuleGroup,
+  finish: (root) => {
+    if (isUnsupported(root)) throw unsupportedError('rqb', root, false);
+    return root as RQBRuleGroup;
+  },
   decode: (input, ctx) => decodeGroup(input, ctx.fields),
 };
 

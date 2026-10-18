@@ -1,6 +1,33 @@
 import type { Codec, CodecContext } from '../codec';
 import type { Group, Rule } from '../types';
-import { columnOf, encodeCall, encodeIn, groupScope, infoOf, isArrayGroupIn, isCompleteRule, isFnCall, ruleDef, type Operand } from './_util';
+import {
+  columnOf,
+  encodeCall,
+  encodeIn,
+  finishRoot,
+  groupScope,
+  infoOf,
+  isArrayGroupIn,
+  isCompleteRule,
+  isFnCall,
+  liftChildren,
+  ruleDef,
+  Unsupported,
+  unsupportedReason,
+  type EmptyQueryMode,
+  type Operand,
+  type UnsupportedMode,
+} from './_util';
+
+export interface ElasticsearchOptions {
+  /**
+   * A valid rule Elasticsearch can't express here (functions on the left, setEq/setNeq, array-group
+   * counts, functions or custom operators without an elasticsearch format): `throw` (default) or `skip`.
+   */
+  unsupported?: UnsupportedMode;
+  /** Output for a query with no rules: `match_all` (`all`, default), `match_none` (`none`), or `throw`. */
+  emptyQuery?: EmptyQueryMode;
+}
 
 /** An Elasticsearch query DSL object (the value of `query` in a search request). */
 export type EsQuery = { readonly [key: string]: unknown };
@@ -16,10 +43,17 @@ const PAINLESS: Record<string, string> = { eq: '==', neq: '!=', lt: '<', lte: '<
 const not = (q: EsQuery): EsQuery => ({ bool: { must_not: [q] } });
 const escapeWildcard = (s: string) => s.replace(/[\\*?]/g, '\\$&');
 
-function encodeRule(rule: Rule, ctx: EsContext): EsQuery | undefined {
-  const { fields } = ctx;
+function encodeRule(rule: Rule, ctx: EsContext): EsQuery | Unsupported | undefined {
+  if (!isCompleteRule(ctx.fields, rule)) return undefined;
   // Function calls are only supported on the value side (date math like `now-7d/d`).
-  if (!isCompleteRule(fields, rule) || isFnCall(rule.field)) return undefined;
+  if (isFnCall(rule.field)) return new Unsupported(rule, 'Elasticsearch can only use functions on the value side');
+  if (rule.operator === 'setEq' || rule.operator === 'setNeq') return new Unsupported(rule, 'set equality needs a script over the whole array');
+  return expressRule(rule, ctx) ?? new Unsupported(rule, unsupportedReason('elasticsearch', ctx.fields, rule));
+}
+
+function expressRule(rule: Rule, ctx: EsContext): EsQuery | undefined {
+  const { fields } = ctx;
+  if (isFnCall(rule.field)) return undefined;
   const f = `${ctx.prefix ?? ''}${columnOf(fields, rule.field)}`;
   const def = ruleDef(fields, rule);
   const info = infoOf(fields, rule.operator);
@@ -94,17 +128,23 @@ function join(g: Pick<Group, 'combinator'>, kids: EsQuery[]): EsQuery | undefine
   return g.combinator === 'and' ? { bool: { must: kids } } : { bool: { should: kids, minimum_should_match: 1 } };
 }
 
-function encodeGroup(g: Group, children: EsQuery[], ctx: EsContext): EsQuery | undefined {
+function encodeGroup(g: Group, children: EsQuery[], ctx: EsContext, codec: Codec<EsQuery, EsQuery>, mode: UnsupportedMode): EsQuery | Unsupported | undefined {
   let q: EsQuery | undefined;
   if (g.of) {
     const m = g.of.match;
-    // Counting matching nested documents needs a script or aggregation; not exported.
-    if (!isArrayGroupIn(ctx.fields, g) || typeof m !== 'string') return undefined;
+    if (!isArrayGroupIn(ctx.fields, g)) return undefined;
+    if (typeof m !== 'string') return new Unsupported(g, 'counting matching nested documents needs an aggregation or script');
     const path = `${ctx.prefix ?? ''}${columnOf(ctx.fields, g.of.field)}`;
-    const inner = join(g, encodeIn(elasticsearch, g.children, { fields: groupScope(ctx.fields, g), prefix: `${path}.` } satisfies EsContext)) ?? { match_all: {} };
+    const lifted = liftChildren<EsQuery>(g, encodeIn(codec, g.children, { fields: groupScope(ctx.fields, g), prefix: `${path}.` } satisfies EsContext), mode);
+    if ('bad' in lifted) return lifted.bad;
+    const inner = join(g, lifted.kids) ?? { match_all: {} };
     const nested = (query: EsQuery): EsQuery => ({ nested: { path, query } });
     q = m === 'some' ? nested(inner) : m === 'none' ? not(nested(inner)) : not(nested(not(inner)));
-  } else q = join(g, children);
+  } else {
+    const lifted = liftChildren<EsQuery>(g, children, mode);
+    if ('bad' in lifted) return lifted.bad;
+    q = join(g, lifted.kids);
+  }
   if (!q) return undefined;
   return g.not ? not(q) : q;
 }
@@ -114,9 +154,17 @@ function encodeGroup(g: Group, children: EsQuery[], ctx: EsContext): EsQuery | u
  * exists, `nested` for array groups (map array fields as `nested`), painless scripts for field
  * comparisons. Text matching is case-insensitive unless the field sets `caseSensitive`.
  */
-export const elasticsearch: Codec<EsQuery, EsQuery> = {
-  name: 'elasticsearch',
-  encodeRule: (rule, ctx) => encodeRule(rule, ctx),
-  encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx),
-  finish: (root) => root ?? { match_all: {} },
-};
+export function elasticsearchFormat(options: ElasticsearchOptions = {}): Codec<EsQuery, EsQuery> {
+  const modes = { unsupported: options.unsupported ?? 'throw', emptyQuery: options.emptyQuery ?? 'all' } as const;
+  const codec: Codec<EsQuery, EsQuery> = {
+    name: 'elasticsearch',
+    // Unsupported markers travel as nodes until a group or `finish` resolves them.
+    encodeRule: (rule, ctx) => encodeRule(rule, ctx) as EsQuery | undefined,
+    encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx, codec, modes.unsupported) as EsQuery | undefined,
+    finish: (root) => finishRoot<EsQuery, EsQuery>('elasticsearch', root, modes, { all: () => ({ match_all: {} }), none: () => ({ match_none: {} }), some: (r) => r }),
+  };
+  return codec;
+}
+
+/** Elasticsearch with the default options (throws on unsupported rules). */
+export const elasticsearch = elasticsearchFormat();

@@ -2,7 +2,25 @@ import type { Codec, CodecContext } from '../codec';
 import type { Fields } from '../fields';
 import type { Group, Query, Rule } from '../types';
 import { parseSqlWhere } from './_sql-parse';
-import { columnOf, encodeCall, encodeIn, groupScope, infoOf, isArrayGroupIn, isCompleteRule, isFnCall, ruleDef, type Operand } from './_util';
+import {
+  caseCondition,
+  columnOf,
+  encodeCall,
+  encodeIn,
+  finishRoot,
+  groupScope,
+  infoOf,
+  isArrayGroupIn,
+  isCompleteRule,
+  isFnCall,
+  liftChildren,
+  ruleDef,
+  Unsupported,
+  unsupportedReason,
+  type EmptyQueryMode,
+  type Operand,
+  type UnsupportedMode,
+} from './_util';
 
 export type SqlDialect = 'postgres' | 'mysql' | 'sqlite' | 'mssql' | 'ansi';
 /** `positional` → `?`, `numbered` → `$1`, `named` → `:p1` (`@p1` on mssql). */
@@ -16,6 +34,13 @@ export interface SqlOptions {
   quoteIdentifiers?: boolean;
   /** Case-insensitive text matching: ILIKE on Postgres, LOWER(…) elsewhere. */
   caseInsensitive?: boolean;
+  /**
+   * A valid rule this dialect can't express (array operators on ANSI, array groups outside
+   * Postgres, a function with no sql format): `throw` (default) or `skip` it, widening the query.
+   */
+  unsupported?: UnsupportedMode;
+  /** Output for a query with no rules: `1 = 1` (`all`, default), `1 = 0` (`none`), or `throw`. */
+  emptyQuery?: EmptyQueryMode;
 }
 
 export interface SqlWithParams<P> {
@@ -39,6 +64,7 @@ interface SqlContext extends CodecContext {
 }
 
 const PH = '\u0000';
+const ARRAY_OPS = new Set(['hasAny', 'hasAll', 'hasNone', 'setEq', 'setNeq']);
 const CMP: Record<string, string> = { eq: '=', neq: '<>', lt: '<', lte: '<=', gt: '>', gte: '>=' };
 const ELEMENT_CAST: Record<string, string> = { number: 'numeric', boolean: 'boolean', date: 'date', datetime: 'timestamptz', time: 'time' };
 
@@ -53,6 +79,7 @@ export function sqlFormat(options: SqlOptions & { params: 'positional' | 'number
 export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithParams<unknown[] | Record<string, unknown>>> {
   const dialect = options.dialect ?? 'ansi';
   const paramStyle = options.params || null;
+  const modes = { unsupported: options.unsupported ?? 'throw', emptyQuery: options.emptyQuery ?? 'all' } as const;
 
   const quote = (name: string) => {
     if (!options.quoteIdentifiers) return name;
@@ -164,8 +191,14 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     return undefined;
   }
 
-  function encodeRule(rule: Rule, ctx: SqlContext): SqlFragment | undefined {
+  function encodeRule(rule: Rule, ctx: SqlContext): SqlFragment | Unsupported | undefined {
     if (!isCompleteRule(ctx.fields, rule)) return undefined;
+    const out = expressRule(rule, ctx);
+    return out ?? new Unsupported(rule, unsupportedReason('sql', ctx.fields, rule, ARRAY_OPS.has(rule.operator) ? `the ${dialect} dialect has no array operators (use postgres, mysql, sqlite or mssql)` : undefined));
+  }
+
+  /** A complete rule as SQL, or undefined when this dialect can't express it. */
+  function expressRule(rule: Rule, ctx: SqlContext): SqlFragment | undefined {
     const def = ruleDef(ctx.fields, rule);
     const info = infoOf(ctx.fields, rule.operator);
     const arg = encodeArg(ctx);
@@ -260,12 +293,15 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     };
   }
 
-  function arrayGroup(g: Group, ctx: SqlContext): SqlFragment | undefined {
+  function arrayGroup(g: Group, ctx: SqlContext): SqlFragment | Unsupported | undefined {
+    if (!isArrayGroupIn(ctx.fields, g)) return undefined;
     // Postgres only: the array column must be jsonb (an array of objects).
-    if (dialect !== 'postgres' || !isArrayGroupIn(ctx.fields, g)) return undefined;
+    if (dialect !== 'postgres') return new Unsupported(g, `array groups need the postgres dialect (jsonb columns); ${dialect} has none`);
     const depth = (ctx.depth ?? 0) + 1;
     const alias = `e${depth}`;
-    const inner = join(g, encodeIn(codec, g.children, { fields: groupScope(ctx.fields, g), alias, depth } satisfies SqlContext));
+    const lifted = liftChildren<SqlFragment>(g, encodeIn(codec, g.children, { fields: groupScope(ctx.fields, g), alias, depth } satisfies SqlContext), modes.unsupported);
+    if ('bad' in lifted) return lifted.bad;
+    const inner = join(g, lifted.kids);
     const from = `jsonb_array_elements(${column(ctx, g.of!.field, true)}) AS ${alias}`;
     const where = inner ? ` WHERE ${inner.sql}` : '';
     const m = g.of!.match;
@@ -291,16 +327,17 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     return g.not ? { sql: `NOT (${sql})`, params, compound: false } : { sql, params, compound: false };
   }
 
-  function encodeGroup(g: Group, children: SqlFragment[], ctx: SqlContext): SqlFragment | undefined {
+  function encodeGroup(g: Group, children: SqlFragment[], ctx: SqlContext): SqlFragment | Unsupported | undefined {
     if (g.of) return arrayGroup(g, ctx);
-    const joined = join(g, children);
+    const lifted = liftChildren<SqlFragment>(g, children, modes.unsupported);
+    if ('bad' in lifted) return lifted.bad;
+    const joined = join(g, lifted.kids);
     if (!joined) return undefined;
     return g.not ? { sql: `NOT (${joined.sql})`, params: joined.params, compound: false } : joined;
   }
 
-  function render(root: SqlFragment | undefined): string | SqlWithParams<unknown[] | Record<string, unknown>> {
-    const sql = root?.sql ?? '1 = 1';
-    const params = root?.params ?? [];
+  function render(root: SqlFragment): string | SqlWithParams<unknown[] | Record<string, unknown>> {
+    const { sql, params } = root;
     if (!paramStyle) return sql;
     let n = 0;
     const text = sql.replace(/\u0000/g, () => {
@@ -314,13 +351,14 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
 
   const codec: SqlCodec<string | SqlWithParams<unknown[] | Record<string, unknown>>> = {
     name: 'sql',
-    encodeRule: (rule, ctx) => encodeRule(rule, ctx),
-    encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx),
-    finish: (root) => render(root),
+    // Unsupported markers travel as nodes until a group or `finish` resolves them.
+    encodeRule: (rule, ctx) => encodeRule(rule, ctx) as SqlFragment | undefined,
+    encodeGroup: (g, children, ctx) => encodeGroup(g, children, ctx) as SqlFragment | undefined,
+    finish: (root) => finishRoot('sql', root, modes, { all: () => render(frag('1 = 1')), none: () => render(frag('1 = 0')), some: render }),
     encodeCases(whens, otherwise) {
       const parts: SqlFragment[] = [];
       const branches = whens.map(({ when, then }) => {
-        const c = when ?? frag('1 = 1');
+        const c = caseCondition('sql', when) ?? frag('1 = 1');
         parts.push(c);
         return `WHEN ${c.sql} THEN ${literal(then)}`;
       });
