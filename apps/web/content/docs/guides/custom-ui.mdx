@@ -1,0 +1,112 @@
+---
+title: Building a custom UI
+description: Your own builder from the headless hooks, with coss ui as the example kit.
+---
+
+The default builder is deliberately plain. For a product, build the builder from the hooks with the
+components you already have. This is how the playground's coss ui builder is made, and the same
+shape works for shadcn/ui, MUI, Mantine or your own design system.
+
+## The pieces
+
+You need three components: a group, a rule, and a value editor. The hooks hand each one everything
+it needs.
+
+```tsx
+import { fieldOptions } from '@trawlnet/core';
+import { QueryProvider, useGroup, useNode, useRule } from '@trawlnet/react';
+import { memo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+
+export function CossQueryBuilder({ store }: { store: QueryStore }) {
+  return (
+    <QueryProvider store={store}>
+      <Group id={store.rootId} />
+    </QueryProvider>
+  );
+}
+
+const Group = memo(function Group({ id }: { id: string }) {
+  const { group, can, setCombinator, addRule, addGroup } = useGroup(id);
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border p-3">
+      <div className="flex items-center gap-2">
+        <ToggleGroup value={[group.combinator]} onValueChange={(v) => v[0] && setCombinator(v[0])} disabled={!can.editGroup}>
+          <ToggleGroupItem value="and">all</ToggleGroupItem>
+          <ToggleGroupItem value="or">any</ToggleGroupItem>
+        </ToggleGroup>
+        <Button size="sm" variant="outline" disabled={!can.addRule} onClick={() => addRule()}>Add rule</Button>
+        <Button size="sm" variant="ghost" disabled={!can.addGroup} onClick={() => addGroup()}>Add group</Button>
+      </div>
+      {group.children.map((child) => <Node id={child} key={child} />)}
+    </div>
+  );
+});
+
+function Node({ id }: { id: string }) {
+  return useNode(id)?.kind === 'group' ? <Group id={id} /> : <Rule id={id} />;
+}
+```
+
+The rule picks a field, an operator, and renders the editor the field and operator call for:
+
+```tsx
+const Rule = memo(function Rule({ id }: { id: string }) {
+  const { rule, def, editor, operators, fieldOptions, issues, can, setField, setOperator, setValue, remove } = useRule(id);
+  const invalid = issues.some((i) => i.severity === 'error');
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Pick items={fieldOptions} value={rule.field as string} onChange={setField} disabled={!can.editField} />
+      <Pick items={operators} value={rule.operator} onChange={setOperator} disabled={!can.editOperator} />
+      {editor.type === 'text' && (
+        <Input size="sm" value={(rule.value as string) ?? ''} aria-invalid={invalid} onChange={(e) => setValue(e.target.value)} />
+      )}
+      {editor.type === 'select' && (
+        <Pick items={editor.options!.map((o) => ({ value: String(o.value), label: o.label }))} value={String(rule.value ?? '')} onChange={setValue} />
+      )}
+      {/* number, date, multiselect, boolean, between pairs … */}
+      <Button size="icon-sm" variant="ghost" disabled={!can.remove} onClick={remove}>×</Button>
+    </div>
+  );
+});
+```
+
+## The editor spec
+
+`editor` describes what to render, so your UI never has to know the operator table:
+
+| `editor.type` | Render |
+| --- | --- |
+| `text`, `textarea` | a text input |
+| `number`, `slider` | a number input or a slider (`def.min`, `def.max`, `def.step`) |
+| `date`, `time`, `datetime` | the matching picker |
+| `boolean` | a switch or yes/no select |
+| `select` | a single select of `editor.options` (indented trees use `depth`, disabled parents use `disabled`) |
+| `multiselect` | a multi select or chips of `editor.options` |
+| `list` | free-form values (comma-separated input, chips) |
+| `none` | nothing (`isNull`, `isEmpty`…) |
+
+`editor.arity` says how many: `'one'`, `'two'` (render two editors for `between`), `'many'`, or
+`'none'`. `editor.async` means options come from `def.search(query, signal)`: use a combobox that
+calls it as the user types. `parseInput`, `formatInput`, `parseList` and `formatList` from
+`@trawlnet/core` convert between input strings and typed values.
+
+## Field refs and functions
+
+When `editor.allowsRef` is true the right side can be a field or a function instead of a literal.
+`useRule` gives you `source` (`'value' | 'field' | 'function'`), `refOptions`, `functionOptions`,
+`setRef` and `setCall`. `defaultCall(fields, name)` builds a call with each argument at its default.
+
+## Keep it fast
+
+- Pass ids, not nodes, and wrap components in `memo`.
+- Don't subscribe rows to the whole query: `useQuery` re-renders on every change.
+- Long trees: the default stylesheet puts `content-visibility: auto` on nested groups so off-screen
+  ones skip layout. Do the same on your group container.
+
+The playground's coss builder (`apps/playground/src/coss/QueryBuilder.tsx` in the repository) is a
+complete version with tree selects, async comboboxes, function editors, array groups, locks and
+tooltips.

@@ -1,0 +1,55 @@
+---
+title: Svelte
+description: Rune-friendly reactive helpers and Svelte 5 components.
+---
+
+```bash
+pnpm add @trawlnet/core @trawlnet/svelte
+```
+
+## The default builder
+
+```svelte
+<script lang="ts">
+  import '@trawlnet/core/styles.css';
+  import { QueryBuilder } from '@trawlnet/svelte';
+  import { fields } from './fields';
+
+  let query = $state(saved);
+</script>
+
+<QueryBuilder {fields} bind:value={query} showLock />
+```
+
+`QueryBuilder` takes `store`, or `fields` with `initial` / `bind:value`, `format` and `settings`;
+plus `onchange`, `components`, `labels`, `class`, `showNot` and `showLock`.
+
+## Reactive helpers
+
+`setQueryStore(store)` puts a store in context; `getQueryStore()` reads it. The `create*` helpers
+return objects whose getters are backed by `createSubscriber` from `svelte/reactivity`, so they work
+in components and in plain `.svelte.ts` modules, and each one subscribes only to what it reads:
+
+```svelte
+<script lang="ts">
+  import { createRule, getQueryStore } from '@trawlnet/svelte';
+
+  let { id } = $props();
+  const store = getQueryStore();
+  const rule = createRule(store, id);
+</script>
+
+<select value={rule.rule.operator} onchange={(e) => rule.setOperator(e.currentTarget.value)}>
+  {#each rule.operators as op}
+    <option value={op.value}>{op.label}</option>
+  {/each}
+</select>
+```
+
+Available: `createNode`, `createRule`, `createGroup`, `createQuery`, `createQueryValue`,
+`createIsValid`, `createHistory`, `createSettings`, and `createDragHandle`, `createDropTarget`,
+`createGroupDropZone`. The default `Group`, `Rule`, `ValueEditor` and `FunctionEditor` components
+are exported for reuse.
+
+The package ships `.svelte` source through the `svelte` export condition; `@sveltejs/vite-plugin-svelte`
+compiles it.

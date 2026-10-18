@@ -1,0 +1,73 @@
+---
+title: Field builders
+description: Every option of f.text, f.number, f.enum and the rest.
+---
+
+All builders live on `f` from `@trawlnet/core` and return a `FieldDef`. Pass the result object to
+`defineFields`.
+
+## Common options
+
+Every builder accepts these.
+
+| Option | Type | |
+| --- | --- | --- |
+| `label` | `string` | Shown in pickers. Defaults to the humanized key (`signedUp` → "Signed up"). |
+| `description` | `string` | Longer help text (RAQB `tooltip`). |
+| `column` | `string` | Name exporters use (SQL column, Mongo path, JsonLogic var). |
+| `operators` | `Op[]` | Restrict and order the operators. Narrows the type. |
+| `excludeOperators` | `OperatorId[]` | Drop operators from the defaults. |
+| `extraOperators` | `string[]` | Add [custom operators](/docs/guides/operators-and-functions) registered with `defineFields`. |
+| `defaultOperator` | `Op` | Used for new rules (default: the first operator). |
+| `defaultValue` | `V \| null` | Used for new rules. |
+| `required` | `boolean` | A rule on this field needs a value (default `true`). |
+| `hidden` | `boolean` | Left out of field pickers; still usable as a comparison target. |
+| `comparable` | `boolean` | Can be the target of a field-to-field rule (default `true`). |
+| `validate` | `(value) => string \| undefined` | Return a message to fail. Runs after the built-in checks. |
+| `widget` | `'input' \| 'textarea' \| 'slider' \| 'select' \| 'radio' \| 'switch' \| …` | A hint for UIs; the core never reads it. |
+| `placeholder`, `prefix`, `suffix` | `string` | UI hints. |
+| `meta` | `Record<string, unknown>` | Anything else your UI needs, passed through. |
+
+## Builders
+
+| Builder | Extra options |
+| --- | --- |
+| `f.text(opts)` | `minLength`, `maxLength`, `pattern`, `caseSensitive` |
+| `f.number(opts)` | `min`, `max`, `step`, `integer` |
+| `f.boolean(opts)` | — |
+| `f.date(opts)`, `f.time(opts)`, `f.datetime(opts)` | — |
+| `f.enum(values, opts)` | `leafOnly`, `allowCustom`, `search` |
+| `f.multiEnum(values, opts)` | `leafOnly`, `allowCustom`, `search` |
+| `f.struct(fields, { label })` | — (flattened by `defineFields`) |
+| `f.array(fields, opts)` | — (query with array groups) |
+| `f.custom({ kind, operators, defaultValue, options, … })` | your own kind and value type |
+
+`values` for `f.enum` / `f.multiEnum` are plain values or `{ value, label, children?, disabled? }`.
+`search(query, signal)` returns a promise of options for remote or huge lists; with `search` set,
+option membership isn't validated.
+
+## defineFields
+
+```ts
+defineFields(fields, {
+  operators?: OperatorDef[];      // custom operators
+  functions?: Record<string, FunctionDef>;
+  messages?: Partial<Record<IssueCode, string | ((issue) => string)>>;
+});
+```
+
+Returns the fields with literal types pinned and struct fields flattened (`FlattenFields`). The
+options are attached to the returned object, so anything that receives these fields (the store,
+codecs, `compile`) sees them.
+
+## extendFields
+
+Don't spread a schema (`{ ...fields, extra }`): the custom operators, functions and messages live on
+a hidden property and would be lost. Use `extendFields(base, more, options?)` to add or override
+fields; it merges registries too.
+
+## Serializing a schema
+
+`fieldsToJSON(fields, { fns })` turns a schema into JSON for sending from a server, with functions
+(validators, searches) referenced by name from `fns`; `fieldsFromJSON(json, { fns, schema })`
+rebuilds it. Custom operators and functions must be passed again in `schema`.

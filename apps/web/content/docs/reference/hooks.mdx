@@ -1,0 +1,30 @@
+---
+title: Hooks by framework
+description: The same store API in React, Vue, Svelte, Solid and the DOM.
+---
+
+Every binding exposes the same concepts under its framework's naming. Each rule and group
+subscribes only to its own node, and permissions come from the store's permission channel.
+
+| Concept | React / Solid | Vue | Svelte | DOM |
+| --- | --- | --- | --- | --- |
+| Create a store | `useQueryStore` | `useQueryStore` | `createQueryStore` (core) | `createQueryStore` (core) |
+| Share it | `<QueryProvider store>` | `provideQueryStore` | `setQueryStore` | pass to `mountQueryBuilder` |
+| Read it | `useStore` | `useStore` | `getQueryStore` | — |
+| A rule | `useRule(id)` | `useRule(id)` | `createRule(store, id)` | `DefaultRule` |
+| A group | `useGroup(id)` | `useGroup(id)` | `createGroup(store, id)` | `DefaultGroup` |
+| A node | `useNode(id)` | `useNode(id)` | `createNode(store, id)` | — |
+| Whole query | `useQuery` | `useQuery` | `createQuery` | `store.getQuery()` |
+| Value in `format` | `useQueryValue` | `useQueryValue` | `createQueryValue` | `store.getValue()` |
+| Validity | `useIsValid` | `useIsValid` | `createIsValid` | `store.isValid()` |
+| Undo / redo | `useHistory` | `useHistory` | `createHistory` | `store.undo()`… |
+| Settings | `useSettings` | `useSettings` | `createSettings` | `store.settings` |
+| Drag handle | `useDragHandle(id)` | `useDragHandle(id)` | `createDragHandle` | `bindDragHandle` |
+| Drop target | `useDropTarget(id)` | `useDropTarget(id)` | `createDropTarget` | `bindDropTarget` |
+| Group drop zone | `useGroupDropZone(id)` | `useGroupDropZone(id)` | `createGroupDropZone` | `bindGroupDropZone` |
+| Default builder | `<QueryBuilder>` | `QueryBuilder` | `QueryBuilder.svelte` | `mountQueryBuilder(el, store)` |
+| Function editor | `FunctionEditor` | `FunctionEditor` | `FunctionEditor.svelte` | built in |
+
+What they return differs by framework: plain values in React, refs and computeds in Vue, objects
+with reactive getters in Svelte, and accessors in Solid (`rule()`, `value()`…). The fields are the
+same: see [React](/docs/guides/react#hooks) for the full list.

@@ -1,0 +1,60 @@
+---
+title: Introduction
+description: A query builder that stays fast at a thousand rules, typed from your schema to the SQL it writes.
+---
+
+trawlnet is the part every filter bar, segment builder, routing form and alert rule shares: a tree of
+conditions that people edit, that you validate, and that ends up as SQL, a MongoDB filter, JsonLogic
+or a function you run in JavaScript.
+
+It comes as a framework-agnostic core and thin bindings:
+
+| Package | What it is |
+| --- | --- |
+| `@trawlnet/core` | Schema builders, the query store, validation, evaluation, and format codecs. No DOM, no framework. Runs in the browser and on the server. |
+| `@trawlnet/react` | Hooks over the store, plus a small unstyled `<QueryBuilder>`. |
+| `@trawlnet/vue`, `@trawlnet/svelte`, `@trawlnet/solid` | The same hooks and builder for each framework. |
+| `@trawlnet/dom` | A vanilla DOM builder: `mountQueryBuilder(el, store)`. |
+
+## Why another query builder
+
+- **Types that follow your schema.** Declare fields once; every rule's value narrows by field and
+  operator. Hover `rule.value` below:
+
+```ts twoslash
+import { defineFields, f, isLiteralRule, type RuleOf } from '@trawlnet/core';
+
+const fields = defineFields({
+  age: f.number({ min: 0 }),
+  plan: f.enum(['free', 'pro', 'team']),
+});
+
+declare const rule: RuleOf<typeof fields>;
+if (rule.field === 'plan' && rule.operator === 'in' && isLiteralRule(rule)) {
+  rule.value;
+  //   ^?
+}
+```
+
+- **Edits stay O(1).** The store keeps nodes by id and notifies only the node that changed, so a
+  keystroke costs about half a millisecond at 1,000 rules, where react-querybuilder takes about
+  60 ms (see the [benchmarks](/#benchmarks)).
+- **Every format, both ways.** SQL with parameters in five dialects, MongoDB, JsonLogic,
+  Elasticsearch, SpEL and a plain-English summary, plus two-way codecs for react-querybuilder,
+  react-awesome-query-builder and jQuery QueryBuilder JSON.
+- **Any UI.** Use the default builder, or build your own from the hooks with coss ui, shadcn/ui,
+  MUI or anything else.
+- **Feature parity with react-awesome-query-builder:** struct and list fields, functions, custom
+  operators, locks, read-only mode, limits, switch cases, schema JSON.
+
+<Cards>
+  <Card title="Installation" href="/docs/installation" description="Add the core and your framework's binding." />
+  <Card title="Quick start" href="/docs/quick-start" description="A typed builder in React in five minutes." />
+  <Card title="Concepts" href="/docs/concepts/schema" description="Schema, store, formats, validation and evaluation." />
+  <Card title="Server usage" href="/docs/guides/server" description="Validate a query and turn it into parameterized SQL." />
+</Cards>
+
+<Callout type="info" title="For LLMs">
+  Every page is available as Markdown: add `.md` to its URL, or fetch [/llms.txt](/llms.txt) for
+  the index and [/llms-full.txt](/llms-full.txt) for everything.
+</Callout>

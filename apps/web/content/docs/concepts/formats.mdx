@@ -1,0 +1,105 @@
+---
+title: Formats
+description: Export a query to SQL, MongoDB, JsonLogic, Elasticsearch, SpEL or text, and read other libraries' JSON both ways.
+---
+
+A codec converts between trawlnet's query JSON and another representation. Each lives at its own
+subpath, so you only bundle the ones you import.
+
+```ts
+import { encode, decode } from '@trawlnet/core';
+import { sqlFormat } from '@trawlnet/core/formats/sql';
+
+const sql = encode(sqlFormat({ dialect: 'postgres' }), query, fields);
+const back = decode(sqlFormat({ dialect: 'postgres' }), "age >= 21 AND plan IN ('pro', 'team')", fields);
+```
+
+| Codec | Import | Direction |
+| --- | --- | --- |
+| SQL (Postgres, MySQL, SQLite, SQL Server, ANSI) | `sql`, `sqlFormat(options)` from `formats/sql` | export, and import of inlined `WHERE` clauses |
+| MongoDB | `mongo` from `formats/mongo` | two-way |
+| JsonLogic | `jsonlogic` from `formats/jsonlogic` | two-way |
+| SpEL (RAQB-compatible) | `spel` from `formats/spel` | two-way |
+| Elasticsearch | `elasticsearch` from `formats/elasticsearch` | export |
+| Plain English | `text`, `textFormat(options)` from `formats/text` | export |
+| react-querybuilder JSON | `rqb` from `formats/rqb` | two-way |
+| react-awesome-query-builder JSON | `raqb` from `formats/raqb` | two-way |
+| jQuery QueryBuilder JSON | `jqqb` from `formats/jqqb` | two-way |
+
+## SQL with parameters
+
+Set `params` to get placeholders and a separate parameter list; the return type follows the option.
+
+```ts
+const pg = sqlFormat({ dialect: 'postgres', params: 'numbered' });
+const { sql, params } = encode(pg, query, fields);
+// "age >= $1 AND plan IN ($2, $3)", [21, 'pro', 'team']
+```
+
+`params` can be `'positional'` (`?`), `'numbered'` (`$1`) or `'named'` (`:p1`, with an object of
+params). Strings are escaped, LIKE wildcards in user input are escaped with an `ESCAPE` clause, and
+each field renders as its `column` when it has one. `quoteIdentifiers` and `caseInsensitive` are
+options too.
+
+## Two kinds of codec
+
+**Export codecs** (sql, mongo, jsonlogic, spel, elasticsearch, text) skip rules that are incomplete
+(a value still missing), the same way `compile()` does. A *valid* rule the target can't express
+(a function with no format for that target, array operators on ANSI SQL, array groups outside
+Postgres) **throws** by default, naming the rule's path, field, operator and the reason, so an
+export never silently matches more than the query:
+
+```text
+trawlnet/sql: can't express the rule at [1] (field "tags", operator "hasAny"): the ansi dialect has no array operators (use postgres, mysql, sqlite or mssql)
+```
+
+Each codec has a factory with options; the ready-made instance (`sql`, `mongo`, …) uses the defaults.
+
+| Option | Values | Default |
+| --- | --- | --- |
+| `unsupported` | `'throw'`, or `'skip'` to drop the rule (widening the query) | `'throw'` |
+| `emptyQuery` | `'all'` (`1 = 1`, `{}`, `true`…), `'none'` (`1 = 0`, `false`…), or `'throw'` | `'all'` |
+
+```ts
+const strict = sqlFormat({ dialect: 'postgres', params: 'numbered', emptyQuery: 'throw' });
+```
+
+**UI-state codecs** (rqb, raqb, jqqb) are faithful: they keep incomplete rules, so they can serve as
+a store's `format`. When the other library can't represent something (array groups and function
+calls in react-querybuilder, for example), they throw the same kind of error instead of dropping it.
+
+## Memoized per node
+
+`encode` caches each node's output by the node object. Because the store's JSON is structurally
+shared, re-encoding after an edit only redoes the edited rule and its ancestors, even for 1,000-rule
+queries.
+
+## Drop-in format mode
+
+Give a store a two-way codec as `format` and its `value`/`onChange` speak that shape. Saved queries
+keep working while the library underneath changes. See
+[Migrating from react-querybuilder](/docs/guides/migrate-react-querybuilder) and
+[from RAQB](/docs/guides/migrate-raqb).
+
+## Switch cases
+
+Codecs that support it export a whole [switch](/docs/guides/routing-and-cases) with `encodeCases`:
+SQL `CASE WHEN`, JsonLogic `if`, MongoDB `$switch`, SpEL ternaries, and a sentence in text.
+
+## Writing your own
+
+A codec is an object with `encodeRule`, `encodeGroup`, an optional `finish`, and `decode` for
+two-way formats:
+
+```ts
+import type { Codec } from '@trawlnet/core';
+
+const prefix: Codec<string, string> = {
+  name: 'prefix',
+  encodeRule: (rule) => `(${rule.operator} ${String(rule.field)} ${JSON.stringify(rule.value)})`,
+  encodeGroup: (group, children) => (children.length ? `(${group.combinator} ${children.join(' ')})` : undefined),
+};
+```
+
+Return `undefined` from either to leave that node out. The [codec reference](/docs/reference/codecs)
+lists what each built-in codec does with every feature.

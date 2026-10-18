@@ -1,0 +1,57 @@
+---
+title: Vue
+description: Composables over the store, and a QueryBuilder component that supports v-model.
+---
+
+```bash
+pnpm add @trawlnet/core @trawlnet/vue
+```
+
+## The default builder
+
+`QueryBuilder` takes a `store`, or `fields` with `initial`/`v-model`, `format` and `settings`.
+It emits `update:modelValue` and `change`.
+
+```vue
+<script setup lang="ts">
+import '@trawlnet/core/styles.css';
+import { QueryBuilder } from '@trawlnet/vue';
+import { ref } from 'vue';
+import { fields } from './fields';
+
+const query = ref(saved);
+</script>
+
+<template>
+  <QueryBuilder :fields="fields" v-model="query" show-lock />
+</template>
+```
+
+Like the React builder, it accepts `components` and `labels` to swap pieces and strings, and
+`showNot` / `showLock`. The components are written with `h()`, so no SFC compiler is involved.
+
+## Composables
+
+`useQueryStore(options)` creates a store tied to the component's scope; `provideQueryStore(store)`
+shares it with descendants, which read it with `useStore()`.
+
+```ts
+import { provideQueryStore, useHistory, useQueryStore, useRule } from '@trawlnet/vue';
+
+const store = useQueryStore({ fields, initial: saved, onChange: save });
+provideQueryStore(store);
+
+const { canUndo, undo } = useHistory();
+```
+
+The composables mirror React's hooks: `useRule(id)`, `useGroup(id)`, `useNode(id)`, `useQuery()`,
+`useQueryValue()`, `useIsValid()`, `useHistory()`, `useSettings()`, and the drag hooks
+`useDragHandle`, `useDropTarget`, `useGroupDropZone`. They return `shallowRef`s and `computed`s fed
+by the store's per-node subscriptions, not deep reactivity, so editing one rule only updates
+that rule's component.
+
+`useRule(id)` returns `rule`, `fields`, `def`, `editor`, `operators`, `fieldOptions`, `refOptions`,
+`functionOptions`, `source`, `locked`, `can` and `issues` as refs, plus the actions `setField`,
+`setOperator`, `setValue`, `setRef`, `setCall`, `setLocked`, `remove` and `clone`.
+
+`useQueryStore` accepts `value` as a ref or getter for controlled use.

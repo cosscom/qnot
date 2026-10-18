@@ -1,0 +1,83 @@
+---
+title: Custom operators and functions
+description: Add operators like "within distance", and functions like lower() or relativeDate(), with output for each format.
+---
+
+## Functions
+
+A function call can stand on either side of a rule. On the right it's `call`; on the left it
+replaces the field name:
+
+```ts
+// signedUp > 30 days ago
+{ kind: 'rule', field: 'signedUp', operator: 'gt',
+  call: { fn: 'relativeDate', args: { amount: { value: 30 }, unit: { value: 'day' }, direction: { value: 'ago' } } } }
+
+// lower(name) = 'ada'
+{ kind: 'rule', field: { fn: 'lower', args: { text: { ref: 'name' } } }, operator: 'eq', value: 'ada' }
+```
+
+Each argument is `{ value }`, `{ ref: 'field' }` or another call, so calls nest.
+
+`builtinFunctions` covers RAQB's basic set: `lower`, `upper`, `length`, `now`, `today` and
+`relativeDate`. Register functions when you define the fields:
+
+```ts
+import { builtinFunctions, defineFields, defineFunction, f } from '@trawlnet/core';
+
+const daysSince = defineFunction({
+  label: 'Days since',
+  returns: f.number(),
+  args: { date: f.date() },
+  evaluate: ({ date }) => Math.floor((Date.now() - Date.parse(String(date))) / 864e5),
+  formats: {
+    sql: ({ date }) => `(CURRENT_DATE - ${date})`,
+    text: ({ date }) => `days since ${date}`,
+  },
+});
+
+const fields = defineFields({ signedUp: f.date(), lastSeen: f.date() }, { functions: { ...builtinFunctions, daysSince } });
+```
+
+- `returns` is a field schema: it decides which operators apply and which editor the UI shows.
+- `args` are field schemas too; `required: false` makes one optional.
+- `evaluate` powers `compile()`.
+- `formats` maps a codec name (`sql`, `mongo`, `jsonlogic`, `spel`, `elasticsearch`, `text`) to an
+  encoder that gets the arguments already encoded for that format, plus their raw values. Exporting
+  a rule whose function has no format for that codec throws (or is skipped with
+  `unsupported: 'skip'`).
+
+Function calls are typed loosely (`FnCall` with a string name); validation checks the function
+exists, its return kind fits the field, and its arguments are valid. Turn them off in the UI with
+`settings.allowFunctions: false`.
+
+## Custom operators
+
+```ts
+import { defineFields, defineOperator, f } from '@trawlnet/core';
+
+const near = defineOperator({
+  id: 'near',
+  arity: 'one',
+  label: 'is within',
+  evaluate: (distance, km) => typeof distance === 'number' && typeof km === 'number' && distance <= km,
+  formats: {
+    sql: ({ field, value }) => `${field} <= ${value}`,
+    mongo: ({ field, raw }) => ({ [String(field)]: { $lte: raw } }),
+  },
+});
+
+const fields = defineFields(
+  { distance: f.number({ extraOperators: ['near'] }) },
+  { operators: [near] },
+);
+```
+
+`extraOperators` adds custom operators to a field's defaults and to its type, so
+`{ field: 'distance', operator: 'near', value: 5 }` type-checks. `arity` decides the value shape
+(`'none'`, `'one'`, `'two'`, `'many'`). Codecs call `formats[codecName]` with the rendered field,
+the rendered value and the raw value; without one, export codecs throw (or skip, with
+`unsupported: 'skip'`) and the UI-state codecs pass the operator through by id.
+
+Built-in operators also record their `inverse` (`eq`/`neq`, `in`/`notIn`…), available from
+`operatorInfo(fields, op).inverse`, for code that wants to push a NOT down instead of wrapping it.

@@ -1,0 +1,101 @@
+---
+title: The store
+description: A normalized tree with per-node subscriptions, which is why edits stay fast.
+---
+
+Every builder, in every framework, sits on a `QueryStore` from `@trawlnet/core`. It owns the query,
+applies edits, validates, keeps history, and tells exactly the right parts of the UI to update.
+
+```ts
+import { createQueryStore } from '@trawlnet/core';
+
+const store = createQueryStore({ fields, initial: savedQuery });
+```
+
+## Nodes and ids
+
+The store doesn't keep the query as one nested object. It keeps a flat map from node id to node,
+where groups hold their children's ids. Ids are internal and never appear in the JSON you save.
+
+```ts
+store.rootId;                         // the root group's id
+store.getGroup(store.rootId).children; // ['1', '2', '5']
+store.getRule('2');                    // { id: '2', parent: '0', kind: 'rule', field: 'age', … }
+```
+
+Edits go through the store by id, and each one replaces a single node object:
+
+```ts
+store.setRuleValue(id, 30);
+store.setOperator(id, 'between');  // the value becomes [30, null]
+store.setField(id, 'plan');        // operator and value adapt to the new field
+store.addRule(groupId, { field: 'plan', operator: 'in', value: ['pro'] });
+store.move(id, otherGroupId, 0);
+store.remove(id);
+```
+
+When the operator changes arity, the value is reshaped rather than thrown away: `30` becomes
+`[30, null]` for `between` and `[30]` for `in`. Changing to a field of the same kind keeps the
+value. [Settings](/docs/reference/settings) can make both reset instead.
+
+## Why it's fast
+
+Each node has its own subscribers. Editing a rule replaces that rule's object and notifies only that
+rule's subscribers; its siblings and parents don't re-render. A keystroke costs the same with ten
+rules as with a thousand.
+
+```ts
+store.subscribe(id, () => console.log('this rule changed'));
+store.subscribe(() => console.log('anything changed'));
+```
+
+The JSON view is structurally shared: `store.getQuery()` rebuilds only the edited node and its
+ancestors, so unchanged subtrees keep their object identity. Format codecs memoize per node object,
+so exporting after an edit only re-encodes the edited branch.
+
+Permission changes (locks, read-only, limits) have their own channel,
+`store.subscribePermissions`, so a value edit never makes every row recompute whether it can be
+removed.
+
+## Transactions and history
+
+Several edits can be one change: one notification, one undo step.
+
+```ts
+store.batch(() => {
+  store.setCombinator(store.rootId, 'or');
+  store.addRule(store.rootId);
+});
+
+store.undo();
+store.redo();
+store.canUndo();
+```
+
+Typing into one value merges into a single undo step (edits to the same value within a second).
+`store.reset(query)` loads a fresh baseline and clears history, for saved views and "discard
+changes". Pass `history: false` to turn history off, or `{ limit, mergeWindowMs }` to tune it.
+
+## Controlled values and formats
+
+`setQuery` and `setValue` load a whole query and reconcile it node by node: unchanged subtrees keep
+their ids (so React keeps their components), and passing back the store's own output is free.
+
+With a `format`, `getValue`/`setValue` speak that format instead of trawlnet's JSON. This is how the
+store becomes a drop-in for react-querybuilder or RAQB:
+
+```ts
+import { rqb } from '@trawlnet/core/formats/rqb';
+
+const store = createQueryStore({ fields, format: rqb, initial: savedRqbQuery });
+store.getValue(); // react-querybuilder's RuleGroupType
+```
+
+## Validation, permissions, settings
+
+`store.issues(id)` returns the node's validation issues, cached until the node changes, and
+`store.isValid()` checks the whole tree. `store.can(action, id)` answers whether the user may add,
+remove, move, edit or lock a node under the current [settings](/docs/guides/settings) and locks.
+The mutation methods check the same rules and ignore edits they refuse.
+
+See the [store reference](/docs/reference/store) for every method.

@@ -1,0 +1,19 @@
+{
+  "title": "Guides",
+  "pages": [
+    "react",
+    "custom-ui",
+    "vue",
+    "svelte",
+    "solid",
+    "vanilla",
+    "server",
+    "arrays-and-structs",
+    "operators-and-functions",
+    "routing-and-cases",
+    "settings",
+    "i18n",
+    "migrate-react-querybuilder",
+    "migrate-raqb"
+  ]
+}

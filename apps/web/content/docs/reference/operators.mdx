@@ -1,0 +1,38 @@
+---
+title: Operators
+description: Every built-in operator, its value shape, and the kinds that use it by default.
+---
+
+| Id | Label | Value | Field ref / function | Default on |
+| --- | --- | --- | --- | --- |
+| `eq` | equals | one | yes | all except multiEnum, array |
+| `neq` | does not equal | one | yes | all except multiEnum, array |
+| `lt` | less than | one | yes | number, date, time, datetime |
+| `lte` | at most | one | yes | number, date, time, datetime |
+| `gt` | greater than | one | yes | number, date, time, datetime |
+| `gte` | at least | one | yes | number, date, time, datetime |
+| `contains` | contains | text | no | text |
+| `notContains` | does not contain | text | no | text |
+| `startsWith` | starts with | text | no | text |
+| `endsWith` | ends with | text | no | text |
+| `between` | is between | `[a, b]` | no | number, date, time, datetime |
+| `notBetween` | is not between | `[a, b]` | no | number, date, time, datetime |
+| `in` | is any of | list | no | text, number, enum |
+| `notIn` | is none of | list | no | text, number, enum |
+| `hasAny` | has any of | list | no | multiEnum |
+| `hasAll` | has all of | list | no | multiEnum |
+| `hasNone` | has none of | list | no | multiEnum |
+| `setEq` | is exactly | list | no | multiEnum |
+| `setNeq` | is not exactly | list | no | multiEnum |
+| `isEmpty` | is empty | none | no | text, multiEnum, array |
+| `isNotEmpty` | is not empty | none | no | text, multiEnum, array |
+| `isNull` | is null | none | no | all |
+| `isNotNull` | is not null | none | no | all |
+
+"Value" is the shape of `rule.value`: `one` matches the field's type, `text` is always a string
+(substring matching), `[a, b]` a pair, `list` an array. `OPERATORS` holds the table, `operatorInfo(fields, id)`
+looks up built-in and custom operators, and each has an `inverse` (`eq` ↔ `neq`, `in` ↔ `notIn`…).
+
+Per kind, the defaults are exported as `TEXT_OPERATORS`, `NUMBER_OPERATORS`, `DATE_OPERATORS`
+(also used by time and datetime), `BOOLEAN_OPERATORS`, `ENUM_OPERATORS`, `MULTI_ENUM_OPERATORS` and
+`ARRAY_OPERATORS`.

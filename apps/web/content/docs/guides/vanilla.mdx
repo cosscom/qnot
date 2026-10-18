@@ -1,0 +1,35 @@
+---
+title: Vanilla DOM
+description: mountQueryBuilder with no framework, and DOM helpers for drag and drop.
+---
+
+```bash
+pnpm add @trawlnet/core @trawlnet/dom
+```
+
+```ts
+import '@trawlnet/core/styles.css';
+import { createQueryStore } from '@trawlnet/core';
+import { mountQueryBuilder } from '@trawlnet/dom';
+
+const store = createQueryStore({ fields, initial: saved });
+const dispose = mountQueryBuilder(document.getElementById('filters')!, store, { showLock: true });
+
+store.subscribe(() => save(store.getQuery()));
+// later: dispose();
+```
+
+Each node subscribes to its own id and patches only its own elements, with a keyed reconcile per
+group, so the vanilla builder keeps the same "one rule, one update" behaviour as the framework
+bindings.
+
+## Options
+
+`mountQueryBuilder(el, store, options)` takes `components`, `labels`, `className`, `showNot` and
+`showLock`. A custom value editor is a factory returning `{ el, update(props), destroy? }`; it's
+created once and patched in place as the rule changes.
+
+## Drag and drop helpers
+
+`bindDragHandle`, `bindDropTarget` and `bindGroupDropZone` attach the store's drag-and-drop to your
+own elements, and `dropPositionOf` reads where a drop would land.

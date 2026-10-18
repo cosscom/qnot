@@ -1,0 +1,94 @@
+@import "tailwindcss";
+/* coss ui tokens (adapted from cosscom/coss packages/ui). shadcn.css points Fumadocs' colors at them. */
+@import "../styles/theme.css";
+@import "tw-animate-css";
+@import "fumadocs-ui/css/shadcn.css";
+@import "fumadocs-ui/css/preset.css";
+@import "fumadocs-twoslash/twoslash.css";
+@import "@trawlnet/core/styles.css";
+@import "../styles/drawings.css";
+
+@source "../**/*.{ts,tsx}";
+@source "../../content/**/*.mdx";
+@source "../../../../packages/react/src";
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-code-foreground: var(--code-foreground);
+}
+
+/* The coss ui sites' page width: header, sidebar, content and footer share it. */
+@utility container {
+  @apply mx-auto max-w-[1416px] px-4 lg:px-6;
+}
+
+@layer base {
+  /* Where native scrollbars still show (the page itself), thin and in the theme's colours. */
+  html,
+  body {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--foreground) 18%, transparent) transparent;
+  }
+  a:active,
+  button:active {
+    @apply opacity-72 md:opacity-100;
+  }
+  /* Code shows what you type: no `>=` → `≥` ligatures from the mono face. */
+  code,
+  pre,
+  kbd,
+  .font-mono {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--foreground) 14%, transparent);
+  }
+}
+
+@layer components {
+  /* Fumadocs' code blocks in the coss ui code block look. */
+  figure.shiki {
+    background-color: var(--color-code);
+    color: var(--color-code-foreground);
+    border-radius: var(--radius-xl);
+    box-shadow: none;
+  }
+  figure.shiki > div:first-child:has(figcaption) {
+    font-family: var(--font-mono);
+    color: var(--color-code-foreground);
+    border-color: --alpha(var(--border) / 64%);
+  }
+  /* Code blocks scroll sideways inside the block: keep their scrollbar as thin as the rest. */
+  figure.shiki pre,
+  .twoslash-popup-container {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--foreground) 18%, transparent) transparent;
+  }
+}
+
+/* Faces of the isometric drawings. */
+:root {
+  --iso-top: var(--background);
+  --iso-left: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  --iso-right: color-mix(in srgb, var(--foreground) 12%, var(--background));
+}
+
+/* The drafting grid behind drawings. */
+.drafting-grid {
+  background-image: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--foreground) 16%, transparent) 1px,
+    transparent 1.2px
+  );
+  background-size: 1.5rem 1.5rem;
+  background-position: center;
+}
+
+/* Spec rows: a dotted leader between the label and its value. */
+.leader {
+  flex: 1;
+  min-width: 1.5rem;
+  border-bottom: 1px dotted color-mix(in srgb, var(--foreground) 32%, transparent);
+  translate: 0 -0.3em;
+}

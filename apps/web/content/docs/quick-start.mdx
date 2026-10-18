@@ -1,0 +1,120 @@
+---
+title: Quick start
+description: A typed query builder in React, from schema to SQL.
+---
+
+<Steps>
+<Step>
+
+### Define your fields
+
+The schema is the one place you describe what can be queried. Everything else, from the UI's
+editors to the types of rule values and the SQL, follows from it.
+
+```ts twoslash title="fields.ts"
+import { defineFields, f } from '@trawlnet/core';
+
+export const fields = defineFields({
+  name: f.text(),
+  age: f.number({ min: 0, integer: true }),
+  plan: f.enum(['free', 'pro', 'team']),
+  verified: f.boolean(),
+  signedUp: f.date({ label: 'Signed up' }),
+});
+```
+
+</Step>
+<Step>
+
+### Render a builder
+
+`<QueryBuilder>` creates a store from your fields and renders the default, unstyled UI.
+
+```tsx title="Filters.tsx"
+import '@trawlnet/core/styles.css';
+import { QueryBuilder } from '@trawlnet/react';
+import type { QueryOf } from '@trawlnet/core';
+import { fields } from './fields';
+
+export function Filters({ onChange }: { onChange: (q: QueryOf<typeof fields>) => void }) {
+  return <QueryBuilder fields={fields} onChange={onChange} />;
+}
+```
+
+</Step>
+<Step>
+
+### Use the query
+
+The value is trawlnet's own JSON: a tree of groups and rules, typed by your schema.
+
+```ts twoslash
+import { defineFields, f, type QueryOf } from '@trawlnet/core';
+const fields = defineFields({ age: f.number(), plan: f.enum(['free', 'pro', 'team']) });
+// ---cut---
+const query: QueryOf<typeof fields> = {
+  kind: 'group',
+  combinator: 'and',
+  children: [
+    { kind: 'rule', field: 'age', operator: 'gte', value: 21 },
+    { kind: 'rule', field: 'plan', operator: 'in', value: ['pro', 'team'] },
+  ],
+};
+```
+
+Turn it into SQL, or filter rows directly:
+
+```ts
+import { compile, encode } from '@trawlnet/core';
+import { sqlFormat } from '@trawlnet/core/formats/sql';
+
+const { sql, params } = encode(sqlFormat({ dialect: 'postgres', params: 'numbered' }), query, fields);
+// sql: "age >= $1 AND plan IN ($2, $3)", params: [21, 'pro', 'team']
+
+const adults = users.filter(compile(fields, query));
+```
+
+</Step>
+</Steps>
+
+## Store-first or controlled
+
+`<QueryBuilder>` accepts store options directly, which is enough for most forms. When other parts of
+the page need the query (a preview, a results table, undo buttons), create the store yourself and
+share it:
+
+```tsx
+import { QueryBuilder, QueryProvider, useHistory, useQuery, useQueryStore } from '@trawlnet/react';
+
+function Page() {
+  const store = useQueryStore({ fields, initial: savedQuery });
+  return (
+    <QueryProvider store={store}>
+      <QueryBuilder store={store} />
+      <Preview />
+    </QueryProvider>
+  );
+}
+
+function Preview() {
+  const query = useQuery<typeof fields>(); // re-renders on every change
+  return <pre>{JSON.stringify(query, null, 2)}</pre>;
+}
+```
+
+It also works controlled, like an input. Passing back the value it gave you costs nothing, because
+the store recognises its own output and skips reconciling:
+
+```tsx
+const [query, setQuery] = useState(initialQuery);
+<QueryBuilder fields={fields} value={query} onChange={setQuery} />;
+```
+
+## Next
+
+<Cards>
+  <Card title="The schema" href="/docs/concepts/schema" description="Field kinds, options, and the types they produce." />
+  <Card title="Custom UI" href="/docs/guides/custom-ui" description="Build your own builder from the hooks with coss ui." />
+  <Card title="Server usage" href="/docs/guides/server" description="Validate, then run the query as parameterized SQL." />
+  <Card title="Formats" href="/docs/concepts/formats" description="Every output, and drop-in compatibility with other libraries." />
+</Cards>

@@ -1,0 +1,61 @@
+---
+title: Evaluating queries in JavaScript
+description: Compile a query into a predicate and filter rows in the browser or on the server.
+---
+
+`compile` turns a query into a plain function once; call it on as many rows as you like.
+
+```ts
+import { compile } from '@trawlnet/core';
+
+const matches = compile(fields, query);
+const result = users.filter(matches);
+```
+
+The row type defaults to `RowOf<typeof fields>`. Struct fields read nested objects
+(`address.city` reads `row.address.city`), and array groups iterate the row's array. To read rows of
+another shape, pass `get`:
+
+```ts
+const matches = compile<typeof fields, User>(fields, query, {
+  get: (user, field) => (field === 'plan' ? user.subscription.plan : user[field as keyof User]),
+});
+```
+
+`matches(fields, query, row)` compiles and tests a single row in one call.
+
+## Semantics
+
+- **Incomplete rules are skipped** by default, as the export codecs do; set `invalidRules: false` to
+  make a group with a bad rule fail closed instead. An empty query matches everything.
+- **Text compares case-insensitively** unless the field sets `caseSensitive: true`.
+- **Dates and date-times** compare as instants; times compare as `HH:mm[:ss]` strings.
+- **Null and undefined** fail every comparison except `isNull` and `isEmpty`; `notIn` and
+  `notBetween` don't match missing values.
+- **`isEmpty`** matches `null`, `undefined`, `''` and empty arrays; `isNull` only `null`/`undefined`.
+- **Multi-value fields:** `hasAny`, `hasAll`, `hasNone`, `setEq`, `setNeq` compare the row's array
+  against the rule's list.
+- **Array groups** quantify over the array: `some`, `all` (true for an empty array), `none`, or a
+  count (`{ count: 'gte', value: 3 }`, or `between`).
+- **Functions** run their `evaluate`; [custom operators](/docs/guides/operators-and-functions) run
+  theirs.
+
+## Switch cases
+
+`compileCases` compiles an ordered list of conditions with results; the first match wins.
+
+```ts
+import { compileCases } from '@trawlnet/core';
+
+const route = compileCases(fields, {
+  cases: [
+    { when: vipQuery, then: 'concierge' },
+    { when: emeaQuery, then: 'emea-team' },
+  ],
+  otherwise: 'self-serve',
+});
+
+route(user); // { value: 'emea-team', index: 1 }
+```
+
+See [Routing and switch cases](/docs/guides/routing-and-cases).

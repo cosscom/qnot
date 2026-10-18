@@ -1,0 +1,48 @@
+---
+title: Routing and switch cases
+description: Ordered conditions with results, first match wins, like a routing form or CASE WHEN.
+---
+
+Many uses of a query builder aren't one filter but a list of them: route a form response to the
+first matching team, pick a price tier, assign a support queue. That's RAQB's "ternary mode" and SQL's
+`CASE WHEN`.
+
+```ts
+import { compileCases, type CasesOf } from '@trawlnet/core';
+
+const routes: CasesOf<typeof fields, { team: string }> = {
+  cases: [
+    { label: 'Enterprise', when: enterpriseQuery, then: { team: 'sales' } },
+    { label: 'EMEA', when: emeaQuery, then: { team: 'emea-support' } },
+  ],
+  otherwise: { team: 'self-serve' },
+};
+
+const route = compileCases(fields, routes);
+route(response); // { value: { team: 'emea-support' }, index: 1 }
+```
+
+`index` is the matching case, or `-1` when `otherwise` was used.
+
+## Editing routes
+
+Each route's condition is an ordinary query, so give each one its own store and builder. A routing
+form editor is a list of cards, each holding a `QueryBuilder` (or your own UI over the hooks), a
+result picker, and controls to reorder and duplicate routes. The Cal.com routing forms example in
+[Examples](/examples) is built exactly this way, including "all / any / none of these rules" as
+AND, OR and NOT+OR on the group.
+
+## Exporting
+
+`encodeCases` exports the whole switch with codecs that support it:
+
+```ts
+import { encodeCases } from '@trawlnet/core';
+import { sqlFormat } from '@trawlnet/core/formats/sql';
+
+encodeCases(sqlFormat({ dialect: 'postgres' }), { cases: routes.cases.map((c) => ({ when: c.when, then: c.then.team })), otherwise: 'self-serve' }, fields);
+// CASE WHEN … THEN 'sales' WHEN … THEN 'emea-support' ELSE 'self-serve' END
+```
+
+SQL gives `CASE WHEN`, JsonLogic an `if` chain, MongoDB `$switch`, SpEL nested ternaries and text a
+sentence. Elasticsearch and the UI-state codecs don't support cases.

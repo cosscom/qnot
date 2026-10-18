@@ -1,0 +1,46 @@
+---
+title: Utilities
+description: Helpers for building UIs, converting values, and working with the schema.
+---
+
+## For UIs
+
+| | |
+| --- | --- |
+| `editorFor(def, operator, fields)` | The `EditorSpec` a rule needs: `type`, `arity`, `options` (flattened trees with `depth`), `allowsRef`, `async`. |
+| `fieldOptions(fields)` | Pickable fields: `{ value, label, group?, description?, isArray }`; hidden fields left out. |
+| `operatorOptions(def, fields)` | `{ value, label }` for a field's operators. |
+| `refOptions(fields, field)` | Fields a rule may compare against (same kind, comparable). |
+| `functionOptions(fields, kind?)` | Registered functions, optionally by return kind. |
+| `countOptions(labels?)` | The count comparisons for array groups. |
+| `defaultCall(fields, name)` | A function call with each argument at its default. |
+| `parseInput(def, raw)` / `formatInput(value)` | Between an input's string and a typed value. |
+| `parseList(def, raw)` / `formatList(value)` | Between a comma-separated string and a list. |
+| `optionValues(def)` | Every selectable option value, flattened. |
+| `CLASS`, `DEFAULT_LABELS` | The default builders' class names and strings. |
+| `createDnd(store)`, `dropIndexFromPointer(rect, y, index)` | The framework-free drag-and-drop state machine the bindings use. |
+
+## Values and rules
+
+| | |
+| --- | --- |
+| `makeRule(fields, partial?)` | A complete rule with the schema's defaults. |
+| `changeField(fields, rule, field, options?)` | A rule moved to another field, keeping what still fits. |
+| `changeOperator(fields, rule, op, options?)` | A rule with its value reshaped for a new operator. |
+| `coerceValue(fields, def, op, value)` | Reshape a value for an operator's arity. |
+| `isGroup`, `isRule`, `isLiteralRule`, `fieldName` | Type guards and helpers. |
+
+## Schema
+
+| | |
+| --- | --- |
+| `fieldLabel(name, def)` | The label, or the humanized key. |
+| `columnOf(fields, name)` | The name exporters use. |
+| `flattenOptions(options, leafOnly?)` | Tree options as a flat list. |
+| `elementFields(fields, arrayField)` | The element schema of an array field. |
+| `leftDef(fields, field)` / `ruleDef(fields, rule)` | The schema of a rule's left side (a field, or a function's return). |
+| `operatorInfo(fields, id)` | A built-in or custom operator's metadata. |
+| `functionOf(fields, call)`, `evaluateOperand(…)` | Look up and run functions. |
+| `registryOf(fields)` | The custom operators, functions and messages attached by `defineFields`. |
+| `fieldsToJSON`, `fieldsFromJSON` | Serialize a schema. |
+| `getPath(row, path)` | The default row reader: plain keys, then dotted paths. |

@@ -1,0 +1,76 @@
+---
+title: On the server
+description: Share one schema, validate what the browser sends, and run it as parameterized SQL or in memory.
+---
+
+`@trawlnet/core` has no DOM and no framework, so the same schema module runs in the browser and in
+Node, Bun, Deno or an edge function. The browser builds a query; the server decides whether to
+trust it.
+
+```ts title="fields.ts (shared)"
+import { builtinFunctions, defineFields, f } from '@trawlnet/core';
+
+export const fields = defineFields(
+  {
+    name: f.text(),
+    age: f.number({ min: 0, integer: true }),
+    plan: f.enum(['free', 'pro', 'team']),
+    signedUp: f.date(),
+  },
+  { functions: builtinFunctions },
+);
+```
+
+```ts title="server.ts"
+import { assertValidQuery, encode, type QueryOf } from '@trawlnet/core';
+import { sqlFormat } from '@trawlnet/core/formats/sql';
+import { fields } from './fields';
+
+// emptyQuery: 'throw' refuses a query with no rules instead of matching every row.
+const postgres = sqlFormat({ dialect: 'postgres', params: 'numbered', emptyQuery: 'throw' });
+
+export async function searchUsers(body: unknown) {
+  const query = body as QueryOf<typeof fields>;
+  assertValidQuery(fields, query); // throws with each bad rule's path and message
+
+  const { sql, params } = encode(postgres, query, fields);
+  return db.query(`SELECT * FROM users WHERE ${sql}`, params);
+}
+```
+
+Given `age ≥ 21`, `plan in (pro, team)`, `name contains "O'Brien; DROP TABLE users"` and
+`signedUp > relativeDate(30 days ago)`, that produces:
+
+```sql
+age >= $1 AND plan IN ($2, $3) AND name LIKE $4 AND signedUp > CURRENT_DATE - INTERVAL '30 day'
+-- params: [21, 'pro', 'team', "%O'Brien; DROP TABLE users%"]
+```
+
+User input only ever reaches the database as bound parameters. Function arguments are inlined
+because a function's SQL may reorder them, so their values are validated by the schema first.
+
+## What to check
+
+- **Validate, don't sanitize.** `assertValidQuery` rejects bad rules. Avoid `sanitizeQuery` with
+  `removeInvalidRules` or `removeUnknown` on untrusted input: dropping a rule makes the query match
+  more rows, not fewer.
+- **Decide what empty means.** A query with no rules is valid; by default it exports as `1 = 1`.
+  `emptyQuery: 'none'` makes it match nothing, `'throw'` refuses it.
+- **Keep `unsupported: 'throw'`** (the default) so a rule the dialect can't express fails loudly
+  instead of being dropped.
+- **Map columns.** Give fields a `column` when the API name differs from the database column.
+- **Limit size.** `settings.maxRules` and `maxDepth` limit the UI; on the server, check the size of
+  the incoming JSON yourself.
+
+## In memory
+
+The same query filters rows without a database:
+
+```ts
+import { compile } from '@trawlnet/core';
+
+const matches = compile(fields, query);
+const result = rows.filter(matches);
+```
+
+The repository's `examples/server` runs this whole flow as a script.

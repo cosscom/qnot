@@ -1,0 +1,30 @@
+---
+title: Settings
+description: The StoreSettings object.
+---
+
+Pass `settings` to `createQueryStore` (or `useQueryStore` / `<QueryBuilder>`), and change them later
+with `store.setSettings(partial)`. The [settings guide](/docs/guides/settings) explains each one.
+
+```ts
+interface StoreSettings {
+  readOnly?: boolean;
+  immutable?: { groups?: boolean; fields?: boolean; operators?: boolean; values?: boolean };
+  maxDepth?: number;
+  maxRules?: number;
+  canReorder?: boolean;          // default true
+  canRegroup?: boolean;          // default true
+  canDeleteLocked?: boolean;     // default false
+  canLeaveEmptyGroup?: boolean;  // default true
+  emptyNewGroups?: boolean;      // default false
+  allowRefs?: boolean;           // default true
+  allowFunctions?: boolean;      // default true
+  confirmRemove?: (node: QueryNode) => boolean | Promise<boolean>;
+  operatorOnFieldChange?: 'keep' | 'reset';
+  valueOnFieldChange?: 'keep' | 'reset';
+  valueOnOperatorChange?: 'keep' | 'reset';
+}
+```
+
+`Action`, as passed to `store.can`: `'addRule' | 'addGroup' | 'remove' | 'clone' | 'move' |
+'editField' | 'editOperator' | 'editValue' | 'editGroup' | 'lock'`.

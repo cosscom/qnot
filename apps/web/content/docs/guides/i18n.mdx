@@ -1,0 +1,49 @@
+---
+title: Translation
+description: Override UI labels, operator names and validation messages.
+---
+
+There are three kinds of text, each overridable.
+
+## UI labels
+
+The default builders read their strings from `DEFAULT_LABELS`. Pass `labels` with any subset:
+
+```tsx
+<QueryBuilder
+  fields={fields}
+  labels={{ and: 'UND', or: 'ODER', not: 'NICHT', addRule: '+ Regel', addGroup: '+ Gruppe', remove: 'Entfernen' }}
+/>
+```
+
+The keys: `and`, `or`, `not`, `addRule`, `addGroup`, `addArrayGroup`, `remove`, `clone`, `drag`,
+`lock`, `unlock`, `compareField`, `compareFunction`, `compareValue`, `compareWith`, `useField`,
+`useFunction`, `yes`, `no`, `empty`, `rangeSeparator`, `some`, `all`, `none`, `count`, `matchOf`,
+`matchWhere`, `countGte`, `countLte`, `countEq`, `countGt`, `countLt`.
+
+## Field and option labels
+
+Field labels come from `label` (or the humanized key); option labels from `{ value, label }`. Build
+the schema per locale, or map labels before calling `defineFields`.
+
+## Validation messages
+
+Pass `messages` keyed by issue code to `defineFields`, as strings or functions:
+
+```ts
+const fields = defineFields(schema, {
+  messages: {
+    required: 'Pflichtfeld',
+    min: (issue) => issue.message.replace('Must be at least', 'Mindestens'),
+  },
+});
+```
+
+Codes: `unknownField`, `unknownOperator`, `operatorNotAllowed`, `required`, `type`, `option`, `min`,
+`max`, `integer`, `minLength`, `maxLength`, `pattern`, `range`, `ref`, `function`, `emptyGroup`,
+`arrayField`, `custom`.
+
+<Callout type="info">
+  Operator labels (`equals`, `is between`…) come from the operator table. For now, translate them
+  in your own UI from `operator.value`; a `labels` hook for operators is planned.
+</Callout>

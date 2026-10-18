@@ -1,0 +1,35 @@
+---
+title: Solid
+description: Fine-grained primitives over the store, and a Solid QueryBuilder.
+---
+
+```bash
+pnpm add @trawlnet/core @trawlnet/solid
+```
+
+## The default builder
+
+```tsx
+import '@trawlnet/core/styles.css';
+import { QueryBuilder } from '@trawlnet/solid';
+import { createSignal } from 'solid-js';
+
+const [query, setQuery] = createSignal(saved);
+<QueryBuilder fields={fields} value={query} onChange={setQuery} showLock />;
+```
+
+`QueryBuilder` takes `store`, or `fields` with `initial` or `value` (an accessor) / `onChange`,
+`format` and `settings`; plus `components`, `labels`, `class`, `showNot`, `showLock`.
+
+## Primitives
+
+`useQueryStore(options)` creates a store; `<QueryProvider store>` shares it; `useStore()` reads it.
+`useRule(id)` returns separate accessors (`rule`, `field`, `operator`, `value`, `ref`, `call`,
+`def`, `editor`, `operators`, `issues`, `source`, `can`…), so an editor that reads only `value()`
+re-runs only when the value changes.
+
+Also: `useGroup`, `useNode`, `useQuery`, `useQueryValue`, `useIsValid`, `useHistory`,
+`useSettings`, `useDragHandle`, `useDropTarget`, `useGroupDropZone`.
+
+The package ships source through the `solid` export condition. `vite-plugin-solid` resolves it; if
+React and Solid share a Vite app, limit each JSX plugin to its own files with `include`/`exclude`.

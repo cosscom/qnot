@@ -1,0 +1,142 @@
+---
+title: Schema and types
+description: Fields describe what can be queried. The query's types follow from them.
+---
+
+A schema is an object of fields built with `f`, passed through `defineFields`. `defineFields` pins
+literal types (so `'free' | 'pro'` stays a union, not `string`), flattens struct fields into dotted
+paths, and attaches custom operators, functions and messages to the field set.
+
+```ts twoslash
+import { defineFields, f } from '@trawlnet/core';
+
+export const fields = defineFields({
+  name: f.text({ minLength: 2 }),
+  age: f.number({ min: 0, max: 130, integer: true }),
+  plan: f.enum(['free', 'pro', 'team']),
+  tags: f.multiEnum(['vip', 'beta', 'churned']),
+  verified: f.boolean(),
+  signedUp: f.date({ label: 'Signed up' }),
+  opensAt: f.time(),
+  address: f.struct({ city: f.text(), zip: f.text({ column: 'postal_code' }) }),
+  orders: f.array({ product: f.text(), qty: f.number() }),
+});
+```
+
+## Field kinds
+
+| Builder | Value type | Default operators |
+| --- | --- | --- |
+| `f.text()` | `string` | `eq neq contains notContains startsWith endsWith in notIn isEmpty isNotEmpty isNull isNotNull` |
+| `f.number()` | `number` | `eq neq lt lte gt gte between notBetween in notIn isNull isNotNull` |
+| `f.boolean()` | `boolean` | `eq neq isNull isNotNull` |
+| `f.date()` | ISO date string | `eq neq lt lte gt gte between notBetween isNull isNotNull` |
+| `f.time()` | `HH:mm[:ss]` string | same as date |
+| `f.datetime()` | ISO date-time string | same as date |
+| `f.enum(values)` | one of `values` | `eq neq in notIn isNull isNotNull` |
+| `f.multiEnum(values)` | an array of `values` | `hasAny hasAll hasNone setEq setNeq isEmpty isNotEmpty isNull isNotNull` |
+| `f.struct(fields)` | (flattened) | becomes `address.city`, `address.zip`… |
+| `f.array(fields)` | a list of records | `isEmpty isNotEmpty isNull isNotNull`; query its items with [array groups](/docs/guides/arrays-and-structs) |
+| `f.custom({ kind, operators })` | your type | your operators |
+
+Every builder takes common options: `label`, `description`, `column` (the name exporters use),
+`operators` (restrict and order), `excludeOperators`, `extraOperators` (custom ones),
+`defaultOperator`, `defaultValue`, `required` (default `true`), `hidden` (not offered in pickers),
+`comparable` (can be compared against, default `true`), `validate`, and UI hints (`widget`,
+`placeholder`, `prefix`, `suffix`, `meta`). See [Field builders](/docs/reference/fields).
+
+Enum options can be plain values or `{ value, label }` objects, and can nest with `children` for a
+tree select. `leafOnly: true` makes parents unselectable:
+
+```ts
+f.enum([
+  { value: 'emea', label: 'EMEA', children: [{ value: 'de', label: 'Germany' }, { value: 'fr', label: 'France' }] },
+  { value: 'amer', label: 'Americas', children: [{ value: 'us', label: 'United States' }] },
+], { leafOnly: true });
+```
+
+## The query shape
+
+A query is a tree of groups and rules. It's plain JSON, so you can store it anywhere.
+
+```ts
+{
+  kind: 'group',
+  combinator: 'and',        // or 'or'
+  not: true,                // optional: negate the group
+  children: [
+    { kind: 'rule', field: 'age', operator: 'gte', value: 21 },
+    { kind: 'rule', field: 'age', operator: 'gt', ref: 'minAge' },          // compare with another field
+    { kind: 'rule', field: 'signedUp', operator: 'gt',
+      call: { fn: 'relativeDate', args: { amount: { value: 7 }, unit: { value: 'day' }, direction: { value: 'ago' } } } },
+    { kind: 'group', combinator: 'or', children: [ /* … */ ] },
+  ],
+}
+```
+
+A rule's right side is exactly one of `value` (a literal), `ref` (another field) or `call` (a
+[function](/docs/guides/operators-and-functions)). Its shape follows the operator: nothing for
+`isNull`, one value for `eq`, a pair for `between`, a list for `in`.
+
+## Types
+
+`QueryOf<typeof fields>` is the query typed against your schema. Rules are a discriminated union
+over every field and operator, so checking `field` and `operator` narrows `value`:
+
+```ts twoslash
+import { defineFields, f, isLiteralRule, type RuleOf } from '@trawlnet/core';
+const fields = defineFields({ age: f.number(), plan: f.enum(['free', 'pro']) });
+// ---cut---
+declare const rule: RuleOf<typeof fields>;
+
+if (rule.field === 'age' && rule.operator === 'between' && isLiteralRule(rule)) {
+  rule.value;
+  //   ^?
+}
+```
+
+`isLiteralRule` rules out field refs and function calls, which carry no `value`. Mistakes are
+compile errors:
+
+```ts twoslash
+// @errors: 2322
+import { defineFields, f, type RuleOf } from '@trawlnet/core';
+const fields = defineFields({ age: f.number(), plan: f.enum(['free', 'pro']) });
+// ---cut---
+const bad: RuleOf<typeof fields> = { kind: 'rule', field: 'plan', operator: 'eq', value: 'gold' };
+```
+
+### Drafts and strict queries
+
+While someone is typing, values can be missing, so `QueryOf` allows `null` in value slots. Once a
+query passes validation it can be narrowed to `StrictQueryOf`, where they can't:
+
+```ts twoslash
+import { defineFields, f, isValidQuery, isLiteralRule, type QueryOf } from '@trawlnet/core';
+const fields = defineFields({ age: f.number() });
+declare const query: QueryOf<typeof fields>;
+// ---cut---
+if (isValidQuery(fields, query)) {
+  const first = query.children[0];
+  if (first?.kind === 'rule' && first.operator === 'eq' && isLiteralRule(first)) {
+    first.value;
+    //    ^?
+  }
+}
+```
+
+### Rows
+
+`RowOf<typeof fields>` is the record shape a query is evaluated against. Struct paths become nested
+objects and array fields become lists of their element rows. `compile()` uses it for its argument
+type.
+
+| Type | Meaning |
+| --- | --- |
+| `QueryOf<F>` | A draft query: values may be `null`. |
+| `StrictQueryOf<F>` | A validated query: no missing values. |
+| `RuleOf<F>` / `NodeOf<F>` | One rule / one rule or group. |
+| `RowOf<F>` | The row a query is evaluated against. |
+| `ValueOf<D>` / `OperatorsOf<D>` | A field definition's value type / operators. |
+| `AnyFieldName<F>` | Root field names plus array element fields. |
+| `Query`, `Rule`, `Group` | The untyped wire shapes. |

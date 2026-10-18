@@ -1,0 +1,53 @@
+---
+title: Locks, read-only and limits
+description: Settings that decide what people can change, and how the UI reflects them.
+---
+
+Settings live on the store, change at runtime, and every binding's UI follows: controls disable,
+buttons hide or grey out, and the store refuses edits the settings forbid.
+
+```ts
+const store = createQueryStore({
+  fields,
+  settings: { maxRules: 20, maxDepth: 2, canRegroup: false },
+});
+
+store.setSettings({ readOnly: true });
+```
+
+| Setting | Default | |
+| --- | --- | --- |
+| `readOnly` | `false` | Nothing can be edited. |
+| `immutable` | — | `{ groups, fields, operators, values }`: freeze one part (RAQB's `immutable*Mode`). |
+| `maxRules` | — | Most rules in the whole query. |
+| `maxDepth` | — | Deepest group nesting below the root. |
+| `canReorder` | `true` | Move nodes within their group. |
+| `canRegroup` | `true` | Move nodes into another group. |
+| `canDeleteLocked` | `false` | Allow removing locked nodes. |
+| `canLeaveEmptyGroup` | `true` | When `false`, removing a group's last child removes the group. |
+| `emptyNewGroups` | `false` | New groups start empty instead of with one rule. |
+| `allowRefs` | `true` | Field-to-field comparisons. |
+| `allowFunctions` | `true` | Function values and left sides. |
+| `confirmRemove` | — | `(node) => boolean \| Promise<boolean>`, asked by `requestRemove` (the UI's remove buttons). |
+| `operatorOnFieldChange` | `'keep'` | `'reset'` always takes the new field's default operator. |
+| `valueOnFieldChange` | `'keep'` | `'reset'` always resets the value. |
+| `valueOnOperatorChange` | `'keep'` | `'reset'` resets instead of reshaping. |
+
+## Locks
+
+Any rule or group can be locked; a locked group locks everything inside it. Locks are part of the
+query JSON (`locked: true`), so they persist.
+
+```ts
+store.setLocked(groupId, true);
+store.isLocked(childId); // true
+```
+
+Show lock toggles in the default builders with `showLock`. Locked nodes get the `tn-locked` class.
+
+## Asking the store
+
+`store.can(action, id)` answers for `addRule`, `addGroup`, `remove`, `clone`, `move` (with a target
+group), `editField`, `editOperator`, `editValue`, `editGroup` and `lock`. The hooks expose these as
+`can` and update them through `store.subscribePermissions`, which fires only when settings, locks or
+(under limits) the tree's shape change, never on value edits.

@@ -1,0 +1,77 @@
+---
+title: Lists and nested fields
+description: Struct fields become dotted paths; array fields are queried with "some / all / none / at least N" groups.
+---
+
+## Struct fields
+
+`f.struct` groups fields under one name. `defineFields` flattens them into dotted paths, which is
+what rules, exporters and `compile()` use:
+
+```ts
+const fields = defineFields({
+  name: f.text(),
+  address: f.struct({ city: f.text(), zip: f.text({ column: 'postal_code' }) }, { label: 'Address' }),
+});
+
+Object.keys(fields); // ['name', 'address.city', 'address.zip']
+```
+
+Field pickers group them under the struct's label (each field gets `group: 'Address'`). `compile()`
+reads `row.address.city`, MongoDB and JsonLogic use the dotted path, and SQL uses the `column` when
+there is one.
+
+## Array fields
+
+An `f.array` field holds a list of records, like a user's orders. You don't compare the list
+directly; you put an **array group** on it, whose rules are about one element at a time:
+
+```ts
+const fields = defineFields({
+  name: f.text(),
+  orders: f.array({ product: f.text(), qty: f.number(), status: f.enum(['paid', 'refunded']) }),
+});
+
+const query: QueryOf<typeof fields> = {
+  kind: 'group',
+  combinator: 'and',
+  children: [
+    {
+      kind: 'group',
+      combinator: 'and',
+      of: { field: 'orders', match: { count: 'gte', value: 3 } },
+      children: [{ kind: 'rule', field: 'status', operator: 'eq', value: 'paid' }],
+    },
+  ],
+};
+// "at least 3 orders where status = paid"
+```
+
+`match` is one of:
+
+| `match` | Means |
+| --- | --- |
+| `'some'` | at least one element matches |
+| `'all'` | every element matches (true for an empty list) |
+| `'none'` | no element matches |
+| `{ count: 'gte' \| 'gt' \| 'lte' \| 'lt' \| 'eq' \| 'neq', value: n }` | the number of matching elements compares to `n` |
+| `{ count: 'between', value: [lo, hi] }` | the number of matches is within a range |
+
+Inside the group, rules use the element's fields (`status`, not `orders.status`), and the types
+follow: `ArrayGroupOf` types the children against the element schema. In the store,
+`store.fieldsFor(id)` returns the scope a node sees, and `store.addArrayGroup(groupId, 'orders', 'some')`
+adds one. The default builders show "[some ▾] of Orders where" with a "+ List condition" button.
+
+Array fields offer `isEmpty`/`isNotEmpty` as plain rules too.
+
+## Exporting array groups
+
+| Codec | Output |
+| --- | --- |
+| SQL | Postgres `jsonb` columns: `EXISTS (SELECT 1 FROM jsonb_array_elements(col) …)`, `COUNT(*)` for counts. Other dialects throw (or skip with `unsupported: 'skip'`). |
+| MongoDB | `$elemMatch`; counts via `$expr` + `$size` of `$filter` |
+| JsonLogic | `some` / `none`, counts with `reduce` over `filter` |
+| Elasticsearch | `nested` queries (counts throw) |
+| SpEL | `orders.?[cond].size()` |
+| RAQB | `rule_group` |
+| react-querybuilder, jQuery QB | throw: they have no equivalent |

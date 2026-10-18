@@ -1,0 +1,142 @@
+---
+title: React
+description: The default builder, the store hooks, and swapping in your own components.
+---
+
+```bash
+pnpm add @trawlnet/core @trawlnet/react
+```
+
+## The default builder
+
+`<QueryBuilder>` takes either a `store` you created, or store options (`fields`, `initial` or
+`value`/`onChange`, `format`, `settings`, `sanitize`) and creates one.
+
+```tsx
+import '@trawlnet/core/styles.css';
+import { QueryBuilder } from '@trawlnet/react';
+
+<QueryBuilder fields={fields} initial={saved} onChange={save} showLock />;
+```
+
+| Prop | |
+| --- | --- |
+| `components` | Replace `Group`, `Rule` or `ValueEditor`; the rest keep their defaults. |
+| `labels` | Override any UI string (see [i18n](/docs/guides/i18n)). |
+| `showNot` | Show the NOT toggle on groups (default `true`). |
+| `showLock` | Show lock toggles on rules and groups (default `false`). |
+| `className` | Added to the root `.tn` element. |
+
+## Owning the store
+
+`useQueryStore(options)` creates a store for the component's lifetime. Options are read once,
+except `value` (synced into the store), `onChange` (always the latest) and `settings` (applied when
+the object changes). Share it with `<QueryProvider>`:
+
+```tsx
+import { QueryBuilder, QueryProvider, useHistory, useIsValid, useQueryStore } from '@trawlnet/react';
+
+function Editor() {
+  const store = useQueryStore({ fields, initial: saved, settings: { maxRules: 50 } });
+  return (
+    <QueryProvider store={store}>
+      <Toolbar />
+      <QueryBuilder store={store} />
+    </QueryProvider>
+  );
+}
+
+function Toolbar() {
+  const { canUndo, canRedo, undo, redo } = useHistory();
+  const valid = useIsValid();
+  return (/* … */);
+}
+```
+
+## Hooks
+
+All hooks read the store from the nearest `<QueryProvider>`. Pass your schema as a type parameter
+for typed results.
+
+| Hook | Returns | Re-renders when |
+| --- | --- | --- |
+| `useRule(id)` | the rule, its field `def`, `editor` spec, `operators`, `fieldOptions`, `refOptions`, `functionOptions`, `source`, `issues`, `can`, `locked`, and actions | that rule changes, or its permissions flip |
+| `useGroup(id)` | the group, `isRoot`, `arrayFields`, `issues`, `can`, `locked`, and actions | that group changes, or its permissions flip |
+| `useNode(id)` | the raw node | that node changes |
+| `useQuery()` | the whole query as JSON | anything changes |
+| `useQueryValue()` | the query in the store's `format` | anything changes |
+| `useIsValid()` | `boolean` | validity flips |
+| `useHistory()` | `{ canUndo, canRedo, undo, redo }` | either flag flips |
+| `useSettings()` | the store's settings | settings change |
+| `useStore()` | the store itself | never |
+
+`useRule` actions: `setField`, `setOperator`, `setValue`, `setRef`, `setCall`, `setLocked`,
+`remove` (asks `confirmRemove` first) and `clone`. `useGroup` actions: `setCombinator`, `setNot`,
+`setMatch`, `setLocked`, `addRule`, `addGroup`, `addArrayGroup`, `remove`, `clone`.
+
+`can` holds booleans for what the user may do now (`editField`, `editOperator`, `editValue`,
+`remove`, `clone`, `lock` for rules; `addRule`, `addGroup`, `editGroup`, `remove`, `clone`, `lock`
+for groups). Disable controls with it; the store refuses the same edits anyway.
+
+## Writing your own UI
+
+A custom builder is a group component that renders its children by id, and a rule component:
+
+```tsx
+import { QueryProvider, useGroup, useNode, useRule } from '@trawlnet/react';
+import { memo } from 'react';
+
+const Group = memo(function Group({ id }: { id: string }) {
+  const { group, addRule, setCombinator } = useGroup(id);
+  return (
+    <fieldset>
+      <select value={group.combinator} onChange={(e) => setCombinator(e.target.value as 'and' | 'or')}>
+        <option value="and">all</option>
+        <option value="or">any</option>
+      </select>
+      {group.children.map((child) => <Node id={child} key={child} />)}
+      <button onClick={() => addRule()}>Add rule</button>
+    </fieldset>
+  );
+});
+
+function Node({ id }: { id: string }) {
+  return useNode(id)?.kind === 'group' ? <Group id={id} /> : <Rule id={id} />;
+}
+
+const Rule = memo(function Rule({ id }: { id: string }) {
+  const { rule, fieldOptions, operators, editor, setField, setOperator, setValue, remove } = useRule(id);
+  /* render rule.field, rule.operator, and an editor for editor.type */
+});
+```
+
+Wrap each piece in `memo` and pass only the id: the per-node subscriptions do the rest, and editing
+one rule re-renders only that rule. The [custom UI guide](/docs/guides/custom-ui) builds a complete
+one with coss ui.
+
+## Drag and drop
+
+Three hooks wire HTML5 drag and drop to the store's `move`. They work in the default builder and in
+your own:
+
+```tsx
+import { useDragHandle, useDropTarget, useGroupDropZone } from '@trawlnet/react';
+
+function Row({ id }: { id: string }) {
+  const { isDragging, handleProps } = useDragHandle(id);
+  const { position, dropProps } = useDropTarget(id); // position: 'before' | 'after' | null
+  return (
+    <div {...dropProps} data-dragging={isDragging} data-drop={position}>
+      <span {...handleProps}>⠿</span>
+      {/* … */}
+    </div>
+  );
+}
+```
+
+`useGroupDropZone(groupId)` makes a group's children area accept drops at its end, including when
+it's empty. Moves respect `canReorder`, `canRegroup`, `maxDepth` and locks.
+
+<Callout type="info">
+  Touch devices don't fire HTML5 drag events, so drag and drop is mouse-only for now.
+</Callout>

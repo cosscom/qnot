@@ -1,0 +1,71 @@
+---
+title: Store
+description: Every method of QueryStore.
+---
+
+```ts
+createQueryStore({ fields, initial?, format?, history?, settings?, sanitize? })
+```
+
+| Option | |
+| --- | --- |
+| `fields` | The schema from `defineFields`. |
+| `initial` | Starting query (in `format`'s shape when given). Defaults to an empty AND group. |
+| `format` | A two-way codec; `getValue`/`setValue` then speak its shape. |
+| `history` | `false`, or `{ limit = 100, mergeWindowMs = 1000 }`. On by default. |
+| `settings` | See [settings](/docs/reference/settings). |
+| `sanitize` | `SanitizeOptions` applied to `initial`, `setQuery` and `setValue`. |
+
+## Reading
+
+| | |
+| --- | --- |
+| `rootId`, `version`, `ruleCount`, `settings`, `fields` | |
+| `get(id)`, `getRule(id)`, `getGroup(id)` | Nodes by id (`getRule`/`getGroup` throw on the wrong kind). |
+| `path(id)`, `depth(id)` | Child indexes from the root; group nesting depth. |
+| `fieldsFor(id)` | The schema a node sees (the element schema inside array groups). |
+| `isLocked(id)` | The node or an ancestor is locked. |
+| `can(action, id, target?)` | Whether an action is allowed now. |
+| `getQuery()` | The query as JSON, structurally shared. |
+| `getNodeJSON(id)` | One subtree as JSON. |
+| `getValue()` | The query in the store's `format`. |
+| `issues(id)`, `isValid()` | Validation. |
+
+## Subscribing
+
+| | |
+| --- | --- |
+| `subscribe(id, fn)` | When that node changes. |
+| `subscribe(fn)` | After every change. |
+| `subscribePermissions(fn)` | When settings, locks, or (under limits) the tree's shape change. |
+
+Each returns an unsubscribe function.
+
+## Editing
+
+| | |
+| --- | --- |
+| `addRule(groupId, rule?, index?)` | Returns the new id, or `null` if not allowed. |
+| `addGroup(groupId, group?, index?)` | New groups contain one rule unless `emptyNewGroups`. |
+| `addArrayGroup(groupId, field, match?, index?)` | |
+| `insert(groupId, node, index?)` | Any JSON subtree. |
+| `remove(id)`, `requestRemove(id)` | `requestRemove` asks `confirmRemove` first. |
+| `clear()` | Remove every child of the root. |
+| `move(id, groupId, index)`, `canMove(id, groupId)` | |
+| `clone(id)` | Inserted after the original. |
+| `setField(id, field)`, `setOperator(id, op)`, `setRuleValue(id, value)` | |
+| `setRef(id, field \| null)`, `setCall(id, call \| null)` | Switch the right side to a field or a function, or back to a value. |
+| `setCombinator(id, 'and' \| 'or')`, `setNot(id, boolean)`, `setMatch(id, quantifier)` | |
+| `setLocked(id, boolean)` | |
+| `setQuery(query)`, `setValue(value)` | Load a query, reconciled node by node. |
+| `reset(query?)` | Load as a fresh baseline and clear history. |
+| `setSettings(partial)` | |
+| `batch(fn, { history?, merge? })` | One notification, one undo step. |
+
+## History
+
+`undo()`, `redo()`, `canUndo()`, `canRedo()`, `clearHistory()`.
+
+## Lifecycle
+
+`dispose()` drops every subscriber.

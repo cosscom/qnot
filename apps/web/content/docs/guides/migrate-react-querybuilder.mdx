@@ -1,0 +1,60 @@
+---
+title: Migrating from react-querybuilder
+description: Keep your saved queries. The store speaks react-querybuilder's JSON through the rqb format.
+---
+
+You don't need a migration script. Give the store the `rqb` format and its `value` / `onChange`
+read and write react-querybuilder's `RuleGroupType`, so queries already in your database load as-is
+and keep being saved in the same shape.
+
+```tsx
+import { QueryBuilder } from '@trawlnet/react';
+import { rqb } from '@trawlnet/core/formats/rqb';
+
+// before: <ReactQueryBuilder fields={rqbFields} query={query} onQueryChange={setQuery} />
+<QueryBuilder fields={fields} format={rqb} value={query} onChange={setQuery} />;
+```
+
+## Fields
+
+react-querybuilder's `fields` array becomes a `defineFields` object. Typical mappings:
+
+| react-querybuilder | trawlnet |
+| --- | --- |
+| `{ name, label }` | `name: f.text({ label })` |
+| `inputType: 'number'` | `f.number()` |
+| `inputType: 'date'` / `'datetime-local'` / `'time'` | `f.date()` / `f.datetime()` / `f.time()` |
+| `valueEditorType: 'select', values` | `f.enum(values.map((v) => ({ value: v.name, label: v.label })))` |
+| `valueEditorType: 'multiselect'` on a list field | `f.multiEnum(…)` |
+| `valueEditorType: 'checkbox'` | `f.boolean()` |
+| `operators` | `operators` (trawlnet names; see below) |
+| `validator` | `validate` (return a message) |
+| `defaultValue`, `defaultOperator` | same |
+
+## Operators
+
+| react-querybuilder | trawlnet |
+| --- | --- |
+| `=`, `!=`, `<`, `<=`, `>`, `>=` | `eq`, `neq`, `lt`, `lte`, `gt`, `gte` |
+| `contains`, `doesNotContain` | `contains`, `notContains` |
+| `beginsWith`, `endsWith` | `startsWith`, `endsWith` |
+| `doesNotBeginWith`, `doesNotEndWith` | a NOT group around `startsWith` / `endsWith` |
+| `in`, `notIn` | `in`, `notIn` |
+| `between`, `notBetween` | `between`, `notBetween` |
+| `null`, `notNull` | `isNull`, `isNotNull` |
+
+`valueSource: 'field'` maps to `ref`. Between and in values written as comma-separated strings
+(`"26,52"`) decode into arrays. RQB's independent-combinators shape decodes too (`fromRQB`).
+
+## What changes
+
+- Rules no longer need `id`s; the store keeps its own.
+- `formatQuery(query, 'sql')` becomes `encode(sqlFormat(), query, fields)` on the native query, or
+  `encode(sqlFormat(), decode(rqb, rqbQuery, fields), fields)` on the RQB shape.
+- Features react-querybuilder can't store (array groups, function calls) throw when encoded to
+  `rqb`. Switch the stored format to trawlnet's own JSON (the default) before using them.
+
+## Speed
+
+At 1,000 rules a keystroke drops from about 60 ms to 0.5 ms and adding a rule from about 58 ms to
+1 ms, and memory roughly halves (see the [benchmarks](/#benchmarks)).

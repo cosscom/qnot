@@ -1,0 +1,70 @@
+---
+title: Installation
+description: Add the core and the binding for your framework.
+---
+
+trawlnet is split so you only ship what you use. The core is plain TypeScript with no dependencies;
+each binding depends on the core and on its framework as a peer.
+
+<Tabs items={['React', 'Vue', 'Svelte', 'Solid', 'Vanilla']}>
+  <Tab value="React">
+    ```bash
+    pnpm add @trawlnet/core @trawlnet/react
+    ```
+    Needs React 18 or later (the hooks use `useSyncExternalStore`).
+  </Tab>
+  <Tab value="Vue">
+    ```bash
+    pnpm add @trawlnet/core @trawlnet/vue
+    ```
+    Needs Vue 3.5. The components are written with `h()`, so no SFC compiler is required.
+  </Tab>
+  <Tab value="Svelte">
+    ```bash
+    pnpm add @trawlnet/core @trawlnet/svelte
+    ```
+    Needs Svelte 5. The package ships `.svelte` components through the `svelte` export condition.
+  </Tab>
+  <Tab value="Solid">
+    ```bash
+    pnpm add @trawlnet/core @trawlnet/solid
+    ```
+    Needs solid-js 1.9. Ships source through the `solid` export condition, which
+    `vite-plugin-solid` picks up.
+  </Tab>
+  <Tab value="Vanilla">
+    ```bash
+    pnpm add @trawlnet/core @trawlnet/dom
+    ```
+    No framework at all.
+  </Tab>
+</Tabs>
+
+## Styles
+
+The default builders render plain elements with stable `tn-*` class names. An optional stylesheet
+gives them a neutral look that follows `prefers-color-scheme`:
+
+```ts
+import '@trawlnet/core/styles.css';
+```
+
+Skip it if you build your own UI from the hooks, or style the `tn-*` classes yourself. The full list
+is exported as `CLASS` from `@trawlnet/core`.
+
+## Formats
+
+Format codecs are subpath imports, so a bundle only includes the ones you use:
+
+```ts
+import { sqlFormat } from '@trawlnet/core/formats/sql';
+import { mongo } from '@trawlnet/core/formats/mongo';
+import { rqb } from '@trawlnet/core/formats/rqb';
+```
+
+See [Formats](/docs/concepts/formats) for the full list.
+
+<Callout type="warn" title="Pre-release">
+  trawlnet is at 0.0 and not yet on npm. The API on these pages is the one in the repository and may
+  still change before 1.0.
+</Callout>

@@ -1,0 +1,63 @@
+---
+title: Migrating from RAQB
+description: From react-awesome-query-builder's config and Immutable tree to a typed schema and plain JSON.
+---
+
+Keep stored RAQB trees working with the `raqb` format: `value` / `onChange` read and write RAQB's
+JSON tree (`QbUtils.getTree` output), including `rule_group` array groups, functions mapped to RAQB's
+BasicFuncs, and locks.
+
+```tsx
+import { QueryBuilder } from '@trawlnet/react';
+import { raqb } from '@trawlnet/core/formats/raqb';
+
+<QueryBuilder fields={fields} format={raqb} value={tree} onChange={setTree} />;
+```
+
+There's no Immutable.js and no Redux store: the value is plain JSON.
+
+## Config to schema
+
+| RAQB `config` | trawlnet |
+| --- | --- |
+| `fields.x.type: 'text' \| 'number' \| 'boolean' \| 'date' \| 'time' \| 'datetime'` | `f.text()`, `f.number()`, … |
+| `type: 'select'` + `listValues` | `f.enum([...])` |
+| `type: 'multiselect'` | `f.multiEnum([...])` |
+| `treeselect` / `treemultiselect` + `treeValues` | `f.enum` / `f.multiEnum` with nested `children`; `treeSelectOnlyLeafs` → `leafOnly` |
+| `!struct` + `subfields` | `f.struct({...})` (flattened to `a.b` paths) |
+| `!group` (`mode: 'some'` / `'array'`) | `f.array({...})` + [array groups](/docs/guides/arrays-and-structs) |
+| `fieldSettings.min/max/step` | `min`, `max`, `step` |
+| `fieldSettings.validateValue` | `validate` |
+| `fieldSettings.asyncFetch` | `search` |
+| `allowCustomValues` | `allowCustom` |
+| `fieldName` | `column` |
+| `label2`, `tooltip` | `description` |
+| `hideForSelect` / `hideForCompare` | `hidden` / `comparable: false` |
+| `excludeOperators` | `excludeOperators` |
+| `preferWidgets: ['slider']`, `textarea` | `widget: 'slider'`, `widget: 'textarea'` |
+| `funcs` | `defineFunction` + `defineFields(…, { functions })` |
+| custom operators | `defineOperator` + `extraOperators` |
+| `settings.*` | store [settings](/docs/guides/settings) |
+| `removeIncompleteRulesOnLoad` etc. | [`sanitizeQuery`](/docs/concepts/validation) or the store's `sanitize` option |
+| `compressConfig` | `fieldsToJSON` / `fieldsFromJSON` |
+| ternary mode | [`compileCases`](/docs/guides/routing-and-cases) |
+
+## Exports
+
+`QbUtils.sqlFormat`, `mongodbFormat`, `jsonLogicFormat`, `spelFormat`, `elasticSearchFormat` and
+`queryString` map to the `sql`, `mongo`, `jsonlogic`, `spel`, `elasticsearch` and `text` codecs.
+`loadFromJsonLogic`, `loadFromSpel` and `SqlUtils.loadFromSql` map to `decode` with those codecs.
+
+## Not carried over
+
+- **Custom conjunctions** (XOR, NOR). NOR is NOT + OR; XOR has no portable meaning in SQL or MongoDB.
+- **`validateValue` returning a `fixedValue`.** Validation reports; it doesn't rewrite values.
+- **Slider `marks`, `rows` for textareas, price formatting options.** The schema carries `widget`,
+  `step`, `prefix` and `suffix`; anything more goes in `meta` for your UI.
+- **RAQB's antd / MUI / Bootstrap / Fluent widget packages.** Build the UI from the hooks with your
+  kit instead.
+
+## Speed
+
+At 1,000 rules, adding a rule drops from about 94 ms to 1 ms, a keystroke from about 8 ms to
+0.5 ms, and the JavaScript from 193 KB to 17 KB gzipped (see the [benchmarks](/#benchmarks)).

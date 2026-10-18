@@ -1,0 +1,97 @@
+---
+title: Validation and sanitizing
+description: Per-node issues from the schema, strict narrowing, and cleaning queries loaded from storage.
+---
+
+Validation comes from the schema: `required`, `min`/`max`/`integer` on numbers,
+`minLength`/`maxLength`/`pattern` on text, membership in enum options, well-formed dates and times,
+`between` pairs in order, field refs of the same kind, known functions with valid arguments, and your
+own `validate` function.
+
+```ts
+import { defineFields, f, validateQuery } from '@trawlnet/core';
+
+const fields = defineFields({
+  age: f.number({ min: 0, integer: true }),
+  email: f.text({ pattern: /^[^@\s]+@[^@\s]+$/ }),
+  code: f.text({ validate: (v) => (v.startsWith('TN-') ? undefined : 'Codes start with TN-') }),
+});
+
+validateQuery(fields, query);
+// [{ path: [0], code: 'integer', message: 'Must be a whole number', severity: 'error' }, …]
+```
+
+Each issue has a `code`, a `message`, a `severity` (an empty group is a `warning`, everything else
+an `error`), a `path` of child indexes, and for pairs and lists the `index` of the offending element.
+
+## In the store and the UI
+
+The store validates lazily per node and caches the result until that node changes:
+
+```ts
+store.issues(ruleId); // readonly Issue[], same array until the rule changes
+store.isValid();      // no error anywhere
+```
+
+The hooks expose them as `issues` on each rule and group, so a UI can mark just the invalid row.
+The default builders add the `tn-invalid` class and a tooltip with the messages.
+
+## Narrowing to strict
+
+`isValidQuery` is a type guard from `QueryOf` to `StrictQueryOf`, where values can't be `null`.
+`assertValidQuery` throws an error listing every problem with its path, which suits a server
+handler:
+
+```ts
+import { assertValidQuery } from '@trawlnet/core';
+
+assertValidQuery(fields, body); // throws: "trawlnet: invalid query:\n  at [0] Must be at least 0"
+// body is StrictQueryOf<typeof fields> from here on
+```
+
+## Sanitizing stored queries
+
+Queries saved months ago may not fit today's schema. `sanitizeQuery` cleans one up and returns the
+same object when nothing needed fixing:
+
+```ts
+import { sanitizeQuery } from '@trawlnet/core';
+
+const clean = sanitizeQuery(fields, saved, {
+  removeIncompleteRules: true,   // rules whose only problem is a missing value
+  removeEmptyGroups: true,       // groups left with no children (not the root)
+  removeInvalidListValues: true, // list values no longer among the options
+  removeUnknown: true,           // rules on fields or operators the schema no longer has
+});
+```
+
+| Option | Default | RAQB equivalent |
+| --- | --- | --- |
+| `removeIncompleteRules` | `false` | `removeIncompleteRulesOnLoad` |
+| `removeInvalidRules` | `false` | none: drops any rule with an error |
+| `removeEmptyGroups` | `false` | `removeEmptyGroupsOnLoad` |
+| `removeInvalidListValues` | `false` | `removeInvalidMultiSelectValuesOnLoad` |
+| `removeUnknown` | `false` | none |
+
+<Callout type="warn" title="Don't sanitize untrusted input into a wider query">
+  On a server, prefer rejecting over cleaning. Dropping a tampered rule like `age >= -5` makes the
+  query match more rows, not fewer. `removeIncompleteRules` only drops rules with missing values and
+  keeps invalid ones so `assertValidQuery` can reject them; `removeInvalidRules` and `removeUnknown`
+  are opt-in for that reason.
+</Callout>
+
+A store can sanitize everything it loads (`initial`, `setQuery`, `setValue`) with the `sanitize`
+option of `createQueryStore`.
+
+## Messages
+
+Override any message per code, for wording or translation, when you define the fields:
+
+```ts
+const fields = defineFields(
+  { age: f.number({ min: 0 }) },
+  { messages: { required: 'Fill this in', min: (issue) => `Too small (${issue.message})` } },
+);
+```
+
+See [i18n](/docs/guides/i18n) for translating the UI's own labels.
