@@ -1,8 +1,7 @@
 import type { Format } from '../codec';
 import type { Fields } from '../fields';
-import { OPERATORS, type OperatorId } from '../operators';
 import type { Group, Query, QueryNode, Rule } from '../types';
-import { coerceScalar, group, negated, toList } from './_util';
+import { coerceScalar, group, infoOf, isFnCall, negated, operatorInfo, toList } from './_util';
 
 /** react-querybuilder's `RuleType` (the subset trawlnet reads and writes). */
 export interface RQBRule {
@@ -31,7 +30,7 @@ export interface RQBRuleGroupIC {
   rules: (RQBRule | RQBRuleGroupIC | string)[];
 }
 
-const TO_RQB: Record<OperatorId, string> = {
+const TO_RQB: Record<string, string> = {
   eq: '=',
   neq: '!=',
   lt: '<',
@@ -49,16 +48,26 @@ const TO_RQB: Record<OperatorId, string> = {
   isNull: 'null',
   isNotNull: 'notNull',
 };
-const FROM_RQB: Record<string, OperatorId> = { ...Object.fromEntries(Object.entries(TO_RQB).map(([k, v]) => [v, k as OperatorId])), '==': 'eq', '<>': 'neq' };
+const FROM_RQB: Record<string, string> = { ...Object.fromEntries(Object.entries(TO_RQB).map(([k, v]) => [v, k])), '==': 'eq', '<>': 'neq' };
 
-function encodeRule(rule: Rule): RQBRule {
-  if (rule.ref !== undefined) return { field: rule.field, operator: TO_RQB[rule.operator], value: rule.ref, valueSource: 'field' };
-  const value = OPERATORS[rule.operator].arity === 'none' ? null : (rule.value ?? null);
-  return { field: rule.field, operator: TO_RQB[rule.operator], value };
+const unsupported = (what: string): never => {
+  throw new Error(`trawlnet/rqb: react-querybuilder has no equivalent for ${what}`);
+};
+
+// Operators react-querybuilder lacks (isEmpty, hasAny…, custom ones) travel under their trawlnet id,
+// which react-querybuilder accepts as a custom operator.
+function encodeRule(rule: Rule, fields: Fields): RQBRule {
+  if (isFnCall(rule.field) || rule.call !== undefined) return unsupported('function calls');
+  const operator = TO_RQB[rule.operator] ?? rule.operator;
+  if (rule.ref !== undefined) return { field: rule.field, operator, value: rule.ref, valueSource: 'field' };
+  const value = infoOf(fields, rule.operator).arity === 'none' ? null : (rule.value ?? null);
+  return { field: rule.field, operator, value };
 }
 
-const encodeGroup = (g: Group, children: (RQBRule | RQBRuleGroup)[]): RQBRuleGroup =>
-  g.not ? { combinator: g.combinator, not: true, rules: children } : { combinator: g.combinator, rules: children };
+function encodeGroup(g: Group, children: (RQBRule | RQBRuleGroup)[]): RQBRuleGroup {
+  if (g.of) return unsupported(`array groups (${g.of.field})`);
+  return g.not ? { combinator: g.combinator, not: true, rules: children } : { combinator: g.combinator, rules: children };
+}
 
 // --- decode ------------------------------------------------------------------------------------
 
@@ -68,16 +77,17 @@ const fail = (msg: string, what: unknown): never => {
 
 function decodeRule(r: RQBRule, fields: Fields): QueryNode {
   const negate = r.operator === 'doesNotBeginWith' || r.operator === 'doesNotEndWith';
-  const operator = negate ? (r.operator === 'doesNotBeginWith' ? 'startsWith' : 'endsWith') : FROM_RQB[r.operator];
-  if (!operator) return fail('unknown operator', r.operator);
+  const operator = negate ? (r.operator === 'doesNotBeginWith' ? 'startsWith' : 'endsWith') : (FROM_RQB[r.operator] ?? r.operator);
+  if (!operatorInfo(fields, operator)) return fail('unknown operator', r.operator);
+  const info = infoOf(fields, operator);
   const def = fields[r.field];
   let rule: Rule;
   if (r.valueSource === 'field') rule = { kind: 'rule', field: r.field, operator, ref: String(r.value) };
   else {
-    const arity = OPERATORS[operator].arity;
+    const arity = info.arity;
     if (arity === 'none') rule = { kind: 'rule', field: r.field, operator };
     else if (arity === 'one') {
-      const v = OPERATORS[operator].textMatch ? (r.value ?? '') : coerceScalar(def, r.value);
+      const v = info.textMatch ? (r.value ?? '') : coerceScalar(def, r.value);
       rule = { kind: 'rule', field: r.field, operator, value: v };
     } else {
       const list = toList(r.value).map((x) => coerceScalar(def, x));
@@ -129,7 +139,7 @@ function decodeGroup(g: RQBRuleGroup | RQBRuleGroupIC, fields: Fields): Group {
  */
 export const rqb: Format<RQBRuleGroup, RQBRule | RQBRuleGroup> = {
   name: 'rqb',
-  encodeRule: (rule) => encodeRule(rule),
+  encodeRule: (rule, ctx) => encodeRule(rule, ctx.fields),
   encodeGroup: (g, children) => encodeGroup(g, children),
   decode: (input, ctx) => decodeGroup(input, ctx.fields),
 };

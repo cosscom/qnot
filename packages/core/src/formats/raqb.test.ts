@@ -84,7 +84,7 @@ describe('raqb', () => {
     expect(decode(raqb, Utils.getTree(tree!) as RAQBGroup, fields)).toEqual(q);
   });
 
-  it('decodes is_empty, multiselect and rejects function values', () => {
+  it('decodes is_empty, multiselect and rejects unknown operators', () => {
     const rule = (operator: string, value: unknown[], valueSrc: RAQBRule['properties']['valueSrc'] = ['value']): RAQBRule => ({
       id: operator,
       type: 'rule',
@@ -95,11 +95,10 @@ describe('raqb', () => {
       kind: 'group',
       combinator: 'and',
       children: [
-        { kind: 'rule', field: 'status', operator: 'isNull' },
-        { kind: 'rule', field: 'status', operator: 'in', value: ['active'] },
+        { kind: 'rule', field: 'status', operator: 'isEmpty' },
+        { kind: 'rule', field: 'status', operator: 'hasAny', value: ['active'] },
       ],
     });
-    expect(() => decode(raqb, { id: 'r', type: 'group', children1: [rule('equal', ['NOW'], ['func'])] }, fields)).toThrow(/function values/);
     expect(() => decode(raqb, { id: 'r', type: 'group', children1: [rule('proximity', ['a'])] }, fields)).toThrow(/unsupported operator/);
   });
 });

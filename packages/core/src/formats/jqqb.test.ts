@@ -58,7 +58,7 @@ describe('jqqb', () => {
         { kind: 'group', combinator: 'and', not: true, children: [{ kind: 'rule', field: 'name', operator: 'startsWith', value: 'x' }] },
         { kind: 'group', combinator: 'and', not: true, children: [{ kind: 'rule', field: 'name', operator: 'endsWith', value: 'y' }] },
         { kind: 'rule', field: 'verified', operator: 'eq', value: false },
-        { kind: 'rule', field: 'nickname', operator: 'isNull' },
+        { kind: 'rule', field: 'nickname', operator: 'isEmpty' },
         { kind: 'group', combinator: 'and', not: true, children: [{ kind: 'rule', field: 'status', operator: 'in', value: ['active', 'banned'] }] },
       ],
     });

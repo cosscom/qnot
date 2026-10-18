@@ -69,16 +69,19 @@ Source: RAQB README + CONFIG.adoc. Status: ✅ done · 🚧 in progress · ⏭ i
 
 ## Formats
 
+Per-codec support and lossy mappings: [formats.md](formats.md).
+
 | RAQB | trawlnet | Status |
 |---|---|---|
-| export SQL | `formats/sql` (5 dialects, params) | ✅ |
-| export MongoDB | `formats/mongo` (two-way) | ✅ |
-| export/import JsonLogic | `formats/jsonlogic` | ✅ |
-| export queryString (human readable) | `formats/text` | 🚧 |
-| export/import SpEL | `formats/spel` | 🚧 |
-| export ElasticSearch | `formats/elasticsearch` | 🚧 |
-| import SQL | `formats/sql` decode | 🚧 |
-| RAQB's own tree JSON | `formats/raqb` (two-way, interop-tested) | ✅ |
+| export SQL | `formats/sql`: 5 dialects, params, CASE WHEN; Postgres jsonb array groups; multiEnum via arrays / JSON functions | ✅ |
+| import SQL | `formats/sql` decode: hand-written WHERE parser (comparisons, LIKE, IN, BETWEEN, IS NULL, AND/OR/NOT, functions) | ✅ |
+| export/import MongoDB | `formats/mongo`: `$elemMatch` / `$expr` + `$filter` counts, `$switch` cases | ✅ |
+| export/import JsonLogic | `formats/jsonlogic`: some/all/none + reduce counts, `if` cases; checked with json-logic-js | ✅ |
+| export queryString (human readable) | `formats/text` | ✅ |
+| export/import SpEL | `formats/spel`: RAQB-compatible both ways (interop-tested with `spelFormat`/`loadFromSpel`) | ✅ |
+| export ElasticSearch | `formats/elasticsearch`: bool/term/terms/range/wildcard/exists, `nested` array groups | ✅ |
+| RAQB's own tree JSON | `formats/raqb`: rule_group, funcs (LOWER/UPPER/NOW/TODAY/RELATIVE_DATE), isLocked; interop-tested | ✅ |
+| react-querybuilder / jQuery QueryBuilder JSON | `formats/rqb`, `formats/jqqb` (no functions or array groups in those libraries) | ✅ |
 
 ## UI frameworks
 

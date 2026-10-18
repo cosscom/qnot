@@ -1,0 +1,143 @@
+# Format codecs
+
+Every codec lives at `@trawlnet/core/formats/<name>` and works with `encode(codec, query, fields)`,
+`decode(codec, value, fields)` and (where noted) `encodeCases(codec, cases, fields)`.
+
+**Export codecs** (sql, mongo, jsonlogic, spel, text, elasticsearch) skip rules that are incomplete
+or invalid, the same way `compile()` does. They also skip rules the target can't express: a function
+with no format for that codec, or an operator the dialect lacks. A query whose rules are all skipped
+becomes the target's "match everything" (`1 = 1`, `{}`, `true`, `''`, `match_all`).
+
+**UI-state codecs** (rqb, raqb, jqqb) are faithful: they keep incomplete rules so they can serve as
+a store `format`. When the target library has no equivalent of something, they throw a clear error
+instead of dropping it.
+
+Fields render under their `column` when one is set (SQL column, Mongo path, JsonLogic var,
+Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment when
+`quoteIdentifiers` is on.
+
+## Feature matrix
+
+| | sql | mongo | jsonlogic | spel | text | elasticsearch | raqb | rqb | jqqb |
+|---|---|---|---|---|---|---|---|---|---|
+| decode | ✅ (WHERE parser) | ✅ | ✅ | ✅ | — | — | ✅ | ✅ | ✅ |
+| functions (left / right) | ✅ via `formats.sql` | ✅ `$expr` | ✅ | ✅ | ✅ | right only (date math) | ✅ BasicFuncs mapping | throws | throws |
+| custom operators | `formats.sql` | `formats.mongo` | `formats.jsonlogic` | `formats.spel` | `formats.text` | `formats.elasticsearch` | by id | by id | by id |
+| isEmpty / isNotEmpty | ✅ | ✅ | ✅ `!` / `!!` | ✅ `<= ''` / `> ''` | ✅ | ✅ | ✅ `is_empty` | by id | ✅ `is_empty` |
+| multiEnum hasAny/All/None, setEq/Neq | pg arrays, mysql JSON, sqlite/mssql json_each; ansi skips | ✅ | ✅ | ✅ | ✅ | all except setEq/setNeq | ✅ (hasAll by id) | by id | by id |
+| array groups some/all/none | Postgres jsonb only | ✅ `$elemMatch` | ✅ | ✅ | ✅ | ✅ `nested` | ✅ `rule_group` | throws | throws |
+| array group counts | Postgres jsonb only | ✅ `$expr` + `$filter` | ✅ `reduce` | ✅ `.size()` | ✅ | skipped | ✅ | throws | throws |
+| `locked` | — | — | — | — | — | — | ✅ `isLocked` | dropped | dropped |
+| cases (`encodeCases`) | `CASE WHEN` | `$switch` | `if` | ternary | sentence | — | — | — | — |
+
+## Per codec
+
+### sql (`sqlFormat({ dialect, params, quoteIdentifiers, caseInsensitive })`)
+- **isEmpty:** `(c IS NULL OR c = '')` for text and enum, `IS NULL` for other scalars. Arrays use
+  cardinality / `JSON_LENGTH` / `json_array_length` / `jsonb_array_length`; MSSQL uses an
+  `OPENJSON` count.
+- **multiEnum on Postgres:** native arrays: `&&` (hasAny), `@>` (hasAll), `NOT (… && …)` (hasNone),
+  `@> AND <@` (setEq). Inside array elements it uses jsonb `?|` / `?&`, which only work for string
+  members.
+- **multiEnum on other dialects:** MySQL uses `JSON_OVERLAPS` / `JSON_CONTAINS`. SQLite uses
+  `json_each` and MSSQL `OPENJSON` subqueries. ANSI skips these rules.
+- **Array groups:** Postgres only, and the column must be jsonb. Output is
+  `EXISTS (SELECT 1 FROM jsonb_array_elements(col) AS e1 WHERE …)`, with element fields read as
+  `e1->>'key'` and cast per kind (`::numeric`, `::boolean`, `::date`, `::timestamptz`, `::time`).
+  `all` is `NOT EXISTS (… WHERE NOT COALESCE(cond, FALSE))`; counts use `(SELECT COUNT(*) …) op n`.
+  Other dialects skip array groups.
+- **Function arguments** are always inlined, even in `params` mode, since a format may reorder
+  them. Custom operators get inlined literals too.
+- **Dates and times** are string literals; the database casts them.
+- **Decode** parses inlined SQL (not parameterized):
+  - Supported: comparisons, `LIKE`/`ILIKE` patterns (`%x%`, `x%`, `%x`, with an ESCAPE char),
+    `IN`, `BETWEEN`, `IS [NOT] NULL`, `AND`/`OR`/`NOT`, parentheses, quoted identifiers, and
+    columns mapped back to fields.
+  - Functions: registered ones whose sql format is `NAME(args)` or a constant such as
+    `CURRENT_TIMESTAMP`.
+  - Emptiness: the encoder's `(c IS NULL OR c = '')` and array-length checks come back as
+    isEmpty/isNotEmpty.
+  - Rejected: `_` wildcards, inner `%`, `INTERVAL` arithmetic, subqueries (so no array groups and
+    no sqlite/mssql multiEnum), and always-false queries.
+  - Single-child groups collapse on export, so they come back flattened.
+
+### mongo
+- Filter form where possible. `$expr` is used for function calls, field refs, setEq/setNeq,
+  counts, and array groups whose children need `$expr`.
+- **Array groups:** some = `$elemMatch`, none = `$not: { $elemMatch }`,
+  all = `$not: { $elemMatch: { $nor: [cond] } }`, counts =
+  `$size` of a `$filter` over `$ifNull: [path, []]`. NOT array groups use `$nor`.
+- **isEmpty:** `$in: [null, '']`, or `[null, []]` for arrays.
+- **multiEnum:** `$in` (hasAny), `$all` (hasAll), `$nin` (hasNone). `$nin` also matches documents
+  where the field is missing, which `compile()` doesn't.
+- **Cases:** `$switch` built from the aggregation form. A custom operator with only a filter-form
+  format can't appear in a case.
+- **Dates and times** stay ISO strings; convert them yourself if you store BSON Dates.
+- **Decode:**
+  - Reads back what it emits, plus shorthand (`{ age: 21 }`, regex literals).
+  - Functions are matched by the shape of their mongo format.
+  - Custom operators come back as plain rules (e.g. `near` → `between`).
+  - Counts of `> 0` / `== 0` decode as some/none.
+
+### jsonlogic
+- Follows react-querybuilder and RAQB conventions: custom `startsWith`/`endsWith` ops,
+  `{"<=": [a, var, b]}` for between, `!` / `!!` for isEmpty / isNotEmpty.
+- **multiEnum:** `some`+`in` (hasAny), `and` of `in` (hasAll), `!some` (hasNone);
+  setEq = hasAll plus `all … in list`.
+- **Array groups:** `some` / `none` over `{var: field}`. `all` is written as `none` of the negated
+  condition, because json-logic's `all` is false for an empty array while ours is true. Counts use
+  `{"reduce": [{"filter": …}, {"+": [1, {"var": "accumulator"}]}, 0]}`, as RAQB does.
+- **Cases:** `{"if": [c1, v1, c2, v2, …, otherwise]}`.
+- **Semantics:** json-logic-js compares case-sensitively, coerces null like JS, and treats `0` as
+  empty for `!`.
+- **Decode:**
+  - Also reads RAQB's `all … in` (multiselect_equals, a subset test) as setEq.
+  - Functions are matched by the shape of their jsonlogic format.
+
+### spel (two-way, RAQB-compatible)
+- **Mirrors RAQB `spelFormat`:**
+  - `x.compareTo(T(java.time.Local…).parse(…)) op 0` for dates, times and datetimes. Datetimes are
+    `yyyy-MM-dd HH:mm:ss` in UTC.
+  - `{…}.?[true].contains(x)` for in.
+  - `T(CollectionUtils).containsAny` for hasAny, `x.equals({…})` for setEq.
+  - `orders.?[cond].size() op n` for array groups.
+  - `x <= ''` / `x > ''` for emptiness.
+- **Our own additions:** hasAll as `x.containsAll({…})`; cases as nested ternaries.
+- **Decode** parses `&&`/`||`/`!` and the `and`/`or`/`not` keywords, comparisons, method calls,
+  selections, `T(…)` types and inline lists. Functions decode when their spel format is a constant
+  or `${arg}.method()`. Decode also accepts `(x == null || x.isEmpty())`.
+
+### text (`textFormat({ labels, words })`)
+- Uses field labels, option labels and comparison symbols:
+  `Age ≥ 21 AND (Plan is any of Pro, Team)`.
+- Array groups read `at least 2 Orders match (Status = paid)`.
+- Uses functions' `text` formats; cases read as one sentence.
+
+### elasticsearch (export only)
+- `bool` must / should (`minimum_should_match: 1`) / must_not, with term, terms, range, wildcard
+  and exists queries. Text is case-insensitive (`case_insensitive: true`) unless the field sets
+  `caseSensitive`.
+- **Field refs** become painless `script` queries. **Function calls** are supported on the value
+  side only, through their `elasticsearch` format (date math such as `now-7d/d`).
+- **Array groups** become `nested` queries (map the field as `nested`): none = `must_not nested`,
+  all = `must_not nested(must_not cond)`.
+- **Skipped:** counts, setEq/setNeq and functions on the left side.
+
+### raqb (two-way, faithful)
+- **Array groups** become `rule_group` (`mode: 'array'`): operator `some`/`all`/`none` or a count
+  operator with `value`. Children are named by full path (`orders.qty`), as RAQB does.
+- **Functions** map to BasicFuncs: lower↔LOWER(str), upper↔UPPER, now↔NOW, today↔TODAY, and
+  relativeDate↔RELATIVE_DATE(TODAY, minus/plus, val, dim). Others travel under their own name and
+  argument names, so define matching RAQB funcs. Left-side calls use `fieldSrc: 'func'`.
+- **multiEnum:** multiselect_contains (hasAny), multiselect_not_contains (hasNone),
+  multiselect_equals (setEq), multiselect_not_equals (setNeq). hasAll and custom operators travel
+  under their own id.
+- **Values and locks:** `isLocked` ↔ `locked`. Times are written `HH:mm:ss`; datetimes are
+  `YYYY-MM-DD HH:mm:ss` in UTC and decode back with a `Z`.
+
+### rqb, jqqb (two-way, faithful)
+- Operators these libraries lack (isEmpty in rqb, the multiEnum ones, custom operators) travel
+  under their trawlnet id. Register matching custom operators in those libraries to edit them there.
+- Function calls and array groups throw, since neither library can represent them.
+- `locked` isn't mapped.
+- jqqb carries field refs in `data.trawlnetRef`.

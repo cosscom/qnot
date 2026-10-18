@@ -71,7 +71,8 @@ describe('mongo', () => {
       combinator: 'or',
       children: [
         { kind: 'rule', field: 'age', operator: 'eq', value: 1 },
-        { kind: 'group', combinator: 'or', not: true, children: [{ kind: 'group', combinator: 'and', not: true, children: [{ kind: 'rule', field: 'name', operator: 'startsWith', value: 'x' }] }] },
+        // NOT NOT startsWith: the double negation cancels out.
+        { kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'name', operator: 'startsWith', value: 'x' }] },
       ],
     });
   });
