@@ -74,7 +74,7 @@ function Chip({ id }: { id: NodeId }) {
       <Menu>
         <MenuTrigger className={cn(part, 'border-e text-muted-foreground')}>{OPERATORS[rule.operator as keyof typeof OPERATORS]?.label ?? rule.operator}</MenuTrigger>
         <MenuPopup align="start">
-          <MenuRadioGroup value={rule.operator} onValueChange={(v) => setOperator(v as never)}>
+          <MenuRadioGroup value={rule.operator} onValueChange={(v) => setOperator(String(v))}>
             {operators.map((o) => (
               <MenuRadioItem key={o.value} value={o.value}>
                 {o.label}

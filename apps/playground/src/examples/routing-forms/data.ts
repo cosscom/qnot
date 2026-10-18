@@ -45,32 +45,24 @@ export type FormResponse = RowOf<FormFields>;
 /** Team-member attributes for "assign to a team member based on their attributes". */
 export const attributeFields = defineFields({
   location: f.enum(['US East', 'US West', 'EMEA', 'APAC', 'LATAM'], { label: 'Location' }),
-  skills: f.enum(['H-1B', 'O-1', 'EB-2', 'L-1', 'Student visas', 'Family', 'Litigation'], { label: 'Skills' }),
+  skills: f.multiEnum(['H-1B', 'O-1', 'EB-2', 'L-1', 'Student visas', 'Family', 'Litigation'], { label: 'Skills' }),
   seniority: f.enum(['Associate', 'Senior', 'Partner'], { label: 'Seniority' }),
-  language: f.enum(['English', 'Spanish', 'Portuguese', 'Hindi', 'Tagalog', 'German'], { label: 'Language' }),
+  languages: f.multiEnum(['English', 'Spanish', 'Portuguese', 'Hindi', 'Tagalog', 'German'], { label: 'Languages' }),
   yearsExperience: f.number({ label: 'Years of experience', min: 0 }),
 });
 export type AttributeFields = typeof attributeFields;
 
-export interface TeamMember {
-  id: string;
-  name: string;
-  avatar: string;
-  location: string;
-  skills: string[];
-  seniority: string;
-  language: string[];
-  yearsExperience: number;
-}
+/** A team member: their attributes typed by the schema, plus display data. */
+export type TeamMember = { [K in keyof RowOf<AttributeFields>]-?: NonNullable<RowOf<AttributeFields>[K]> } & { id: string; name: string; avatar: string };
 
 export const TEAM: TeamMember[] = [
-  { id: 'm1', name: 'Priya Raman', avatar: 'PR', location: 'US East', skills: ['H-1B', 'EB-2', 'L-1'], seniority: 'Partner', language: ['English', 'Hindi'], yearsExperience: 14 },
-  { id: 'm2', name: 'Diego Alvarez', avatar: 'DA', location: 'LATAM', skills: ['Family', 'Student visas'], seniority: 'Associate', language: ['English', 'Spanish', 'Portuguese'], yearsExperience: 3 },
-  { id: 'm3', name: 'Hannah Becker', avatar: 'HB', location: 'EMEA', skills: ['L-1', 'O-1'], seniority: 'Senior', language: ['English', 'German'], yearsExperience: 8 },
-  { id: 'm4', name: 'Marcus Lee', avatar: 'ML', location: 'US West', skills: ['O-1', 'EB-2', 'Litigation'], seniority: 'Partner', language: ['English'], yearsExperience: 17 },
-  { id: 'm5', name: 'Grace Okafor', avatar: 'GO', location: 'EMEA', skills: ['Family', 'Student visas', 'H-1B'], seniority: 'Senior', language: ['English'], yearsExperience: 6 },
-  { id: 'm6', name: 'Paolo Santos', avatar: 'PS', location: 'APAC', skills: ['H-1B', 'Student visas'], seniority: 'Associate', language: ['English', 'Tagalog'], yearsExperience: 2 },
-  { id: 'm7', name: 'Sofia Martins', avatar: 'SM', location: 'LATAM', skills: ['O-1', 'Family'], seniority: 'Senior', language: ['Portuguese', 'Spanish', 'English'], yearsExperience: 9 },
+  { id: 'm1', name: 'Priya Raman', avatar: 'PR', location: 'US East', skills: ['H-1B', 'EB-2', 'L-1'], seniority: 'Partner', languages: ['English', 'Hindi'], yearsExperience: 14 },
+  { id: 'm2', name: 'Diego Alvarez', avatar: 'DA', location: 'LATAM', skills: ['Family', 'Student visas'], seniority: 'Associate', languages: ['English', 'Spanish', 'Portuguese'], yearsExperience: 3 },
+  { id: 'm3', name: 'Hannah Becker', avatar: 'HB', location: 'EMEA', skills: ['L-1', 'O-1'], seniority: 'Senior', languages: ['English', 'German'], yearsExperience: 8 },
+  { id: 'm4', name: 'Marcus Lee', avatar: 'ML', location: 'US West', skills: ['O-1', 'EB-2', 'Litigation'], seniority: 'Partner', languages: ['English'], yearsExperience: 17 },
+  { id: 'm5', name: 'Grace Okafor', avatar: 'GO', location: 'EMEA', skills: ['Family', 'Student visas', 'H-1B'], seniority: 'Senior', languages: ['English'], yearsExperience: 6 },
+  { id: 'm6', name: 'Paolo Santos', avatar: 'PS', location: 'APAC', skills: ['H-1B', 'Student visas'], seniority: 'Associate', languages: ['English', 'Tagalog'], yearsExperience: 2 },
+  { id: 'm7', name: 'Sofia Martins', avatar: 'SM', location: 'LATAM', skills: ['O-1', 'Family'], seniority: 'Senior', languages: ['Portuguese', 'Spanish', 'English'], yearsExperience: 9 },
 ];
 
 export const EVENTS = [
@@ -130,7 +122,7 @@ export const initialRoutes = (): Route[] => [
       kind: 'group',
       combinator: 'and',
       children: [
-        { kind: 'rule', field: 'skills', operator: 'in', value: ['O-1', 'EB-2'] },
+        { kind: 'rule', field: 'skills', operator: 'hasAny', value: ['O-1', 'EB-2'] },
         { kind: 'rule', field: 'seniority', operator: 'in', value: ['Senior', 'Partner'] },
       ],
     },
@@ -156,13 +148,9 @@ export const initialRoutes = (): Route[] => [
 
 export const initialFallback = (): RouteAction => ({ type: 'event', eventId: 'consult-30', content: '', url: '' });
 
-/**
- * A team member qualifies when the attribute query matches them. Members hold several skills and
- * languages, so each combination is tried; the member qualifies if any combination matches.
- */
+/** Team members whose attributes match the route's attribute rules. */
 export function qualifyingMembers(query: QueryOf<AttributeFields>): TeamMember[] {
-  const pred = compile(attributeFields, query);
-  return TEAM.filter((m) => m.skills.some((skill) => m.language.some((language) => pred({ ...m, skills: skill, language } as RowOf<AttributeFields>))));
+  return TEAM.filter(compile(attributeFields, query));
 }
 
 /** First route whose rules match wins; null means fall through to the fallback. */

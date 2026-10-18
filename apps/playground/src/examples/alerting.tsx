@@ -27,7 +27,9 @@ const fields = defineFields({
   rps: f.number({ label: 'Requests/s', min: 0 }),
 });
 
-type Sample = { id: string; service: string; region: string; cpu: number; errorRate: number; p99: number; slo: number; rps: number };
+type Service = 'api' | 'web' | 'worker' | 'search' | 'billing';
+type Region = 'us-east-1' | 'eu-west-1' | 'ap-south-1';
+type Sample = { id: string; service: Service; region: Region; cpu: number; errorRate: number; p99: number; slo: number; rps: number };
 
 const SERVICES: Pick<Sample, 'service' | 'region' | 'slo'>[] = [
   { service: 'api', region: 'us-east-1', slo: 300 },
@@ -110,7 +112,7 @@ export function Demo() {
     return () => clearInterval(t);
   }, [running]);
 
-  const states = samples.map((s) => ({ s, on: firing(s as never) }));
+  const states = samples.map((s) => ({ s, on: firing(s) }));
 
   // Record transitions (fired / resolved) for the event log.
   useEffect(() => {

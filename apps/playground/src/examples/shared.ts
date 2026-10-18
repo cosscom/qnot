@@ -1,9 +1,9 @@
-import { createQueryStore, type Fields, type Query, type QueryOf, type QueryStore } from '@trawlnet/core';
+import { createQueryStore, type Fields, type QueryOf, type QueryStore } from '@trawlnet/core';
 import { useState, useSyncExternalStore } from 'react';
 
-/** One store for the component's lifetime. Accepts the schema-typed query or the plain `Query` shape. */
-export function useExampleStore<F extends Fields>(fields: F, initial?: QueryOf<F> | Query): QueryStore<F> {
-  const [store] = useState(() => createQueryStore({ fields, ...(initial && { initial: initial as QueryOf<F> }) }) as unknown as QueryStore<F>);
+/** One store for the component's lifetime. */
+export function useExampleStore<F extends Fields>(fields: F, initial?: QueryOf<F>): QueryStore<F> {
+  const [store] = useState(() => createQueryStore({ fields, ...(initial && { initial }) }) as unknown as QueryStore<F>);
   return store;
 }
 

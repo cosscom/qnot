@@ -1,4 +1,4 @@
-import { defineFields, encode, f, type Query } from '@trawlnet/core';
+import { defineFields, encode, f, type Codec, type Query } from '@trawlnet/core';
 import { jsonlogic } from '@trawlnet/core/formats/jsonlogic';
 import { mongo } from '@trawlnet/core/formats/mongo';
 import { sqlFormat } from '@trawlnet/core/formats/sql';
@@ -71,7 +71,7 @@ export function Demo() {
   const outputs = useMemo(
     () =>
       CODECS.map(({ label, codec }) => {
-        const out = encode(codec as never, query as Query, fields) as unknown;
+        const out: unknown = encode(codec as Codec<unknown>, query as Query, fields);
         if (typeof out === 'string') return { label, text: out };
         // SQL with bound parameters: show the statement as-is with its params underneath.
         if (out && typeof out === 'object' && 'sql' in out && 'params' in out) {

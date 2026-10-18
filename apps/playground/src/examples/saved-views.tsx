@@ -2,6 +2,7 @@ import { compile, defineFields, f, type Query, type QueryOf } from '@trawlnet/co
 import { QueryProvider, useHistory } from '@trawlnet/react';
 import { BookmarkIcon, BookmarkPlusIcon, Redo2Icon, SaveIcon, Undo2Icon } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { ScrollBox } from '@/components/scroll-box';
 import { Tip } from '@/components/tip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -93,7 +94,7 @@ function HistoryButtons() {
 const code = `
 // A view is just a name + native JSON. Load one into the store; save writes it back.
 const store = createQueryStore({ fields, initial: views[0].query });
-const open = (view) => { store.setQuery(view.query); store.clearHistory(); };
+const open = (view) => store.reset(view.query); // new baseline, fresh undo history
 const save = () => (view.query = store.getQuery());
 
 // Dirty tracking is a reference check: getQuery() is structurally shared, so an unchanged
@@ -116,8 +117,7 @@ export function Demo() {
   const total = rows.reduce((n, d) => n + d.amount, 0);
 
   const open = (v: View) => {
-    store.setQuery(v.query);
-    store.clearHistory();
+    store.reset(v.query);
     setLoaded(store.getQuery());
     setActiveId(v.id);
   };
@@ -177,8 +177,8 @@ export function Demo() {
               <Badge variant="outline">{rows.length} deals</Badge>
               <span className="text-muted-foreground text-xs">${total.toLocaleString()} total</span>
             </div>
-            <div className="max-h-80 overflow-auto rounded-xl border">
-              <Table>
+            <ScrollBox className="rounded-xl border" viewportClassName="max-h-80">
+              <Table render={<div className="overflow-visible!" />}>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Deal</TableHead>
@@ -204,7 +204,7 @@ export function Demo() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </ScrollBox>
           </div>
         </div>
       </QueryProvider>

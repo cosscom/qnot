@@ -3,6 +3,7 @@ import { jsonlogic } from '@trawlnet/core/formats/jsonlogic';
 import { FlagIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { CodeBlock } from '@/components/code-block';
+import { ScrollBox } from '@/components/scroll-box';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -120,7 +121,8 @@ export function Demo() {
             <Badge variant="success">{onCount} on</Badge>
             <Badge variant="outline">{segCount} in segment</Badge>
           </div>
-          <div className="grid max-h-[560px] grid-cols-1 gap-1 overflow-auto rounded-xl border p-1.5">
+          <ScrollBox className="rounded-xl border" viewportClassName="max-h-[560px]">
+          <div className="grid grid-cols-1 gap-1 p-1.5">
             {states.map(({ u, seg, on }) => (
               <div key={u.id} className={cn('flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs', on ? 'bg-success/10' : seg ? 'bg-muted/50' : '')}>
                 <span className={cn('size-2 rounded-full', on ? 'bg-success' : seg ? 'bg-warning' : 'bg-muted-foreground/30')} />
@@ -133,6 +135,7 @@ export function Demo() {
               </div>
             ))}
           </div>
+          </ScrollBox>
           <p className="text-muted-foreground text-xs">Green: flag on. Amber: in segment but outside the rollout bucket. #n is the user's sticky 0–99 bucket.</p>
         </div>
       </div>

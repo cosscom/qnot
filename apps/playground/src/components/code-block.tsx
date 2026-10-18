@@ -1,5 +1,6 @@
 import { CheckIcon, CopyIcon } from 'lucide-react';
 import { useState } from 'react';
+import { ScrollBox } from '@/components/scroll-box';
 import { Tip } from '@/components/tip';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,7 +25,9 @@ export function CodeBlock({ code, className, label, wrap }: { code: string; clas
           {copied ? <CheckIcon /> : <CopyIcon />}
         </Button>
       </Tip>
-      <pre className={cn('max-h-[420px] overflow-auto p-3 pe-10 font-mono text-[12px] leading-relaxed', wrap && 'whitespace-pre-wrap break-words')}>{code}</pre>
+      <ScrollBox viewportClassName="max-h-[420px]">
+        <pre className={cn('p-3 pe-10 font-mono text-[12px] leading-relaxed', wrap && 'whitespace-pre-wrap break-words')}>{code}</pre>
+      </ScrollBox>
     </div>
   );
 }

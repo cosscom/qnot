@@ -1,4 +1,4 @@
-import { compile, defineFields, f, type Query, type QueryNode } from '@trawlnet/core';
+import { compile, defineFields, f, type RowOf } from '@trawlnet/core';
 import { CircleCheckIcon, CircleXIcon, ShieldCheckIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +30,9 @@ const fields = defineFields({
   hour: f.number({ label: 'Hour of day (UTC)', min: 0, max: 23, integer: true }),
 });
 
-type Request = { role: string; department: string; resource: string; action: string; mfa: boolean; isOwner: boolean; hour: number };
+type Row = RowOf<typeof fields>;
+/** A request's facts: every field present and non-null. */
+type Request = { [K in keyof Row]-?: NonNullable<Row[K]> };
 
 const code = `
 // Policy = "allow if" query. Deny-overrides are NOT groups ANDed at the root.
@@ -99,10 +101,10 @@ export function Demo() {
   const query = useLiveQuery(store);
   const [req, setReq] = useState<Request>({ role: 'editor', department: 'support', resource: 'customers', action: 'read', mfa: false, isOwner: false, hour: 14 });
   const { allowed, statements } = useMemo(() => {
-    const allowed = compile(fields, query)(req as never);
-    const statements = (query.children as readonly QueryNode[]).map((s) => ({
+    const allowed = compile(fields, query)(req);
+    const statements = query.children.map((s) => ({
       text: describeQuery(fields, s),
-      ok: compile(fields, { kind: 'group', combinator: 'and', children: [s] } as Query as never)(req as never),
+      ok: compile(fields, { kind: 'group', combinator: 'and', children: [s] })(req),
     }));
     return { allowed, statements };
   }, [query, req]);
@@ -111,7 +113,7 @@ export function Demo() {
   const enumInput = (k: 'role' | 'department' | 'resource' | 'action') => (
     <div className="flex flex-col gap-1.5">
       <Label>{k[0]!.toUpperCase() + k.slice(1)}</Label>
-      <CossSelect className="w-full" items={toItems(fields[k].options)} value={req[k]} onChange={(v) => set(k, v)} />
+      <CossSelect className="w-full" items={toItems(fields[k].options)} value={req[k]} onChange={(v) => set(k, v as Request[typeof k])} />
     </div>
   );
 

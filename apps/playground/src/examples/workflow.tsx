@@ -1,4 +1,4 @@
-import { compile, defineFields, f } from '@trawlnet/core';
+import { compile, defineFields, f, type RowOf } from '@trawlnet/core';
 import { BellIcon, CalendarPlusIcon, MailIcon, MessageSquareIcon, WebhookIcon, WorkflowIcon, ZapIcon } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +39,7 @@ const ACTIONS = [
   { value: 'webhook', label: 'Call webhook' },
 ];
 
-const EVENTS = [
+const EVENTS: (RowOf<typeof fields> & { trigger: string; who: string })[] = [
   { trigger: 'created', who: 'maya@northwind.io', eventType: 'Product demo', team: 'Sales', durationMin: 45, startsInHours: 20, firstBooking: true, paid: false, attendeeEmail: 'maya@northwind.io', attendeeCountry: 'US' },
   { trigger: 'created', who: 'jonas@kiel.de', eventType: 'Intro call', team: 'Sales', durationMin: 15, startsInHours: 3, firstBooking: false, paid: false, attendeeEmail: 'jonas@kiel.de', attendeeCountry: 'DE' },
   { trigger: 'rescheduled', who: 'arjun@quant.co', eventType: 'Product demo', team: 'Sales', durationMin: 45, startsInHours: 50, firstBooking: false, paid: false, attendeeEmail: 'arjun@quant.co', attendeeCountry: 'IN' },
@@ -89,7 +89,7 @@ export function Demo() {
   const [target, setTarget] = useState('{attendee.email}');
   const results = useMemo(() => {
     const cond = compile(fields, query);
-    return EVENTS.map((e) => ({ e, triggerOk: e.trigger === trigger, condOk: cond(e as never) }));
+    return EVENTS.map((e) => ({ e, triggerOk: e.trigger === trigger, condOk: cond(e) }));
   }, [query, trigger]);
   const ActionIcon = action === 'email' ? MailIcon : action === 'sms' ? MessageSquareIcon : WebhookIcon;
 

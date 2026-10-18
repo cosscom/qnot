@@ -1,3 +1,4 @@
+import { ScrollBox } from '@/components/scroll-box';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { EXAMPLES } from './registry';
@@ -9,7 +10,7 @@ export function ExamplesPage({ exampleId }: { exampleId?: string }) {
   return (
     <div className="grid min-h-[calc(100vh-53px)] lg:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="border-b lg:border-e lg:border-b-0">
-        <div className="lg:sticky lg:top-[53px] lg:max-h-[calc(100vh-53px)] lg:overflow-y-auto">
+        <ScrollBox className="lg:sticky lg:top-[53px]" viewportClassName="lg:max-h-[calc(100vh-53px)]">
           <nav className="flex flex-col gap-5 p-4">
             <div className="flex items-center gap-2 px-2">
               <span className="font-semibold text-sm">Examples</span>
@@ -43,7 +44,7 @@ export function ExamplesPage({ exampleId }: { exampleId?: string }) {
               );
             })}
           </nav>
-        </div>
+        </ScrollBox>
       </aside>
       <main className="min-w-0 p-4 sm:p-8">
         <current.Demo key={current.meta.id} />
