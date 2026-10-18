@@ -20,6 +20,25 @@ export type Predicate<Row> = (row: Row) => boolean;
 const SKIP = Symbol('skip');
 type Compiled = Predicate<any> | typeof SKIP;
 type Getter = (row: any, field: string) => unknown;
+type Reader = (row: any) => unknown;
+
+/** A reader for one field, built once at compile time: a plain property read unless the name is a dotted path. */
+function readerFor(field: string, get: Getter | undefined): Reader {
+  if (get) return (row) => get(row, field);
+  if (!field.includes('.')) return (row) => (row === null || row === undefined ? undefined : row[field]);
+  const parts = field.split('.');
+  return (row) => {
+    if (row !== null && typeof row === 'object' && field in row) return row[field];
+    let cur = row;
+    for (const part of parts) {
+      if (cur === null || typeof cur !== 'object') return undefined;
+      cur = cur[part];
+    }
+    return cur;
+  };
+}
+
+const IDENTITY = (v: unknown) => v;
 
 const isNil = (v: unknown) => v === null || v === undefined;
 const isBlank = (v: unknown) => isNil(v) || v === '' || (Array.isArray(v) && v.length === 0);
@@ -38,6 +57,7 @@ export function getPath(row: unknown, field: string): unknown {
 }
 
 function normalizer(def: AnyFieldDef | undefined): (v: unknown) => unknown {
+  if (def?.kind === 'text' ? def.caseSensitive : def?.kind !== 'date' && def?.kind !== 'datetime') return IDENTITY;
   switch (def?.kind) {
     case 'date':
     case 'datetime':
@@ -62,13 +82,13 @@ const binary: Record<string, (a: any, b: any) => boolean> = {
   endsWith: (a, b) => String(a).endsWith(b),
 };
 
-function compileRule(fields: Fields, rule: Rule, get: Getter, invalid: 'skip' | false): Compiled {
+function compileRule(fields: Fields, rule: Rule, get: Getter, custom: Getter | undefined, invalid: 'skip' | false): Compiled {
   if (validateRule(fields, rule).length) return invalid === 'skip' ? SKIP : () => false;
   const def = leftDef(fields, rule.field);
   const norm = normalizer(def);
   const op = rule.operator;
   const left = rule.field;
-  const read: (row: any) => unknown = isFnCall(left) ? (row) => evaluateOperand(fields, left, row, get) : (row) => get(row, left);
+  const read: Reader = isFnCall(left) ? (row) => evaluateOperand(fields, left, row, get) : readerFor(left, custom);
   const info = operatorInfo(fields, op);
 
   if (info?.evaluate) {
@@ -90,7 +110,7 @@ function compileRule(fields: Fields, rule: Rule, get: Getter, invalid: 'skip' | 
 
   if (rule.ref !== undefined || rule.call !== undefined) {
     const cmp = binary[op]!;
-    const rhs: (row: any) => unknown = rule.ref !== undefined ? ((ref) => (row: any) => get(row, ref))(rule.ref) : ((call) => (row: any) => evaluateOperand(fields, call, row, get))(rule.call!);
+    const rhs: Reader = rule.ref !== undefined ? readerFor(rule.ref, custom) : ((call) => (row: any) => evaluateOperand(fields, call, row, get))(rule.call!);
     return (row) => {
       const a = read(row);
       const b = rhs(row);
@@ -146,6 +166,20 @@ function compileRule(fields: Fields, rule: Rule, get: Getter, invalid: 'skip' | 
   const cmp = binary[op];
   if (!cmp) return invalid === 'skip' ? SKIP : () => false;
   const b = norm(value);
+  // The common case, specialized: no normalization, a single strict comparison per row.
+  if (def?.kind === 'text' && !def.caseSensitive && typeof b === 'string' && (op === 'eq' || op === 'neq')) {
+    const eq = (row: any) => {
+      const a = read(row);
+      return typeof a === 'string' && (a === b || a.toLowerCase() === b);
+    };
+    return op === 'eq' ? eq : (row) => typeof read(row) === 'string' && !eq(row);
+  }
+  if (norm === IDENTITY && (op === 'eq' || op === 'neq')) {
+    return op === 'eq' ? (row) => read(row) === b : (row) => {
+      const a = read(row);
+      return a !== null && a !== undefined && a !== b;
+    };
+  }
   return (row) => {
     const a = read(row);
     return !isNil(a) && cmp(norm(a), b);
@@ -169,23 +203,43 @@ function quantify(match: Quantifier, test: Predicate<unknown>): (items: readonly
   return (items) => cmp(count(items), target);
 }
 
-function compileNode(fields: Fields, node: QueryNode, get: Getter, invalid: 'skip' | false): Compiled {
-  if (node.kind === 'rule') return compileRule(fields, node, get, invalid);
-  return compileGroup(fields, node, get, invalid);
+function compileNode(fields: Fields, node: QueryNode, get: Getter, custom: Getter | undefined, invalid: 'skip' | false): Compiled {
+  if (node.kind === 'rule') return compileRule(fields, node, get, custom, invalid);
+  return compileGroup(fields, node, get, custom, invalid);
 }
 
-function compileGroup(fields: Fields, node: Group, get: Getter, invalid: 'skip' | false): Compiled {
+/** AND/OR over predicates, unrolled for small groups so the hot loop has no closure-per-call array walk. */
+function combine(parts: Predicate<any>[], and: boolean): Predicate<any> {
+  if (parts.length === 1) return parts[0]!;
+  if (parts.length === 2) {
+    const [a, b] = parts as [Predicate<any>, Predicate<any>];
+    return and ? (row) => a(row) && b(row) : (row) => a(row) || b(row);
+  }
+  const n = parts.length;
+  return and
+    ? (row) => {
+        for (let i = 0; i < n; i++) if (!parts[i]!(row)) return false;
+        return true;
+      }
+    : (row) => {
+        for (let i = 0; i < n; i++) if (parts[i]!(row)) return true;
+        return false;
+      };
+}
+
+function compileGroup(fields: Fields, node: Group, get: Getter, custom: Getter | undefined, invalid: 'skip' | false): Compiled {
   const scope = groupScope(fields, node);
   // Inside an array group, rules read the element's own fields.
   const innerGet: Getter = node.of ? getPath : get;
-  const parts = node.children.map((c) => compileNode(scope, c, innerGet, invalid)).filter((p): p is Predicate<any> => p !== SKIP);
-  const all: Predicate<any> = !parts.length ? () => true : node.combinator === 'and' ? (row) => parts.every((p) => p(row)) : (row) => parts.some((p) => p(row));
+  const innerCustom = node.of ? undefined : custom;
+  const parts = node.children.map((c) => compileNode(scope, c, innerGet, innerCustom, invalid)).filter((p): p is Predicate<any> => p !== SKIP);
+  const all: Predicate<any> = !parts.length ? () => true : combine(parts, node.combinator === 'and');
   let pred: Predicate<any> = all;
   if (node.of) {
-    const field = node.of.field;
+    const items$ = readerFor(node.of.field, custom);
     const q = quantify(node.of.match, all);
     pred = (row) => {
-      const items = get(row, field);
+      const items = items$(row);
       return q(Array.isArray(items) ? items : []);
     };
   } else if (!parts.length) return SKIP;
@@ -198,7 +252,7 @@ function compileGroup(fields: Fields, node: Group, get: Getter, invalid: 'skip' 
  */
 export function compile<F extends Fields, Row = RowOf<F>>(fields: F, query: QueryOf<F>, options: CompileOptions<Row> = {}): Predicate<Row> {
   const get = (options.get ?? getPath) as Getter;
-  const p = compileNode(fields, query as Query, get, options.invalidRules ?? 'skip');
+  const p = compileNode(fields, query as Query, get, options.get as Getter | undefined, options.invalidRules ?? 'skip');
   return p === SKIP ? () => true : p;
 }
 

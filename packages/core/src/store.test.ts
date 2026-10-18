@@ -169,4 +169,21 @@ describe('store', () => {
     expect(store.getQuery()).toEqual({ kind: 'group', combinator: 'or', children: [] });
     expect(store.canUndo()).toBe(false);
   });
+
+  it('keeps isValid() correct incrementally across edits, removals, undo and setQuery', () => {
+    const { store, ruleId, groupId } = setup();
+    expect(store.isValid()).toBe(true);
+    store.setRuleValue(ruleId, '');
+    expect(store.isValid()).toBe(false);
+    store.setRuleValue(ruleId, 'Ada');
+    expect(store.isValid()).toBe(true);
+    const bad = store.addRule(groupId, { field: 'age', operator: 'eq', value: null })!;
+    expect(store.isValid()).toBe(false);
+    store.remove(bad);
+    expect(store.isValid()).toBe(true);
+    store.undo();
+    expect(store.isValid()).toBe(false);
+    store.setQuery({ kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'name', operator: 'eq', value: 'x' }] } as any);
+    expect(store.isValid()).toBe(true);
+  });
 });

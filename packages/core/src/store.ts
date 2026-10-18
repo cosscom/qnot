@@ -241,8 +241,9 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
   let seq = 0;
   let version = 0;
   let ruleCount = 0;
-  let validVersion = -1;
-  let valid = true;
+  // Nodes with error-severity issues; built on the first isValid() call, then kept up to date
+  // per commit from the touched nodes only, so validity costs O(edit) instead of O(tree).
+  let invalid: Set<NodeId> | null = null;
   let lastValue: { query: Query; value: T } | null = null;
 
   // --- low-level writes (recorded in the open transaction) -----------------------------------
@@ -376,6 +377,19 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
       invalidate(id, nodes.get(id));
     }
     if (historyOpts && done.history && touched.length) pushHistory(done, touched);
+    if (invalid) {
+      for (const id of touched) {
+        const before = done.before.get(id);
+        const after = nodes.get(id);
+        // A group's array scope decides its descendants' schema: re-validate everything next time.
+        if (before?.kind === 'group' && after?.kind === 'group' && before.of !== after.of) {
+          invalid = null;
+          break;
+        }
+        if (after && store.issues(id).some((i) => i.severity === 'error')) invalid.add(id);
+        else invalid.delete(id);
+      }
+    }
     version++;
     if (done.all) subs.forEach((set) => set.forEach((fn) => fn()));
     else for (const id of touched) subs.get(id)?.forEach((fn) => fn());
@@ -843,12 +857,11 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
       return cached;
     },
     isValid() {
-      if (validVersion !== version) {
-        valid = true;
-        for (const id of nodes.keys()) if (store.issues(id).some((i) => i.severity === 'error')) valid = false;
-        validVersion = version;
+      if (!invalid) {
+        invalid = new Set();
+        for (const id of nodes.keys()) if (store.issues(id).some((i) => i.severity === 'error')) invalid.add(id);
       }
-      return valid;
+      return invalid.size === 0;
     },
 
     dispose() {
