@@ -1,0 +1,37 @@
+{
+  "name": "@trawlnet/solid",
+  "version": "0.0.0",
+  "description": "Solid bindings for trawlnet: fine-grained primitives plus a tiny unstyled <QueryBuilder>.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.tsx",
+      "solid": "./src/index.tsx",
+      "default": "./src/index.tsx"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      ".": { "types": "./dist/index.d.ts", "solid": "./dist/index.jsx", "default": "./dist/index.jsx" }
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@trawlnet/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.0"
+  },
+  "devDependencies": {
+    "@solidjs/testing-library": "^0.8.10",
+    "jsdom": "^27.0.0",
+    "solid-js": "^1.9.17",
+    "typescript": "^6.0.3"
+  }
+}

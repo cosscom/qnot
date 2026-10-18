@@ -1,0 +1,47 @@
+{
+  "name": "@trawlnet/svelte",
+  "version": "0.0.0",
+  "description": "Svelte 5 bindings for trawlnet: rune-friendly reactive helpers plus a tiny unstyled <QueryBuilder>.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "svelte": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "svelte": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "svelte": "./dist/index.js",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "svelte": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "svelte-package -i src -o dist",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@trawlnet/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "svelte": "^5.7.0"
+  },
+  "devDependencies": {
+    "@sveltejs/package": "^3.0.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "jsdom": "^27.0.0",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.7",
+    "typescript": "^6.0.3"
+  }
+}

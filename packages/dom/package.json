@@ -1,0 +1,27 @@
+{
+  "name": "@trawlnet/dom",
+  "version": "0.0.0",
+  "description": "Vanilla DOM renderer for trawlnet: no framework, per-node patching.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@trawlnet/core": "workspace:*"
+  },
+  "devDependencies": {
+    "jsdom": "^27.0.0"
+  }
+}
