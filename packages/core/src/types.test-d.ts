@@ -1,5 +1,5 @@
 import { describe, expectTypeOf, it } from 'vitest';
-import { createQueryStore, f, defineFields, compile, isValidQuery, type QueryOf, type RuleOf, type RowOf } from './index';
+import { createQueryStore, f, defineFields, compile, isValidQuery, isLiteralRule, type QueryOf, type RuleOf, type RowOf } from './index';
 import { fields } from './fixtures.test-helpers';
 
 type R = RuleOf<typeof fields>;
@@ -7,11 +7,11 @@ type R = RuleOf<typeof fields>;
 describe('schema-typed rules', () => {
   it('narrows value by field and operator', () => {
     const check = (r: R) => {
-      if (r.field === 'age' && r.operator === 'between' && r.ref === undefined) expectTypeOf(r.value).toEqualTypeOf<readonly [number | null, number | null]>();
+      if (r.field === 'age' && r.operator === 'between' && isLiteralRule(r)) expectTypeOf(r.value).toEqualTypeOf<readonly [number | null, number | null]>();
       if (r.field === 'age' && r.operator === 'in') expectTypeOf(r.value).toEqualTypeOf<readonly number[]>();
-      if (r.field === 'status' && r.operator === 'eq' && r.ref === undefined) expectTypeOf(r.value).toEqualTypeOf<'active' | 'pending' | 'banned' | null>();
+      if (r.field === 'status' && r.operator === 'eq' && isLiteralRule(r)) expectTypeOf(r.value).toEqualTypeOf<'active' | 'pending' | 'banned' | null>();
       if (r.field === 'name' && r.operator === 'contains') expectTypeOf(r.value).toEqualTypeOf<string | null>();
-      if (r.field === 'joined' && r.operator === 'gt' && r.ref === undefined) expectTypeOf(r.value).toEqualTypeOf<string | null>();
+      if (r.field === 'joined' && r.operator === 'gt' && isLiteralRule(r)) expectTypeOf(r.value).toEqualTypeOf<string | null>();
     };
     void check;
   });
@@ -63,7 +63,7 @@ describe('schema-typed rules', () => {
     const q = {} as QueryOf<typeof fields>;
     if (isValidQuery(fields, q)) {
       const r = q.children[0];
-      if (r?.kind === 'rule' && r.field === 'age' && r.operator === 'eq' && r.ref === undefined) expectTypeOf(r.value).toEqualTypeOf<number>();
+      if (r?.kind === 'rule' && r.field === 'age' && r.operator === 'eq' && isLiteralRule(r)) expectTypeOf(r.value).toEqualTypeOf<number>();
     }
   });
 
@@ -84,7 +84,7 @@ describe('schema-typed rules', () => {
   it('infers enum values from object options', () => {
     const fs = defineFields({ plan: f.enum([{ value: 1, label: 'Free' }, { value: 2, label: 'Pro' }]) });
     const check = (r: RuleOf<typeof fs>) => {
-      if (r.operator === 'eq' && r.ref === undefined) expectTypeOf(r.value).toEqualTypeOf<1 | 2 | null>();
+      if (r.operator === 'eq' && isLiteralRule(r)) expectTypeOf(r.value).toEqualTypeOf<1 | 2 | null>();
     };
     void check;
   });

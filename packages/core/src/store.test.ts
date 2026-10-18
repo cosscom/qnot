@@ -65,9 +65,9 @@ describe('store', () => {
 
   it('adds, clones, moves and removes', () => {
     const { store, ruleId, groupId } = setup();
-    const added = store.addRule(groupId, { field: 'status', operator: 'eq', value: 'active' });
+    const added = store.addRule(groupId, { field: 'status', operator: 'eq', value: 'active' })!;
     expect(store.getGroup(groupId).children).toHaveLength(2);
-    const copy = store.clone(ruleId);
+    const copy = store.clone(ruleId)!;
     expect(store.getGroup(store.rootId).children[1]).toBe(copy);
     expect(store.move(ruleId, groupId, 0)).toBe(true);
     expect(store.getGroup(groupId).children[0]).toBe(ruleId);
@@ -81,7 +81,7 @@ describe('store', () => {
 
   it('moves within the same parent account for the removed slot', () => {
     const { store, ruleId, groupId } = setup();
-    const third = store.addRule(store.rootId);
+    const third = store.addRule(store.rootId)!;
     store.move(ruleId, store.rootId, 3);
     expect(store.getGroup(store.rootId).children).toEqual([groupId, third, ruleId]);
   });

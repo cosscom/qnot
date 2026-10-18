@@ -1,47 +1,72 @@
 // Framework-agnostic helpers for building query UIs. Every binding's default components use these,
 // so React, Vue, Svelte, Solid and vanilla DOM behave identically.
-import { fieldLabel, type AnyFieldDef, type Fields } from './fields';
-import { OPERATORS, type Arity, type OperatorId } from './operators';
+import { fieldLabel, flattenOptions, registryOf, type AnyFieldDef, type EnumOption, type Fields } from './fields';
+import { operatorInfo, type Arity } from './operators';
 
-export type EditorType = 'text' | 'number' | 'date' | 'boolean' | 'select' | 'multiselect' | 'list' | 'none';
+export type EditorType = 'text' | 'textarea' | 'number' | 'slider' | 'date' | 'time' | 'datetime' | 'boolean' | 'select' | 'multiselect' | 'list' | 'none';
 
 export interface EditorSpec {
   /** Which widget to render. `list` is free-form multiple values (comma-separated input). */
   readonly type: EditorType;
   /** How many inputs: none, one, a pair (between), or many. */
   readonly arity: Arity;
-  readonly options?: readonly { readonly value: unknown; readonly label: string }[];
-  /** Comparable operators can switch between a literal and another field. */
+  /** Options flattened from a tree (each with its depth for indentation). */
+  readonly options?: readonly { readonly value: unknown; readonly label: string; readonly depth: number; readonly disabled?: boolean }[];
+  /** The raw (possibly nested) options, for tree pickers. */
+  readonly tree?: readonly EnumOption<unknown>[];
+  /** Comparable operators can switch between a literal, another field, or a function. */
   readonly allowsRef: boolean;
+  /** Options come from `def.search` as the user types. */
+  readonly async: boolean;
 }
 
 const scalarEditor = (def: AnyFieldDef | undefined): EditorType => {
-  if (def?.options) return 'select';
+  if (def?.options || def?.search) return 'select';
   switch (def?.kind) {
     case 'number':
-      return 'number';
+      return def.widget === 'slider' ? 'slider' : 'number';
     case 'date':
-      return 'date';
+    case 'time':
+    case 'datetime':
     case 'boolean':
-      return 'boolean';
+      return def.kind as EditorType;
     default:
-      return 'text';
+      return def?.widget === 'textarea' ? 'textarea' : 'text';
   }
 };
 
-/** The editor a rule needs for its field and operator. */
-export function editorFor(def: AnyFieldDef | undefined, operator: OperatorId): EditorSpec {
-  const info = OPERATORS[operator];
-  const base = { arity: info.arity, allowsRef: info.comparable, ...(def?.options && { options: def.options }) };
-  if (info.arity === 'none') return { ...base, type: 'none' };
-  if (info.textMatch) return { ...base, type: 'text' };
-  if (info.arity === 'many') return { ...base, type: def?.options ? 'multiselect' : 'list' };
+function flatOptions(options: readonly EnumOption<unknown>[], leafOnly: boolean | undefined) {
+  const out: { value: unknown; label: string; depth: number; disabled?: boolean }[] = [];
+  const walk = (opts: readonly EnumOption<unknown>[], depth: number) => {
+    for (const o of opts) {
+      const parent = !!o.children?.length;
+      out.push({ value: o.value, label: o.label, depth, ...((o.disabled || (leafOnly && parent)) && { disabled: true }) });
+      if (o.children) walk(o.children, depth + 1);
+    }
+  };
+  walk(options, 0);
+  return out;
+}
+
+/** The editor a rule needs for its field and operator. Pass `fields` so custom operators resolve. */
+export function editorFor(def: AnyFieldDef | undefined, operator: string, fields: Fields = {}): EditorSpec {
+  const info = operatorInfo(fields, operator);
+  const arity = info?.arity ?? 'one';
+  const base = {
+    arity,
+    allowsRef: !!info?.comparable,
+    async: !!def?.search,
+    ...(def?.options && { options: flatOptions(def.options, def.leafOnly), tree: def.options }),
+  };
+  if (arity === 'none') return { ...base, type: 'none' };
+  if (info?.textMatch) return { ...base, type: 'text' };
+  if (arity === 'many') return { ...base, type: def?.options || def?.search ? 'multiselect' : 'list' };
   return { ...base, type: scalarEditor(def) };
 }
 
 /** Parse what an `<input>` holds into a value for this field (numbers, booleans, option values). */
 export function parseInput(def: AnyFieldDef | undefined, raw: string): unknown {
-  if (def?.options) return def.options.find((o) => String(o.value) === raw)?.value ?? null;
+  if (def?.options) return flattenOptions(def.options).find((o) => String(o.value) === raw)?.value ?? (def.allowCustom && raw !== '' ? raw : null);
   switch (def?.kind) {
     case 'number': {
       if (raw.trim() === '') return null;
@@ -51,6 +76,8 @@ export function parseInput(def: AnyFieldDef | undefined, raw: string): unknown {
     case 'boolean':
       return raw === 'true';
     case 'date':
+    case 'time':
+    case 'datetime':
       return raw === '' ? null : raw;
     default:
       return raw;
@@ -76,15 +103,46 @@ export interface Option<V = string> {
   readonly label: string;
 }
 
-export const fieldOptions = <F extends Fields>(fields: F): Option<keyof F & string>[] =>
-  Object.keys(fields).map((name) => ({ value: name, label: fieldLabel(name, fields[name]) }));
+export interface FieldOption<V = string> extends Option<V> {
+  /** Struct label, for grouped pickers. */
+  readonly group?: string;
+  readonly description?: string;
+  /** Array fields are queried with array groups, not rules. */
+  readonly isArray: boolean;
+}
 
-export const operatorOptions = (def: AnyFieldDef | undefined): Option<OperatorId>[] =>
-  (def?.operators ?? []).map((op) => ({ value: op, label: OPERATORS[op].label }));
+/** Fields offered in a field picker: hidden fields left out, struct fields carry their group. */
+export const fieldOptions = <F extends Fields>(fields: F): FieldOption<keyof F & string>[] =>
+  Object.keys(fields)
+    .filter((name) => !fields[name]!.hidden)
+    .map((name) => {
+      const def = fields[name]!;
+      return {
+        value: name,
+        label: fieldLabel(name, def),
+        isArray: def.kind === 'array',
+        ...(def.group && { group: def.group }),
+        ...(def.description && { description: def.description }),
+      };
+    });
 
-/** Fields a rule on `field` may compare against (same kind, not itself). */
-export const refOptions = <F extends Fields>(fields: F, field: string): Option<keyof F & string>[] =>
-  fieldOptions(fields).filter((o) => o.value !== field && fields[o.value]?.kind === fields[field]?.kind);
+export const operatorOptions = (def: AnyFieldDef | undefined, fields: Fields = {}): Option<string>[] =>
+  (def?.operators ?? []).map((op) => ({ value: op, label: operatorInfo(fields, op)?.label ?? op }));
+
+/** Fields a rule on `field` may compare against (same kind, not itself, comparable). */
+export const refOptions = <F extends Fields>(fields: F, field: string, kind = fields[field]?.kind): Option<keyof F & string>[] =>
+  Object.keys(fields)
+    .filter((n) => n !== field && fields[n]!.kind === kind && fields[n]!.comparable !== false)
+    .map((n) => ({ value: n, label: fieldLabel(n, fields[n]) }));
+
+/** Functions returning `kind` (all functions when omitted), for function pickers. */
+export const functionOptions = (fields: Fields, kind?: string): Option<string>[] =>
+  Object.entries(registryOf(fields).functions)
+    .filter(([, fn]) => kind === undefined || fn.returns.kind === kind)
+    .map(([name, fn]) => ({ value: name, label: fn.label ?? name }));
+
+/** Every selectable option value of a field, flattened from trees. */
+export const optionValues = (def: AnyFieldDef | undefined): unknown[] => flattenOptions(def?.options, def?.leafOnly).map((o) => o.value);
 
 /** Stable class names shared by every binding's default UI (styled by `@trawlnet/core/styles.css`). */
 export const CLASS = {
@@ -106,4 +164,35 @@ export const CLASS = {
   dropInside: 'tn-drop-inside',
   dragging: 'tn-dragging',
   invalid: 'tn-invalid',
+  locked: 'tn-locked',
+  arrayGroup: 'tn-array-group',
 } as const;
+
+/** UI strings shared by every binding's default components. Override per builder for i18n. */
+export const DEFAULT_LABELS = {
+  and: 'AND',
+  or: 'OR',
+  not: 'NOT',
+  addRule: '+ Rule',
+  addGroup: '+ Group',
+  addArrayGroup: '+ List condition',
+  remove: 'Remove',
+  clone: 'Duplicate',
+  drag: 'Drag to move',
+  lock: 'Lock',
+  unlock: 'Unlock',
+  compareField: 'Compare with another field',
+  compareFunction: 'Compare with a function',
+  compareValue: 'Compare with a value',
+  yes: 'Yes',
+  no: 'No',
+  empty: '—',
+  rangeSeparator: 'and',
+  some: 'some',
+  all: 'all',
+  none: 'none',
+  count: 'count',
+  matchOf: 'of',
+  matchWhere: 'where',
+};
+export type Labels = typeof DEFAULT_LABELS;

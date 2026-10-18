@@ -20,6 +20,11 @@ export interface Codec<T, N = unknown> {
   finish?(root: N | undefined, ctx: CodecContext): T;
   /** Parse the representation back into a native query; present on two-way formats. */
   decode?(input: T, ctx: CodecContext): Query;
+  /**
+   * Switch mode: combine encoded case conditions into one output (SQL CASE WHEN, JsonLogic if,
+   * Mongo $switch…). `whens[i].when` is the case's root as returned by `encodeGroup`.
+   */
+  encodeCases?(whens: readonly { when: N | undefined; then: unknown }[], otherwise: unknown, ctx: CodecContext): unknown;
 }
 
 /** A two-way codec: usable as a store's `format` so `value`/`onChange` speak that shape. */
@@ -58,6 +63,19 @@ export function encode<T, N>(codec: Codec<T, N>, query: Query, fields: Fields): 
   const ctx: CodecContext = { fields };
   const root = encodeNode(codec, query, ctx, cacheFor(codec, fields));
   return codec.finish ? codec.finish(root, ctx) : (root as unknown as T);
+}
+
+/** Encode a switch (see `CasesOf`) with a codec that supports it. */
+export function encodeCases<N>(
+  codec: Codec<any, N>,
+  cases: { readonly cases: readonly { readonly when: Query; readonly then: unknown }[]; readonly otherwise?: unknown },
+  fields: Fields,
+): unknown {
+  if (!codec.encodeCases) throw new Error(`trawlnet: the ${codec.name} codec can't export switch/cases`);
+  const ctx: CodecContext = { fields };
+  const cache = cacheFor(codec, fields);
+  const whens = cases.cases.map((c) => ({ when: encodeNode(codec, c.when, ctx, cache), then: c.then }));
+  return codec.encodeCases(whens, cases.otherwise, ctx);
 }
 
 export function decode<T>(codec: Codec<T>, input: T, fields: Fields): Query {
