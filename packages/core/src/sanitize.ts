@@ -5,19 +5,25 @@ import type { Group, Query, QueryNode, QueryOf } from './types';
 import { groupScope, validateRule } from './validate';
 
 export interface SanitizeOptions {
-  /** Drop rules with a missing or invalid value (RAQB removeIncompleteRulesOnLoad). */
+  /**
+   * Drop rules whose only problem is a missing value (RAQB removeIncompleteRulesOnLoad). Rules with
+   * a present-but-invalid value are kept, so validation can reject them instead of silently
+   * widening the query.
+   */
   removeIncompleteRules?: boolean;
+  /** Drop every rule with an error, including present-but-invalid values. Avoid on servers. */
+  removeInvalidRules?: boolean;
   /** Drop groups left without children, except the root (RAQB removeEmptyGroupsOnLoad). */
   removeEmptyGroups?: boolean;
   /** Drop list values that aren't in the field's options (RAQB removeInvalidMultiSelectValuesOnLoad). */
   removeInvalidListValues?: boolean;
-  /** Drop rules on fields or operators the schema doesn't know (default true). */
+  /** Drop rules on fields or operators the schema doesn't know, e.g. after a schema change (default false). */
   removeUnknown?: boolean;
 }
 
 /** Clean a query loaded from storage. Returns the input unchanged (same object) when nothing needed fixing. */
 export function sanitizeQuery<F extends Fields>(fields: F, query: QueryOf<F>, options: SanitizeOptions = {}): QueryOf<F> {
-  const opts = { removeUnknown: true, ...options };
+  const opts = options;
   const fixNode = (node: QueryNode, scope: Fields, isRoot: boolean): QueryNode | null => {
     if (node.kind === 'group') {
       const inner = groupScope(scope, node);
@@ -39,7 +45,10 @@ export function sanitizeQuery<F extends Fields>(fields: F, query: QueryOf<F>, op
       const kept = rule.value.filter((v) => allowed.has(v));
       if (kept.length !== rule.value.length) rule = { ...rule, value: kept };
     }
-    if (opts.removeIncompleteRules && validateRule(scope, rule).some((i) => i.severity === 'error')) return null;
+    if (opts.removeIncompleteRules || opts.removeInvalidRules) {
+      const errors = validateRule(scope, rule).filter((i) => i.severity === 'error');
+      if (errors.length && (opts.removeInvalidRules || errors.every((i) => i.code === 'required'))) return null;
+    }
     return rule;
   };
   return (fixNode(query as Query, fields, true) ?? query) as QueryOf<F>;

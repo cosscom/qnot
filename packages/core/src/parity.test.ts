@@ -171,8 +171,11 @@ describe('validation', () => {
       { kind: 'rule', field: 'gone' as 'name', operator: 'eq', value: 'x' },
       { kind: 'group', combinator: 'or', children: [{ kind: 'rule', field: 'name', operator: 'eq', value: null }] },
     );
-    const clean = sanitizeQuery(fields, q, { removeIncompleteRules: true, removeEmptyGroups: true, removeInvalidListValues: true });
+    const clean = sanitizeQuery(fields, q, { removeIncompleteRules: true, removeEmptyGroups: true, removeInvalidListValues: true, removeUnknown: true });
     expect(clean.children).toEqual([{ kind: 'rule', field: 'tags', operator: 'hasAny', value: ['vip'] }]);
+    const invalid = and({ kind: 'rule', field: 'opensAt', operator: 'eq', value: '25:00' });
+    expect(sanitizeQuery(fields, invalid, { removeIncompleteRules: true })).toBe(invalid);
+    expect(sanitizeQuery(fields, invalid, { removeInvalidRules: true }).children).toEqual([]);
     const valid = and({ kind: 'rule', field: 'name', operator: 'eq', value: 'x' });
     expect(sanitizeQuery(fields, valid, { removeIncompleteRules: true })).toBe(valid);
   });
