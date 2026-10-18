@@ -1,7 +1,7 @@
-import { DEFAULT_LABELS, functionOf, type AnyFieldDef, type EditorSpec, type Fields, type FnCall, type NodeId, type Option } from '@trawlnet/core';
+import { DEFAULT_LABELS, defaultCall, type AnyFieldDef, type EditorSpec, type NodeId } from '@trawlnet/core';
 import { getContext, setContext, type Component } from 'svelte';
 
-export { DEFAULT_LABELS };
+export { DEFAULT_LABELS, defaultCall };
 export type Labels = typeof DEFAULT_LABELS;
 
 export interface ValueEditorProps {
@@ -32,19 +32,5 @@ export const setUI = (ui: UI) => setContext(KEY, ui);
 export const getUI = () => getContext<UI>(KEY);
 
 export const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' ');
-
-/** A function call with each argument at its default literal. */
-export const defaultCall = (fields: Fields, fn: string): FnCall => {
-  const def = functionOf(fields, { fn, args: {} });
-  return { fn, args: Object.fromEntries(Object.entries(def?.args ?? {}).map(([name, a]) => [name, { value: a.defaultValue ?? null }])) };
-};
-
-export const COUNT_OPS: Option[] = [
-  { value: 'gte', label: 'at least' },
-  { value: 'lte', label: 'at most' },
-  { value: 'eq', label: 'exactly' },
-  { value: 'gt', label: 'more than' },
-  { value: 'lt', label: 'fewer than' },
-];
 
 export const indent = (depth: number | undefined) => '  '.repeat(depth ?? 0);

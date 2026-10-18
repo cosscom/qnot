@@ -3,8 +3,10 @@
 // disabling listens on the store's permissions channel, which value edits never fire.
 import {
   CLASS,
+  countOptions,
   createDnd,
   DEFAULT_LABELS,
+  defaultCall,
   editorFor,
   elementFields,
   fieldLabel,
@@ -36,7 +38,7 @@ import {
 } from '@trawlnet/core';
 import { bindDragHandle, bindDropTarget, bindGroupDropZone, type DropPosition } from './dnd';
 
-export { DEFAULT_LABELS };
+export { DEFAULT_LABELS, defaultCall };
 export type Labels = typeof DEFAULT_LABELS;
 
 export interface ValueEditorProps {
@@ -140,12 +142,6 @@ const fillFieldOptions = (sel: HTMLSelectElement, options: readonly FieldOption[
 
 const setInvalid = (el: HTMLElement, invalid: boolean) => (invalid ? el.setAttribute('aria-invalid', 'true') : el.removeAttribute('aria-invalid'));
 
-/** A function call with each argument at its default literal. */
-export const defaultCall = (fields: Fields, fn: string): FnCall => {
-  const def = functionOf(fields, { fn, args: {} });
-  return { fn, args: Object.fromEntries(Object.entries(def?.args ?? {}).map(([name, a]) => [name, { value: a.defaultValue ?? null }])) };
-};
-
 /** Bitmask of `store.can(action, id)` answers, cheap to compare between permission events. */
 const permBits = (store: QueryStore<any, any>, id: NodeId, actions: readonly Action[]) => {
   let b = 0;
@@ -192,16 +188,24 @@ function asyncControl(def: AnyFieldDef | undefined, multiple: boolean, emit: (v:
       150,
     );
   };
+  const format = multiple ? formatList : formatInput;
+  let emitted: unknown;
+  let first = true;
   input.oninput = () => {
-    emit(multiple ? parseList({ ...def!, options: options as never }, input.value) : (options.find((o) => String(o.value) === input.value)?.value ?? (def?.allowCustom ? input.value : null)));
+    emitted = multiple ? parseList({ ...def!, options: options as never }, input.value) : (options.find((o) => String(o.value) === input.value)?.value ?? (def?.allowCustom ? input.value : null));
+    emit(emitted);
     search();
   };
   search();
-  let first = true;
   return {
     el: h('span', { className: 'tn-async' }, input, list),
     set(v, invalid, disabled) {
-      if (first) input.value = multiple ? formatList(v) : formatInput(v);
+      // Follow external changes (undo, controlled updates), but keep text the user is typing when
+      // the value is just what this input emitted.
+      if (first || format(v) !== format(emitted)) {
+        input.value = format(v);
+        emitted = v;
+      }
       first = false;
       setInvalid(input, invalid);
       input.disabled = disabled;
@@ -484,7 +488,7 @@ export function DefaultRule(ctx: MountContext, id: NodeId): NodeView {
     onchange: () =>
       sourceSel.value === 'field' ? store.setRef(id, refs[0]!.value) : sourceSel.value === 'function' ? store.setCall(id, defaultCall(fields, functions[0]!.value)) : store.setRef(id, null),
   });
-  sourceSel.setAttribute('aria-label', 'Compare with');
+  sourceSel.setAttribute('aria-label', labels.compareWith);
   const valueHost = h('span');
   valueHost.style.display = 'contents';
   const refSel = h('select', { className: CLASS.value, onchange: () => store.setRef(id, refSel.value) });
@@ -538,7 +542,7 @@ export function DefaultRule(ctx: MountContext, id: NodeId): NodeView {
     lhsToggle.hidden = lhsFunctions.length === 0;
     lhsToggle.disabled = !can('editField');
     const fieldIsFn = isFnCall(r.field);
-    lhsToggle.title = fieldIsFn ? 'Use a field' : 'Use a function';
+    lhsToggle.title = fieldIsFn ? labels.useField : labels.useFunction;
     lhsToggle.setAttribute('aria-pressed', String(fieldIsFn));
     if (fieldIsFn) {
       if (!lhsFn) {
@@ -662,14 +666,6 @@ function toggleDrop(el: HTMLElement, p: DropPosition) {
 
 // --- group -------------------------------------------------------------------------------------
 
-const COUNT_OPS: Option[] = [
-  { value: 'gte', label: 'at least' },
-  { value: 'lte', label: 'at most' },
-  { value: 'eq', label: 'exactly' },
-  { value: 'gt', label: 'more than' },
-  { value: 'lt', label: 'fewer than' },
-];
-
 /** "some / all / none / at least N of Orders where …" for array groups. */
 function matchEditor(labels: Labels, onChange: (m: Quantifier) => void) {
   let match: Quantifier = 'some';
@@ -684,7 +680,7 @@ function matchEditor(labels: Labels, onChange: (m: Quantifier) => void) {
     { value: 'count', label: labels.count },
   ]);
   const op = h('select', { className: 'tn-match-op', onchange: () => typeof match === 'object' && onChange({ count: op.value as 'gte', value: match.value as number }) });
-  fillOptions(op, COUNT_OPS);
+  fillOptions(op, countOptions(labels));
   const count = h('input', { className: 'tn-match-count', type: 'number', min: '0', oninput: () => typeof match === 'object' && onChange({ count: match.count as 'gte', value: Number(count.value) }) });
   const strong = h('strong');
   const el = h('span', { className: 'tn-match' }, mode, op, count, h('span', {}, `${labels.matchOf} `, strong, ` ${labels.matchWhere}`));

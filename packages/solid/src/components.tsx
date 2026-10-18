@@ -1,7 +1,9 @@
 /** @jsxImportSource solid-js */
 import {
   CLASS,
+  countOptions,
   DEFAULT_LABELS,
+  defaultCall,
   editorFor,
   fieldLabel,
   formatInput,
@@ -40,7 +42,7 @@ import {
   useStore,
 } from './primitives';
 
-export { DEFAULT_LABELS };
+export { DEFAULT_LABELS, defaultCall };
 export type Labels = typeof DEFAULT_LABELS;
 
 export interface ValueEditorProps {
@@ -87,12 +89,6 @@ const OptionList = (props: { options: readonly OptionLike[] }) => (
     )}
   </For>
 );
-
-/** A function call with each argument at its default literal. */
-export const defaultCall = (fields: Fields, fn: string): FnCall => {
-  const def = functionOf(fields, { fn, args: {} });
-  return { fn, args: Object.fromEntries(Object.entries(def?.args ?? {}).map(([name, a]) => [name, { value: a.defaultValue ?? null }])) };
-};
 
 export function QueryProvider(props: { store: QueryStore<any, any>; children?: JSX.Element }) {
   // The store is fixed for the provider's lifetime.
@@ -144,8 +140,24 @@ function DraftInput(props: {
 
 /** Text input backed by the field's async `search`, suggesting options as the user types. */
 function AsyncInput(props: { def: AnyFieldDef | undefined; value: unknown; onChange: (v: unknown) => void; invalid: boolean; disabled?: boolean; multiple?: boolean }) {
-  const [query, setQuery] = createSignal(props.multiple ? formatList(props.value) : formatInput(props.value));
+  const format = props.multiple ? formatList : formatInput;
+  const [query, setQuery] = createSignal(format(props.value));
   const [found, setFound] = createSignal<readonly OptionLike[]>([]);
+  // Follow external value changes (undo, controlled updates) without clobbering the text the user
+  // is typing: only reset when the new value isn't what this input last emitted.
+  let emitted: unknown = props.value;
+  createEffect(
+    on(
+      () => props.value,
+      (v) => {
+        if (format(v) !== format(emitted)) {
+          setQuery(format(v));
+          emitted = v;
+        }
+      },
+      { defer: true },
+    ),
+  );
   const listId = `tn-async-${Math.random().toString(36).slice(2)}`;
   createEffect(() => {
     const def = props.def;
@@ -169,11 +181,10 @@ function AsyncInput(props: { def: AnyFieldDef | undefined; value: unknown; onCha
         onInput={(e) => {
           const raw = e.currentTarget.value;
           setQuery(raw);
-          props.onChange(
-            props.multiple
-              ? parseList({ ...props.def!, options: found() as never }, raw)
-              : (found().find((o) => String(o.value) === raw)?.value ?? (props.def?.allowCustom ? raw : null)),
-          );
+          emitted = props.multiple
+            ? parseList({ ...props.def!, options: found() as never }, raw)
+            : (found().find((o) => String(o.value) === raw)?.value ?? (props.def?.allowCustom ? raw : null));
+          props.onChange(emitted);
         }}
       />
       <datalist id={listId}>
@@ -462,7 +473,7 @@ export function DefaultRule(props: { id: NodeId }) {
           type="button"
           class={cx(CLASS.action, 'tn-lhs-toggle')}
           disabled={!r.can().editField}
-          title={fieldIsFn() ? 'Use a field' : 'Use a function'}
+          title={fieldIsFn() ? ui.labels.useField : ui.labels.useFunction}
           aria-pressed={fieldIsFn()}
           onClick={() => r.setField(fieldIsFn() ? r.fieldOptions()[0]!.value : defaultCall(r.fields(), lhsFunctions()[0]!.value))}
         >
@@ -478,7 +489,7 @@ export function DefaultRule(props: { id: NodeId }) {
           class="tn-source"
           value={r.source()}
           disabled={!r.can().editValue}
-          aria-label="Compare with"
+          aria-label={ui.labels.compareWith}
           onChange={(e) => {
             const v = e.currentTarget.value;
             v === 'field' ? r.setRef(r.refOptions()[0]!.value) : v === 'function' ? r.setCall(defaultCall(r.fields(), r.functionOptions()[0]!.value)) : r.setRef(null);
@@ -547,14 +558,6 @@ function NodeView(props: { id: NodeId }) {
   );
 }
 
-const COUNT_OPS: Option[] = [
-  { value: 'gte', label: 'at least' },
-  { value: 'lte', label: 'at most' },
-  { value: 'eq', label: 'exactly' },
-  { value: 'gt', label: 'more than' },
-  { value: 'lt', label: 'fewer than' },
-];
-
 /** "some / all / none / at least N of Orders where …" for array groups. */
 function MatchEditor(props: { match: Quantifier; label: string; onChange: (m: Quantifier) => void; disabled?: boolean; labels: Labels }) {
   const counted = () => (typeof props.match === 'object' && props.match.count !== 'between' ? (props.match as { count: 'gte'; value: number }) : null);
@@ -574,7 +577,7 @@ function MatchEditor(props: { match: Quantifier; label: string; onChange: (m: Qu
       <Show when={counted()}>
         {(m) => (
           <>
-            <Select class="tn-match-op" value={m().count} options={COUNT_OPS} disabled={props.disabled} onChange={(count) => props.onChange({ count: count as 'gte', value: m().value })} />
+            <Select class="tn-match-op" value={m().count} options={countOptions(props.labels)} disabled={props.disabled} onChange={(count) => props.onChange({ count: count as 'gte', value: m().value })} />
             <input
               class="tn-match-count"
               type="number"

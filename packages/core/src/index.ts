@@ -88,5 +88,5 @@ export { createQueryStore } from './store';
 export type { QueryStore, StoreOptions, StoreSettings, Action, BatchOptions, HistoryOptions, NodeId, RuleNode, GroupNode, StoreNode } from './store';
 export { createDnd, dropIndexFromPointer } from './dnd';
 export type { DndController, DndState, DropTarget } from './dnd';
-export { editorFor, parseInput, formatInput, parseList, formatList, fieldOptions, operatorOptions, refOptions, functionOptions, optionValues, CLASS, DEFAULT_LABELS } from './ui';
+export { editorFor, parseInput, formatInput, parseList, formatList, fieldOptions, operatorOptions, refOptions, functionOptions, optionValues, countOptions, defaultCall, CLASS, DEFAULT_LABELS } from './ui';
 export type { EditorSpec, EditorType, Option, FieldOption, Labels } from './ui';

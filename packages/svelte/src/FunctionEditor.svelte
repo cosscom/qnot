@@ -1,8 +1,8 @@
 <script lang="ts">
   // Editor for a function call: pick the function, then each argument (literal, field, or nested call).
-  import { fieldLabel, functionOf, functionOptions, type Fields, type FnCall } from '@trawlnet/core';
+  import { defaultCall, fieldLabel, functionOf, functionOptions, type Fields, type FnCall } from '@trawlnet/core';
   import OperandEditor from './OperandEditor.svelte';
-  import { defaultCall, type Labels } from './ui';
+  import type { Labels } from './ui';
 
   interface Props {
     call: FnCall;

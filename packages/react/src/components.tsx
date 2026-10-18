@@ -1,6 +1,8 @@
 import {
   CLASS,
+  countOptions,
   DEFAULT_LABELS,
+  defaultCall,
   editorFor,
   fieldLabel,
   formatInput,
@@ -98,8 +100,17 @@ function OptionList({ editor }: { editor: EditorSpec }) {
 
 /** Text input backed by the field's async `search`, suggesting options as the user types. */
 function AsyncInput({ def, value, onChange, invalid, disabled, multiple }: { def: AnyFieldDef | undefined; value: unknown; onChange: (v: unknown) => void; invalid: boolean; disabled?: boolean; multiple?: boolean }) {
-  const [query, setQuery] = useState(() => (multiple ? formatList(value) : formatInput(value)));
+  const format = multiple ? formatList : formatInput;
+  const [query, setQuery] = useState(() => format(value));
   const [options, setOptions] = useState<{ value: unknown; label: string }[]>([]);
+  // Follow external value changes (undo, controlled updates) without clobbering the text the user
+  // is typing: only reset when the new value isn't what this input last emitted.
+  const [prev, setPrev] = useState(value);
+  const [emitted, setEmitted] = useState(value);
+  if (prev !== value) {
+    setPrev(value);
+    if (format(value) !== format(emitted)) setQuery(format(value));
+  }
   const listId = useMemo(() => `tn-async-${Math.random().toString(36).slice(2)}`, []);
   useEffect(() => {
     if (!def?.search) return;
@@ -121,7 +132,9 @@ function AsyncInput({ def, value, onChange, invalid, disabled, multiple }: { def
         aria-invalid={invalid || undefined}
         onChange={(e) => {
           setQuery(e.target.value);
-          onChange(multiple ? parseList({ ...def!, options: options as never }, e.target.value) : (options.find((o) => String(o.value) === e.target.value)?.value ?? (def?.allowCustom ? e.target.value : null)));
+          const next = multiple ? parseList({ ...def!, options: options as never }, e.target.value) : (options.find((o) => String(o.value) === e.target.value)?.value ?? (def?.allowCustom ? e.target.value : null));
+          setEmitted(next);
+          onChange(next);
         }}
       />
       <datalist id={listId}>
@@ -255,11 +268,6 @@ function FieldSelect({ value, options, onChange, disabled }: { value: string; op
   );
 }
 
-const defaultCall = (fields: Fields, fn: string): FnCall => {
-  const def = functionOf(fields, { fn, args: {} });
-  return { fn, args: Object.fromEntries(Object.entries(def?.args ?? {}).map(([name, a]) => [name, { value: a.defaultValue ?? null }])) };
-};
-
 /** Editor for a function call: pick the function, then each argument (literal, field, or nested call). */
 export function FunctionEditor({ call, fields, kind, onChange, disabled, labels }: { call: FnCall; fields: Fields; kind?: string; onChange: (c: FnCall) => void; disabled?: boolean; labels: Labels }) {
   const fns = useMemo(() => functionOptions(fields, kind), [fields, kind]);
@@ -348,7 +356,7 @@ export const DefaultRule = memo(function DefaultRule({ id }: { id: NodeId }) {
           type="button"
           className={cx(CLASS.action, 'tn-lhs-toggle')}
           disabled={!can.editField}
-          title={fieldIsFn ? 'Use a field' : 'Use a function'}
+          title={fieldIsFn ? labels.useField : labels.useFunction}
           aria-pressed={fieldIsFn}
           onClick={() => r.setField(fieldIsFn ? r.fieldOptions[0]!.value : defaultCall(fields, lhsFunctions[0]!.value))}
         >
@@ -366,7 +374,7 @@ export const DefaultRule = memo(function DefaultRule({ id }: { id: NodeId }) {
           className="tn-source"
           value={source}
           disabled={!can.editValue}
-          aria-label="Compare with"
+          aria-label={labels.compareWith}
           onChange={(e) =>
             e.target.value === 'field' ? r.setRef(r.refOptions[0]!.value) : e.target.value === 'function' ? r.setCall(defaultCall(fields, r.functionOptions[0]!.value)) : r.setRef(null)
           }
@@ -408,14 +416,6 @@ function NodeView({ id }: { id: NodeId }) {
   return kind === 'group' ? <components.Group id={id} /> : <components.Rule id={id} />;
 }
 
-const COUNT_OPS: Option[] = [
-  { value: 'gte', label: 'at least' },
-  { value: 'lte', label: 'at most' },
-  { value: 'eq', label: 'exactly' },
-  { value: 'gt', label: 'more than' },
-  { value: 'lt', label: 'fewer than' },
-];
-
 /** "some / all / none / at least N of Orders where …" for array groups. */
 function MatchEditor({ match, label, onChange, disabled, labels }: { match: Quantifier; label: string; onChange: (m: Quantifier) => void; disabled?: boolean; labels: Labels }) {
   const mode = typeof match === 'string' ? match : 'count';
@@ -434,7 +434,7 @@ function MatchEditor({ match, label, onChange, disabled, labels }: { match: Quan
       </select>
       {typeof match === 'object' && match.count !== 'between' && (
         <>
-          <Select className="tn-match-op" value={match.count} options={COUNT_OPS} disabled={disabled} onChange={(count) => onChange({ count: count as 'gte', value: match.value })} />
+          <Select className="tn-match-op" value={match.count} options={countOptions(labels)} disabled={disabled} onChange={(count) => onChange({ count: count as 'gte', value: match.value })} />
           <input className="tn-match-count" type="number" min={0} value={match.value} disabled={disabled} onChange={(e) => onChange({ count: match.count, value: Number(e.target.value) })} />
         </>
       )}

@@ -1,7 +1,7 @@
 <script lang="ts">
   // "some / all / none / at least N of Orders where …" for array groups.
-  import type { Quantifier } from '@trawlnet/core';
-  import { COUNT_OPS, type Labels } from './ui';
+  import { countOptions, type Quantifier } from '@trawlnet/core';
+  import type { Labels } from './ui';
 
   let { match, label, onChange, disabled, labels }: { match: Quantifier; label: string; onChange: (m: Quantifier) => void; disabled?: boolean; labels: Labels } = $props();
   const counted = $derived(typeof match === 'object' && match.count !== 'between' ? (match as { count: 'gte'; value: number }) : null);
@@ -21,7 +21,7 @@
   </select>
   {#if counted}
     <select class="tn-match-op" value={counted.count} {disabled} onchange={(e) => onChange({ count: e.currentTarget.value as 'gte', value: counted.value })}>
-      {#each COUNT_OPS as o (o.value)}
+      {#each countOptions(labels) as o (o.value)}
         <option value={o.value}>{o.label}</option>
       {/each}
     </select>

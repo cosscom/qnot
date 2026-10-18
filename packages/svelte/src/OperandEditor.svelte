@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { CLASS, editorFor, functionOptions, isFnCall, refOptions, type AnyFieldDef, type Fields, type FnCall, type Operand } from '@trawlnet/core';
+  import { CLASS, defaultCall, editorFor, functionOptions, isFnCall, refOptions, type AnyFieldDef, type Fields, type FnCall, type Operand } from '@trawlnet/core';
   import FunctionEditor from './FunctionEditor.svelte';
   import ValueEditor from './ValueEditor.svelte';
-  import { defaultCall, type Labels } from './ui';
+  import type { Labels } from './ui';
 
   interface Props {
     operand: Operand;

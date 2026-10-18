@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { CLASS, functionOptions, isFnCall, type FnCall, type NodeId } from '@trawlnet/core';
+  import { CLASS, defaultCall, functionOptions, isFnCall, type FnCall, type NodeId } from '@trawlnet/core';
   import FieldSelect from './FieldSelect.svelte';
   import FunctionEditor from './FunctionEditor.svelte';
   import { createDragHandle, createDropTarget, createRule, createSettings, getDndController, getQueryStore } from './reactive';
-  import { cx, defaultCall, getUI } from './ui';
+  import { cx, getUI } from './ui';
 
   let { id }: { id: NodeId } = $props();
   const store = getQueryStore();
@@ -49,7 +49,7 @@
       type="button"
       class={cx(CLASS.action, 'tn-lhs-toggle')}
       disabled={!can.editField}
-      title={fieldIsFn ? 'Use a field' : 'Use a function'}
+      title={fieldIsFn ? ui.labels.useField : ui.labels.useFunction}
       aria-pressed={fieldIsFn}
       onclick={() => r.setField(fieldIsFn ? r.fieldOptions[0]!.value : defaultCall(fields, lhsFunctions[0]!.value))}>ƒ</button
     >
@@ -69,7 +69,7 @@
       class="tn-source"
       value={r.source}
       disabled={!can.editValue}
-      aria-label="Compare with"
+      aria-label={ui.labels.compareWith}
       onchange={(e) => {
         const v = e.currentTarget.value;
         if (v === 'field') r.setRef(refs[0]!.value);

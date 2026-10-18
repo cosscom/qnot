@@ -88,3 +88,23 @@ describe('parity UI', () => {
     expect(container.querySelectorAll('.tn-rule')).toHaveLength(3);
   });
 });
+
+describe('async search input', () => {
+  it('follows external value changes without clobbering typed text', () => {
+    const cities = defineFields({
+      city: f.enum(['berlin', 'paris'], { allowCustom: true, search: async () => [{ value: 'paris' as const, label: 'Paris' }] }),
+    });
+    const store = createQueryStore({ fields: cities, initial: { kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'city', operator: 'eq', value: 'berlin' }] } });
+    const id = store.getGroup(store.rootId).children[0]!;
+    const { container } = render(<QueryBuilder store={store} />);
+    const input = () => container.querySelector<HTMLInputElement>('.tn-rule input[list]')!;
+    expect(input().value).toBe('berlin');
+    act(() => store.setRuleValue(id, 'paris'));
+    expect(input().value).toBe('paris');
+    fireEvent.change(input(), { target: { value: 'pa' } });
+    expect(store.getRule(id)).toMatchObject({ value: 'pa' });
+    expect(input().value).toBe('pa');
+    act(() => void store.undo());
+    expect(input().value).toBe('berlin');
+  });
+});

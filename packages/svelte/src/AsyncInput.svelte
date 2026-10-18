@@ -13,7 +13,20 @@
   let { def, value, onChange, invalid, disabled, multiple = false }: Props = $props();
 
   // svelte-ignore state_referenced_locally
-  let query = $state(multiple ? formatList(value) : formatInput(value));
+  const format = multiple ? formatList : formatInput;
+  // svelte-ignore state_referenced_locally
+  let query = $state(format(value));
+  // Follow external value changes (undo, controlled updates) without clobbering the text the user
+  // is typing: only reset when the new value isn't what this input last emitted.
+  // svelte-ignore state_referenced_locally
+  let emitted: unknown = value;
+  $effect.pre(() => {
+    const v = value;
+    if (format(v) !== format(emitted)) {
+      query = format(v);
+      emitted = v;
+    }
+  });
   let found = $state.raw<readonly { value: unknown; label: string }[]>([]);
   const listId = `tn-async-${Math.random().toString(36).slice(2)}`;
 
@@ -39,7 +52,8 @@
   oninput={(e) => {
     const raw = e.currentTarget.value;
     query = raw;
-    onChange(multiple ? parseList({ ...def!, options: found as never }, raw) : (found.find((o) => String(o.value) === raw)?.value ?? (def?.allowCustom ? raw : null)));
+    emitted = multiple ? parseList({ ...def!, options: found as never }, raw) : (found.find((o) => String(o.value) === raw)?.value ?? (def?.allowCustom ? raw : null));
+    onChange(emitted);
   }}
 />
 <datalist id={listId}>

@@ -1,6 +1,7 @@
 // Framework-agnostic helpers for building query UIs. Every binding's default components use these,
 // so React, Vue, Svelte, Solid and vanilla DOM behave identically.
 import { fieldLabel, flattenOptions, registryOf, type AnyFieldDef, type EnumOption, type Fields } from './fields';
+import { functionOf, type FnCall } from './functions';
 import { operatorInfo, type Arity } from './operators';
 
 export type EditorType = 'text' | 'textarea' | 'number' | 'slider' | 'date' | 'time' | 'datetime' | 'boolean' | 'select' | 'multiselect' | 'list' | 'none';
@@ -184,6 +185,9 @@ export const DEFAULT_LABELS = {
   compareField: 'Compare with another field',
   compareFunction: 'Compare with a function',
   compareValue: 'Compare with a value',
+  compareWith: 'Compare with',
+  useField: 'Use a field',
+  useFunction: 'Use a function',
   yes: 'Yes',
   no: 'No',
   empty: '—',
@@ -194,5 +198,25 @@ export const DEFAULT_LABELS = {
   count: 'count',
   matchOf: 'of',
   matchWhere: 'where',
+  countGte: 'at least',
+  countLte: 'at most',
+  countEq: 'exactly',
+  countGt: 'more than',
+  countLt: 'fewer than',
 };
 export type Labels = typeof DEFAULT_LABELS;
+
+/** Operators offered for "count" quantifiers on array groups ("at least 2 of Orders where …"). */
+export const countOptions = (labels: Pick<Labels, 'countGte' | 'countLte' | 'countEq' | 'countGt' | 'countLt'> = DEFAULT_LABELS): Option<'gte' | 'lte' | 'eq' | 'gt' | 'lt'>[] => [
+  { value: 'gte', label: labels.countGte },
+  { value: 'lte', label: labels.countLte },
+  { value: 'eq', label: labels.countEq },
+  { value: 'gt', label: labels.countGt },
+  { value: 'lt', label: labels.countLt },
+];
+
+/** A call to function `fn` with every argument at its default literal (what pickers insert). */
+export const defaultCall = (fields: Fields, fn: string): FnCall => {
+  const def = functionOf(fields, { fn, args: {} });
+  return { fn, args: Object.fromEntries(Object.entries(def?.args ?? {}).map(([name, a]) => [name, { value: a.defaultValue ?? null }])) };
+};

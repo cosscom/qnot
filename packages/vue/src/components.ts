@@ -1,6 +1,8 @@
 import {
   CLASS,
+  countOptions,
   DEFAULT_LABELS,
+  defaultCall,
   editorFor,
   fieldLabel,
   formatInput,
@@ -37,7 +39,7 @@ import {
   useStore,
 } from './composables';
 
-export { DEFAULT_LABELS };
+export { DEFAULT_LABELS, defaultCall };
 export type Labels = typeof DEFAULT_LABELS;
 
 export interface ValueEditorProps {
@@ -80,12 +82,6 @@ interface OptionLike {
 }
 const options = (list: readonly OptionLike[]) =>
   list.map((o) => h('option', { key: String(o.value), value: String(o.value), disabled: o.disabled }, '  '.repeat(o.depth ?? 0) + o.label));
-
-/** A function call with each argument at its default literal. */
-export const defaultCall = (fields: Fields, fn: string): FnCall => {
-  const def = functionOf(fields, { fn, args: {} });
-  return { fn, args: Object.fromEntries(Object.entries(def?.args ?? {}).map(([name, a]) => [name, { value: a.defaultValue ?? null }])) };
-};
 
 const anyProp = { type: null as unknown as PropType<unknown> };
 
@@ -142,8 +138,21 @@ const AsyncInput = defineComponent({
     multiple: Boolean,
   },
   setup(props) {
-    const query = ref(props.multiple ? formatList(props.value) : formatInput(props.value));
+    const format = props.multiple ? formatList : formatInput;
+    const query = ref(format(props.value));
     const found = ref<readonly OptionLike[]>([]);
+    // Follow external value changes (undo, controlled updates) without clobbering the text the
+    // user is typing: only reset when the new value isn't what this input last emitted.
+    let emitted: unknown = props.value;
+    watch(
+      () => props.value,
+      (v) => {
+        if (format(v) !== format(emitted)) {
+          query.value = format(v);
+          emitted = v;
+        }
+      },
+    );
     const listId = `tn-async-${Math.random().toString(36).slice(2)}`;
     let ctrl: AbortController | null = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -174,11 +183,10 @@ const AsyncInput = defineComponent({
         onInput: (e: Event) => {
           const raw = target(e).value;
           query.value = raw;
-          props.onChange(
-            props.multiple
-              ? parseList({ ...props.def!, options: found.value as never }, raw)
-              : (found.value.find((o) => String(o.value) === raw)?.value ?? (props.def?.allowCustom ? raw : null)),
-          );
+          emitted = props.multiple
+            ? parseList({ ...props.def!, options: found.value as never }, raw)
+            : (found.value.find((o) => String(o.value) === raw)?.value ?? (props.def?.allowCustom ? raw : null));
+          props.onChange(emitted);
         },
       }),
       h('datalist', { id: listId }, found.value.map((o) => h('option', { key: String(o.value), value: String(o.value) }, o.label))),
@@ -436,6 +444,7 @@ export const DefaultRule = defineComponent({
           lhsFunctions.value.length
             ? btn('ƒ', () => r.setField(fieldIsFn ? r.fieldOptions.value[0]!.value : defaultCall(fields, lhsFunctions.value[0]!.value)), {
                 class: cx(CLASS.action, 'tn-lhs-toggle'),
+                title: fieldIsFn ? labels.useField : labels.useFunction,
                 disabled: !can.editField,
                 pressed: fieldIsFn,
               })
@@ -451,7 +460,7 @@ export const DefaultRule = defineComponent({
                   class: 'tn-source',
                   value: r.source.value,
                   disabled: !can.editValue,
-                  'aria-label': 'Compare with',
+                  'aria-label': labels.compareWith,
                   onChange: (e: Event) => {
                     const v = target<HTMLSelectElement>(e).value;
                     v === 'field' ? r.setRef(refs[0]!.value) : v === 'function' ? r.setCall(defaultCall(fields, fns[0]!.value)) : r.setRef(null);
@@ -491,14 +500,6 @@ const NodeView = defineComponent({
   },
 });
 
-const COUNT_OPS: Option[] = [
-  { value: 'gte', label: 'at least' },
-  { value: 'lte', label: 'at most' },
-  { value: 'eq', label: 'exactly' },
-  { value: 'gt', label: 'more than' },
-  { value: 'lt', label: 'fewer than' },
-];
-
 /** "some / all / none / at least N of Orders where …" for array groups. */
 function matchEditor(match: Quantifier, label: string, onChange: (m: Quantifier) => void, disabled: boolean, labels: Labels) {
   const mode = typeof match === 'string' ? match : 'count';
@@ -518,7 +519,7 @@ function matchEditor(match: Quantifier, label: string, onChange: (m: Quantifier)
     ),
     ...(typeof match === 'object' && match.count !== 'between'
       ? [
-          select('tn-match-op', match.count, COUNT_OPS, (count) => onChange({ count: count as 'gte', value: match.value }), disabled),
+          select('tn-match-op', match.count, countOptions(labels), (count) => onChange({ count: count as 'gte', value: match.value }), disabled),
           h('input', { class: 'tn-match-count', type: 'number', min: 0, value: match.value, disabled, onInput: (e: Event) => onChange({ count: match.count, value: Number(target(e).value) }) }),
         ]
       : []),
