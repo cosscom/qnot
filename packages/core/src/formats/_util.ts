@@ -1,11 +1,11 @@
 // Helpers shared by the format codecs. Not part of the public API.
 import type { Codec, CodecContext } from '../codec';
-import { columnOf, registryOf, type AnyFieldDef, type Fields } from '../fields';
+import { columnOf, fieldDef, registryOf, type AnyFieldDef, type Fields } from '../fields';
 import { functionOf, isFnCall, type FnCall, type Operand } from '../functions';
 import { operatorInfo } from '../operators';
 import { ruleDef } from '../scope';
 import type { Group, QueryNode, Rule } from '../types';
-import { groupScope, validateRule } from '../validate';
+import { groupScope, validateGroup, validateRule } from '../validate';
 
 export { columnOf, groupScope, isFnCall, operatorInfo, ruleDef };
 export type { FnCall, Operand };
@@ -22,6 +22,12 @@ export function ruleProblem(fields: Fields, rule: Rule): 'incomplete' | Unsuppor
   if (!errors.length) return undefined;
   if (errors.every((i) => i.code === 'required')) return 'incomplete';
   return new Unsupported(rule, `invalid rule (${errors.map((e) => e.message).join('; ')})`);
+}
+
+/** An Unsupported marker for a group whose shape is invalid (bad combinator, NOT flag, list quantifier). */
+export function groupProblem(fields: Fields, g: Group): Unsupported | undefined {
+  const errors = validateGroup(fields, g).filter((i) => i.severity === 'error');
+  return errors.length ? new Unsupported(g, `invalid group (${errors.map((e) => e.message).join('; ')})`) : undefined;
 }
 
 export const escapeRegex = (s: string): string => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
@@ -167,7 +173,7 @@ export function encodeIn<N, C extends CodecContext>(codec: Codec<any, N>, nodes:
 }
 
 /** True when `g` is an array group over a real array field of this scope. */
-export const isArrayGroupIn = (fields: Fields, g: Group): boolean => !!g.of && !!fields[g.of.field]?.of;
+export const isArrayGroupIn = (fields: Fields, g: Group): boolean => !!g.of && !!fieldDef(fields, g.of.field)?.of;
 
 /** Human/RAQB-style comparison words for count quantifiers. */
 export const COUNT_OPS = { eq: '==', neq: '!=', lt: '<', lte: '<=', gt: '>', gte: '>=' } as const;

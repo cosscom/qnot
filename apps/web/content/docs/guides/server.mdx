@@ -42,12 +42,13 @@ Given `age ≥ 21`, `plan in (pro, team)`, `name contains "O'Brien; DROP TABLE u
 `signedUp > relativeDate(30 days ago)`, that produces:
 
 ```sql
-age >= $1 AND plan IN ($2, $3) AND name LIKE $4 AND signedUp > CURRENT_DATE - INTERVAL '30 day'
+age >= $1 AND plan IN ($2, $3) AND name LIKE $4 ESCAPE '!' AND signedUp > CURRENT_DATE - INTERVAL '30 day'
 -- params: [21, 'pro', 'team', "%O'Brien; DROP TABLE users%"]
 ```
 
-User input only ever reaches the database as bound parameters. Function arguments are inlined
-because a function's SQL may reorder them, so their values are validated by the schema first.
+User input only ever reaches the database as bound parameters: rule values, list items, function
+arguments, custom operator values and case results. The `INTERVAL` text comes from `relativeDate`,
+which only accepts a whole amount and a known unit.
 
 ## What to check
 
@@ -61,6 +62,23 @@ because a function's SQL may reorder them, so their values are validated by the 
 - **Map columns.** Give fields a `column` when the API name differs from the database column.
 - **Limit size.** `settings.maxRules` and `maxDepth` limit the UI; on the server, check the size of
   the incoming JSON yourself.
+
+## Security
+
+The SQL output was audited for injection against Postgres (including
+`standard_conforming_strings = off`), MySQL (including `NO_BACKSLASH_ESCAPES`), SQL Server and
+SQLite, in inline and parameterized mode, and CI keeps fuzzing it against all four. In short:
+
+- Only JSON scalars are written into SQL, escaped so they mean the same thing under every server
+  setting; NUL characters are refused.
+- Fields, refs, functions and operators must exist in your schema (own keys only); anything else
+  throws, and malformed groups always throw.
+- Invalid rules and rules a dialect can't express throw by default, so a tampered query never
+  silently matches more rows.
+- Custom operator and function `formats.sql` are your SQL: they receive escaped literals or
+  placeholders, but never interpolate `raw` values without checking them.
+
+Threat model, guarantees per dialect, and the audit results: [SECURITY.md](https://github.com/sean-brydon/trawlnet/blob/main/SECURITY.md).
 
 ## In memory
 

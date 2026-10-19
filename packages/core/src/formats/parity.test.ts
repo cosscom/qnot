@@ -109,7 +109,7 @@ describe('sql', () => {
     const q = and(rule('tags', 'hasAny', ['vip']));
     expect(encode(sqlFormat({ dialect: 'mysql' }), q, pfields)).toBe(`JSON_OVERLAPS(tags, '["vip"]')`);
     expect(encode(sqlFormat({ dialect: 'sqlite' }), q, pfields)).toBe("EXISTS (SELECT 1 FROM json_each(tags) WHERE value IN ('vip'))");
-    expect(encode(sqlFormat({ dialect: 'mssql' }), q, pfields)).toBe("EXISTS (SELECT 1 FROM OPENJSON(tags) WHERE value IN ('vip'))");
+    expect(encode(sqlFormat({ dialect: 'mssql' }), q, pfields)).toBe("EXISTS (SELECT 1 FROM OPENJSON(tags) WHERE value IN (N'vip'))");
     const mixed = and(rule('name', 'eq', 'a'), rule('tags', 'hasAny', ['vip']), orders('some', rule('qty', 'gt', 1)));
     expect(() => encode(sql, mixed, pfields)).toThrow(/rule at \[1\] \(field "tags", operator "hasAny"\): the ansi dialect has no array operators/);
     expect(encode(sqlFormat({ unsupported: 'skip' }), mixed, pfields)).toBe("name = 'a'");

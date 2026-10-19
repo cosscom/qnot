@@ -1,5 +1,5 @@
 import type { Codec, CodecContext } from '../codec';
-import type { Fields } from '../fields';
+import { fieldDef, type Fields } from '../fields';
 import type { Group, Query, Rule } from '../types';
 import { parseSqlWhere } from './_sql-parse';
 import {
@@ -8,6 +8,7 @@ import {
   encodeCall,
   encodeIn,
   finishRoot,
+  groupProblem,
   groupScope,
   infoOf,
   isArrayGroupIn,
@@ -49,10 +50,19 @@ export interface SqlWithParams<P> {
   params: P;
 }
 
-/** Intermediate per-node output. Placeholders are `\u0000` until `finish` numbers them. */
+/** A parameter value and the id its placeholder token carries. */
+export interface SqlParam {
+  readonly id: number;
+  readonly value: unknown;
+}
+
+/**
+ * Intermediate per-node output. Placeholders are `\u0000<id>\u0000` tokens until `finish` numbers
+ * them in text order, so a format that reorders or repeats an argument still binds the right value.
+ */
 export interface SqlFragment {
   readonly sql: string;
-  readonly params: readonly unknown[];
+  readonly params: readonly SqlParam[];
   /** True when the fragment is an AND/OR chain that needs parentheses inside another chain. */
   readonly compound: boolean;
 }
@@ -64,7 +74,13 @@ interface SqlContext extends CodecContext {
   readonly depth?: number;
 }
 
-const PH = '\u0000';
+/** Placeholder ids, unique per process so memoized fragments can be combined freely. */
+let nextParamId = 0;
+const TOKEN = /\u0000(\d+)\u0000/g;
+/** A safe unquoted identifier segment; anything else needs `quoteIdentifiers: true`. */
+const BARE_IDENTIFIER = /^[\p{L}_][\p{L}\p{N}_$]*$/u;
+/** The LIKE escape character: not a backslash, so no dialect setting can change its meaning. */
+const LIKE_ESCAPE = '!';
 const ARRAY_OPS = new Set(['hasAny', 'hasAll', 'hasNone', 'setEq', 'setNeq']);
 const CMP: Record<string, string> = { eq: '=', neq: '<>', lt: '<', lte: '<=', gt: '>', gte: '>=' };
 const ELEMENT_CAST: Record<string, string> = { number: 'numeric', boolean: 'boolean', date: 'date', datetime: 'timestamptz', time: 'time' };
@@ -83,51 +99,88 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
   const modes = { unsupported: options.unsupported ?? 'throw', emptyQuery: options.emptyQuery ?? 'all' } as const;
 
   const quote = (name: string) => {
-    if (!options.quoteIdentifiers) return name;
+    if (!options.quoteIdentifiers) {
+      if (!BARE_IDENTIFIER.test(name)) throw new Error(`trawlnet/sql: column name "${name}" isn't a plain identifier; pass \`quoteIdentifiers: true\``);
+      return name;
+    }
+    if (name.includes('\u0000')) throw new Error('trawlnet/sql: column names cannot contain NUL characters');
     if (dialect === 'mysql') return `\`${name.replace(/`/g, '``')}\``;
     if (dialect === 'mssql') return `[${name.replace(/]/g, ']]')}]`;
     return `"${name.replace(/"/g, '""')}"`;
   };
 
-  const literal = (v: unknown): string => {
-    if (typeof v === 'number') return Number.isFinite(v) ? String(v) : 'NULL';
-    if (typeof v === 'boolean') return dialect === 'mssql' || dialect === 'sqlite' ? (v ? '1' : '0') : v ? 'TRUE' : 'FALSE';
-    if (v === null || v === undefined) return 'NULL';
-    let s = typeof v === 'object' ? JSON.stringify(v) : String(v);
-    s = s.replace(/'/g, "''");
-    if (dialect === 'mysql') s = s.replace(/\\/g, '\\\\');
-    return `'${s}'`;
+  // String literals that mean the same thing under every server setting: Postgres E'' strings
+  // whenever a backslash is present (safe with standard_conforming_strings on or off), MySQL hex
+  // literals for backslashes (safe with or without NO_BACKSLASH_ESCAPES), N'' on SQL Server.
+  const encoder = new TextEncoder();
+  const quoteString = (s: string): string => {
+    if (s.includes('\u0000')) throw new Error("trawlnet/sql: string values can't contain NUL (\\u0000) characters");
+    const q = s.replace(/'/g, "''");
+    if (s.includes('\\')) {
+      if (dialect === 'postgres') return `E'${q.replace(/\\/g, '\\\\')}'`;
+      if (dialect === 'mysql') return `_utf8mb4 X'${Array.from(encoder.encode(s), (b) => b.toString(16).padStart(2, '0')).join('')}'`;
+    }
+    return dialect === 'mssql' ? `N'${q}'` : `'${q}'`;
   };
 
-  // A value either inlined or turned into a placeholder, with its param. NUL characters are refused:
-  // Postgres rejects them, SQLite cuts strings at them, so the database would see a different value.
-  const val = (v: unknown): SqlFragment => {
+  /** Only JSON scalars are ever written into SQL; anything else is refused. */
+  const scalar = (v: unknown): string | number | boolean | null => {
+    if (v === null || v === undefined) return null;
+    if (typeof v === 'string' || typeof v === 'boolean') return v;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    throw new Error(`trawlnet/sql: refusing to write a ${typeof v === 'object' ? 'non-scalar' : typeof v} value into SQL`);
+  };
+
+  const literal = (raw: unknown): string => {
+    const v = scalar(raw);
+    if (typeof v === 'number') return String(v);
+    if (typeof v === 'boolean') return dialect === 'mssql' || dialect === 'sqlite' ? (v ? '1' : '0') : v ? 'TRUE' : 'FALSE';
+    if (v === null) return 'NULL';
+    return quoteString(v);
+  };
+
+  // A value either inlined or turned into a placeholder token with its param.
+  const val = (raw: unknown): SqlFragment => {
+    const v = scalar(raw);
+    if (!paramStyle) return { sql: literal(v), params: [], compound: false };
     if (typeof v === 'string' && v.includes('\u0000')) throw new Error("trawlnet/sql: string values can't contain NUL (\\u0000) characters");
-    return paramStyle ? { sql: PH, params: [v], compound: false } : { sql: literal(v), params: [], compound: false };
+    const id = nextParamId++;
+    return { sql: `\u0000${id}\u0000`, params: [{ id, value: v }], compound: false };
   };
   const frag = (sql: string, ...parts: SqlFragment[]): SqlFragment => ({ sql, params: parts.flatMap((p) => p.params), compound: false });
-  const likePattern = (s: string, pre: string, post: string) => `${pre}${s.replace(/[\\%_]/g, '\\$&')}${post}`;
+  const withParams = (sql: string, params: readonly SqlParam[]): SqlFragment => ({ sql, params, compound: false });
+  const likeChars = dialect === 'mssql' ? /[!%_[\]]/g : /[!%_]/g;
+  const likePattern = (s: string, pre: string, post: string) => `${pre}${s.replace(likeChars, `${LIKE_ESCAPE}$&`)}${post}`;
+  // Always explicit: MySQL and Postgres default to a backslash escape, which would give a value's
+  // own backslashes a meaning.
+  const escapeClause = (_pattern: string) => ` ESCAPE '${LIKE_ESCAPE}'`;
 
   /** A column as an expression: quoted path, or a jsonb path (cast for its kind) inside an array element. */
   function column(ctx: SqlContext, name: string, asJson = false): string {
+    // Only the schema's own fields become columns, whatever the (untrusted) query says.
+    const def = fieldDef(ctx.fields, name);
+    if (!def) throw new Error(`trawlnet/sql: unknown field "${String(name).slice(0, 80)}"`);
     const col = columnOf(ctx.fields, name);
     if (!ctx.alias) return col.split('.').map(quote).join('.');
     const parts = col.split('.');
     const last = parts.pop()!;
-    const path = [ctx.alias, ...parts.map((p) => `'${p.replace(/'/g, "''")}'`)].join('->');
-    const kind = ctx.fields[name]?.kind;
-    if (asJson || kind === 'multiEnum' || kind === 'array') return `${path}->'${last.replace(/'/g, "''")}'`;
-    const text = `${path}->>'${last.replace(/'/g, "''")}'`;
+    const path = [ctx.alias, ...parts.map(quoteString)].join('->');
+    const kind = def.kind;
+    if (asJson || kind === 'multiEnum' || kind === 'array') return `${path}->${quoteString(last)}`;
+    const text = `${path}->>${quoteString(last)}`;
     const cast = kind && ELEMENT_CAST[kind];
     return cast ? `(${text})::${cast}` : text;
   }
 
-  // Function arguments are always inlined: a format may reorder or repeat them, which would break
-  // positional placeholders.
-  const encodeArg = (ctx: SqlContext) =>
+  // Function arguments become placeholders too (collected into `params`): tokens carry ids, so a
+  // format that reorders or repeats its arguments still binds the right values.
+  const encodeArg = (ctx: SqlContext, params: SqlParam[]) =>
     function arg(o: Operand): string | undefined {
       if (isFnCall(o)) return encodeCall('sql', ctx.fields, o, arg);
-      return 'ref' in o ? column(ctx, o.ref) : literal(o.value);
+      if ('ref' in o) return column(ctx, o.ref);
+      const f = val(o.value);
+      params.push(...f.params);
+      return f.sql;
     };
 
   function emptiness(ctx: SqlContext, rule: Rule, col: string, empty: boolean): string {
@@ -196,27 +249,45 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     return undefined;
   }
 
-  function encodeRule(rule: Rule, ctx: SqlContext): SqlFragment | Unsupported | undefined {
+  function encodeRule(input: Rule, ctx: SqlContext): SqlFragment | Unsupported | undefined {
+    // Read the untrusted rule exactly once, so what's validated is what's emitted (no getters or
+    // toJSON tricks between the check and the output).
+    let rule: Rule;
+    try {
+      rule = snapshotRule(input);
+    } catch {
+      return new Unsupported(input, 'invalid rule (not plain JSON data)');
+    }
     const problem = ruleProblem(ctx.fields, rule);
     if (problem === 'incomplete') return undefined;
-    if (problem) return problem;
+    // Markers point at the caller's node (not the snapshot) so groups can report its path.
+    if (problem) return new Unsupported(rule, problem.reason, [], input);
     const out = expressRule(rule, ctx);
-    return out ?? new Unsupported(rule, unsupportedReason('sql', ctx.fields, rule, ARRAY_OPS.has(rule.operator) ? `the ${dialect} dialect has no array operators (use postgres, mysql, sqlite or mssql)` : undefined));
+    return out ?? new Unsupported(rule, unsupportedReason('sql', ctx.fields, rule, ARRAY_OPS.has(rule.operator) ? `the ${dialect} dialect has no array operators (use postgres, mysql, sqlite or mssql)` : undefined), [], input);
   }
 
   /** A complete rule as SQL, or undefined when this dialect can't express it. */
   function expressRule(rule: Rule, ctx: SqlContext): SqlFragment | undefined {
     const def = ruleDef(ctx.fields, rule);
     const info = infoOf(ctx.fields, rule.operator);
-    const arg = encodeArg(ctx);
+    const callParams: SqlParam[] = [];
+    const arg = encodeArg(ctx, callParams);
     const left = isFnCall(rule.field) ? encodeCall('sql', ctx.fields, rule.field, arg) : column(ctx, rule.field);
     if (left === undefined) return undefined;
+    // Any function-argument params ride along with whatever the rule produces.
+    const out = expressValue(rule, ctx, def, info, left, arg);
+    return out && (callParams.length ? { ...out, params: [...callParams, ...out.params] } : out);
+  }
 
+  function expressValue(rule: Rule, ctx: SqlContext, def: ReturnType<typeof ruleDef>, info: ReturnType<typeof infoOf>, left: string, arg: (o: Operand) => string | undefined): SqlFragment | undefined {
     const custom = info.formats?.sql;
     if (custom) {
+      // Custom operators get each value as an escaped literal (or a placeholder in params mode).
       const v = rule.value;
-      const value = info.arity === 'none' ? undefined : Array.isArray(v) ? v.map(literal) : literal(v);
-      return frag(String(custom({ field: left, value, raw: v })));
+      const one = (x: unknown) => val(typeof x === 'object' && x !== null ? JSON.stringify(x) : x);
+      const parts = info.arity === 'none' ? [] : Array.isArray(v) ? v.map(one) : [one(v)];
+      const value = info.arity === 'none' ? undefined : Array.isArray(v) ? parts.map((p) => p.sql) : parts[0]!.sql;
+      return frag(String(custom({ field: left, value, raw: v })), ...parts);
     }
 
     const textual = def?.kind === 'text' || info.textMatch;
@@ -243,9 +314,11 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
       case 'eq':
       case 'neq':
         if (v === null || v === undefined) return frag(`${col} ${rule.operator === 'eq' ? 'IS NULL' : 'IS NOT NULL'}`);
-        if (ci && dialect === 'postgres') {
-          const p = val(v);
-          return frag(`${col} ${rule.operator === 'eq' ? 'ILIKE' : 'NOT ILIKE'} ${p.sql}`, p);
+        if (ci && dialect === 'postgres' && typeof v === 'string') {
+          // ILIKE with the value's own wildcards escaped: equality, not a pattern.
+          const pattern = likePattern(v, '', '');
+          const p = val(pattern);
+          return frag(`${col} ${rule.operator === 'eq' ? 'ILIKE' : 'NOT ILIKE'} ${p.sql}${escapeClause(pattern)}`, p);
         }
         return cmp(col, CMP[rule.operator]!, ciVal(val(v)));
       case 'lt':
@@ -263,7 +336,7 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
         const negate = rule.operator === 'notContains' ? 'NOT ' : '';
         const like = ci && dialect === 'postgres' ? 'ILIKE' : 'LIKE';
         const p = ciVal(val(pattern));
-        return frag(`${col} ${negate}${like} ${p.sql}${pattern.includes('\\') ? ` ESCAPE ${literal('\\')}` : ''}`, p);
+        return frag(`${col} ${negate}${like} ${p.sql}${escapeClause(pattern)}`, p);
       }
       case 'between':
       case 'notBetween': {
@@ -335,6 +408,10 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
   }
 
   function encodeGroup(g: Group, children: SqlFragment[], ctx: SqlContext): SqlFragment | Unsupported | undefined {
+    // A malformed group (bad combinator, NOT flag or list quantifier) is tampering, not a dialect
+    // gap: always refused, even with `unsupported: 'skip'`.
+    const problem = groupProblem(ctx.fields, g);
+    if (problem) throw new Error(`trawlnet/sql: ${problem.reason}`);
     if (g.of) return arrayGroup(g, ctx);
     const lifted = liftChildren<SqlFragment>(g, children, modes.unsupported);
     if ('bad' in lifted) return lifted.bad;
@@ -346,14 +423,17 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
   function render(root: SqlFragment): string | SqlWithParams<unknown[] | Record<string, unknown>> {
     const { sql, params } = root;
     if (!paramStyle) return sql;
-    let n = 0;
-    const text = sql.replace(/\u0000/g, () => {
-      n++;
+    const byId = new Map(params.map((p) => [p.id, p.value]));
+    const values: unknown[] = [];
+    const text = sql.replace(TOKEN, (_, id: string) => {
+      if (!byId.has(Number(id))) throw new Error('trawlnet/sql: internal error: a placeholder has no value');
+      values.push(byId.get(Number(id)));
+      const n = values.length;
       if (paramStyle === 'positional') return '?';
       if (paramStyle === 'numbered') return `$${n}`;
       return dialect === 'mssql' ? `@p${n}` : `:p${n}`;
     });
-    return paramStyle === 'named' ? { sql: text, params: Object.fromEntries(params.map((p, i) => [`p${i + 1}`, p])) } : { sql: text, params: [...params] };
+    return paramStyle === 'named' ? { sql: text, params: Object.fromEntries(values.map((v, i) => [`p${i + 1}`, v])) } : { sql: text, params: values };
   }
 
   const codec: SqlCodec<string | SqlWithParams<unknown[] | Record<string, unknown>>> = {
@@ -365,11 +445,19 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     encodeCases(whens, otherwise) {
       const parts: SqlFragment[] = [];
       const branches = whens.map(({ when, then }) => {
-        const c = caseCondition('sql', when) ?? frag('1 = 1');
-        parts.push(c);
-        return `WHEN ${c.sql} THEN ${literal(then)}`;
+        // A case with no rules follows `emptyQuery`, like a whole query would.
+        let c = caseCondition('sql', when);
+        if (!c) {
+          if (modes.emptyQuery === 'throw') throw new Error('trawlnet/sql: a case has no rules to export');
+          c = frag(modes.emptyQuery === 'none' ? '1 = 0' : '1 = 1');
+        }
+        const t = val(then);
+        parts.push(c, t);
+        return `WHEN ${c.sql} THEN ${t.sql}`;
       });
-      const sql = `CASE ${branches.join(' ')}${otherwise === undefined ? '' : ` ELSE ${literal(otherwise)}`} END`;
+      const e = otherwise === undefined ? undefined : val(otherwise);
+      if (e) parts.push(e);
+      const sql = `CASE ${branches.join(' ')}${e ? ` ELSE ${e.sql}` : ''} END`;
       return render({ sql, params: parts.flatMap((p) => p.params), compound: false });
     },
     decode(input, ctx) {
@@ -378,6 +466,23 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     },
   };
   return codec;
+}
+
+/** Copy a rule, reading each property once. Throws on values JSON can't hold (functions, cycles). */
+function snapshotRule(rule: Rule): Rule {
+  const copy = (x: unknown): unknown => {
+    if (x === null || typeof x !== 'object') return x;
+    return JSON.parse(JSON.stringify(x));
+  };
+  const field = rule.field;
+  const out: { -readonly [K in keyof Rule]: Rule[K] } = { kind: rule.kind, field: typeof field === 'string' ? field : (copy(field) as Rule['field']), operator: rule.operator };
+  const value = rule.value;
+  const ref = rule.ref;
+  const call = rule.call;
+  if (value !== undefined) out.value = Array.isArray(value) ? value.map(copy) : copy(value);
+  if (ref !== undefined) out.ref = ref;
+  if (call !== undefined) out.call = copy(call) as Rule['call'];
+  return out;
 }
 
 /** ANSI SQL with inlined, escaped literals. Two-way: `decode` parses WHERE clauses. */

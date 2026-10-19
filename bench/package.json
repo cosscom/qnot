@@ -12,6 +12,8 @@
     "@react-awesome-query-builder/ui": "6.6.15",
     "@syncfusion/ej2-material-theme": "^35.1.40",
     "@syncfusion/ej2-querybuilder": "^35.1.37",
+    "@trawlnet/core": "workspace:*",
+    "@trawlnet/react": "workspace:*",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.2",
     "devextreme": "^26.1.5",
@@ -19,12 +21,13 @@
     "jquery": "^3.7.1",
     "jquery-extendext": "^1.0.0",
     "moment": "^2.31.0",
+    "mssql": "^12.7.9",
+    "mysql2": "^3.24.6",
+    "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-querybuilder": "8.25.0",
-    "sql-parser-mistic": "^1.2.3",
-    "@trawlnet/core": "workspace:*",
-    "@trawlnet/react": "workspace:*"
+    "sql-parser-mistic": "^1.2.3"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

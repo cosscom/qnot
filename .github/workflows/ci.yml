@@ -48,3 +48,43 @@ jobs:
           key: next-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/content/**', 'packages/*/src/**') }}
           restore-keys: next-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm --filter web build
+
+  security:
+    name: SQL injection fuzz (Postgres, MySQL, SQL Server, SQLite)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pw
+        ports: ['55432:5432']
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: pw
+          MYSQL_DATABASE: t
+        ports: ['53306:3306']
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          MSSQL_SA_PASSWORD: Str0ng!Passw0rd
+        ports: ['51433:1433']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: oven-sh/setup-bun@v2
+      - name: Differential fuzz against real databases
+        run: bun bench/security/sql-dbs.ts
+        env:
+          N: '800'
+          WAIT: '120'
+          REQUIRED: sqlite,pg,pg-scs-off,mysql,mysql-nobackslash,mssql
+      - name: SQL parser fuzz
+        run: bun bench/security/sql-parse-fuzz.ts
+

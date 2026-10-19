@@ -17,10 +17,10 @@ describe('sql', () => {
         'age <= 50',
         'age > 18',
         'age >= 18',
-        "name LIKE '%50\\%\\_off%' ESCAPE '\\'",
-        "name NOT LIKE '%x%'",
-        "name LIKE 'A%'",
-        "name LIKE '%e'",
+        "name LIKE '%50!%!_off%' ESCAPE '!'",
+        "name NOT LIKE '%x%' ESCAPE '!'",
+        "name LIKE 'A%' ESCAPE '!'",
+        "name LIKE '%e' ESCAPE '!'",
         'age BETWEEN 18 AND 65',
         'age NOT BETWEEN 1 AND 5',
         "status IN ('active', 'pending')",
@@ -60,8 +60,10 @@ describe('sql', () => {
 
   it('quotes identifiers and literals per dialect', () => {
     const q = q1({ kind: 'rule', field: 'name', operator: 'contains', value: "a\\b'c" });
-    expect(encode(sqlFormat({ dialect: 'mysql', quoteIdentifiers: true }), q, fields)).toBe("`name` LIKE '%a\\\\\\\\b''c%' ESCAPE '\\\\'");
-    expect(encode(sqlFormat({ dialect: 'postgres', quoteIdentifiers: true }), q, fields)).toBe(`"name" LIKE '%a\\\\b''c%' ESCAPE '\\'`);
+    // Backslashes: a hex literal on MySQL and an E'' string on Postgres mean the same under every
+    // server setting (NO_BACKSLASH_ESCAPES, standard_conforming_strings).
+    expect(encode(sqlFormat({ dialect: 'mysql', quoteIdentifiers: true }), q, fields)).toBe("`name` LIKE _utf8mb4 X'25615c62276325' ESCAPE '!'");
+    expect(encode(sqlFormat({ dialect: 'postgres', quoteIdentifiers: true }), q, fields)).toBe(`"name" LIKE E'%a\\\\b''c%' ESCAPE '!'`);
     expect(encode(sqlFormat({ dialect: 'mssql', quoteIdentifiers: true }), q1({ kind: 'rule', field: 'verified', operator: 'eq', value: true }), fields)).toBe('[verified] = 1');
     expect(encode(sqlFormat({ dialect: 'sqlite' }), q1({ kind: 'rule', field: 'verified', operator: 'neq', value: false }), fields)).toBe('verified <> 0');
   });
@@ -79,13 +81,13 @@ describe('sql', () => {
     };
     const positional = encode(sqlFormat({ params: 'positional' }), q, fields);
     expectTypeOf(positional).toEqualTypeOf<{ sql: string; params: unknown[] }>();
-    expect(positional).toEqual({ sql: 'name LIKE ? AND age BETWEEN ? AND ? AND status IN (?, ?) AND age > minAge', params: ['A%', 18, 65, 'active', 'pending'] });
+    expect(positional).toEqual({ sql: "name LIKE ? ESCAPE '!' AND age BETWEEN ? AND ? AND status IN (?, ?) AND age > minAge", params: ['A%', 18, 65, 'active', 'pending'] });
     expect(encode(sqlFormat({ params: 'numbered', dialect: 'postgres' }), q, fields).sql).toBe(
-      'name LIKE $1 AND age BETWEEN $2 AND $3 AND status IN ($4, $5) AND age > minAge',
+      "name LIKE $1 ESCAPE '!' AND age BETWEEN $2 AND $3 AND status IN ($4, $5) AND age > minAge",
     );
     const named = encode(sqlFormat({ params: 'named' }), q, fields);
     expectTypeOf(named.params).toEqualTypeOf<Record<string, unknown>>();
-    expect(named).toEqual({ sql: 'name LIKE :p1 AND age BETWEEN :p2 AND :p3 AND status IN (:p4, :p5) AND age > minAge', params: { p1: 'A%', p2: 18, p3: 65, p4: 'active', p5: 'pending' } });
+    expect(named).toEqual({ sql: "name LIKE :p1 ESCAPE '!' AND age BETWEEN :p2 AND :p3 AND status IN (:p4, :p5) AND age > minAge", params: { p1: 'A%', p2: 18, p3: 65, p4: 'active', p5: 'pending' } });
     expect(encode(sqlFormat({ params: 'named', dialect: 'mssql' }), q, fields).sql).toContain('@p1');
     expectTypeOf(encode(sql, q, fields)).toEqualTypeOf<string>();
   });
@@ -100,8 +102,8 @@ describe('sql', () => {
 
   it('matches case-insensitively when asked', () => {
     const q = q1({ kind: 'rule', field: 'name', operator: 'contains', value: 'Ad' });
-    expect(encode(sqlFormat({ dialect: 'postgres', caseInsensitive: true }), q, fields)).toBe("name ILIKE '%Ad%'");
-    expect(encode(sqlFormat({ dialect: 'mysql', caseInsensitive: true }), q, fields)).toBe("LOWER(name) LIKE LOWER('%Ad%')");
+    expect(encode(sqlFormat({ dialect: 'postgres', caseInsensitive: true }), q, fields)).toBe("name ILIKE '%Ad%' ESCAPE '!'");
+    expect(encode(sqlFormat({ dialect: 'mysql', caseInsensitive: true }), q, fields)).toBe("LOWER(name) LIKE LOWER('%Ad%') ESCAPE '!'");
     expect(encode(sqlFormat({ caseInsensitive: true }), q1({ kind: 'rule', field: 'age', operator: 'eq', value: 3 }), fields)).toBe('age = 3');
   });
 

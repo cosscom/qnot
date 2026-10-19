@@ -192,7 +192,7 @@ describe('invalid rules never widen an export', () => {
     const { elasticsearch } = await import('./elasticsearch');
     const { spel } = await import('./spel');
     for (const codec of [sqlFormat({ dialect: 'postgres' }), mongo, jsonlogic, elasticsearch, spel]) {
-      expect(() => encode(codec as never, tampered as never, fs), codec.name).toThrow(/invalid rule \(Expected text\)/);
+      expect(() => encode(codec as never, tampered as never, fs), codec.name).toThrow(/invalid rule \((Expected text|Malformed value)\)/);
       expect(() => encode(codec as never, incomplete as never, fs), codec.name).not.toThrow();
     }
     expect(encode(sqlFormat({ dialect: 'postgres' }), incomplete as never, fs)).toBe('age >= 21');

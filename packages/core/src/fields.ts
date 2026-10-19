@@ -407,5 +407,12 @@ const humanize = (key: string) =>
 
 export const fieldLabel = (name: string, def: AnyFieldDef | undefined): string => def?.label ?? humanize(name.slice(name.lastIndexOf('.') + 1));
 
+/**
+ * A field's schema, only when `name` is the schema's own key: query JSON is untrusted, and names
+ * like `__proto__`, `constructor` or `toString` must not resolve to Object.prototype members.
+ */
+export const fieldDef = (fields: Fields, name: unknown): AnyFieldDef | undefined =>
+  typeof name === 'string' && Object.hasOwn(fields, name) ? fields[name] : undefined;
+
 /** The name exporters should use for a field (its `column`, or the key). */
-export const columnOf = (fields: Fields, name: string): string => fields[name]?.column ?? name;
+export const columnOf = (fields: Fields, name: string): string => fieldDef(fields, name)?.column ?? name;

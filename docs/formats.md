@@ -71,8 +71,10 @@ Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment wh
   `e1->>'key'` and cast per kind (`::numeric`, `::boolean`, `::date`, `::timestamptz`, `::time`).
   `all` is `NOT EXISTS (… WHERE NOT COALESCE(cond, FALSE))`; counts use `(SELECT COUNT(*) …) op n`.
   Other dialects throw (or skip with `unsupported: 'skip'`).
-- **Function arguments** are always inlined, even in `params` mode, since a format may reorder
-  them. Custom operators get inlined literals too.
+- **Literals and parameters:** see [SECURITY.md](../SECURITY.md). Strings are escaped per dialect
+  so they mean the same under every server setting; with `params`, function arguments, custom
+  operator values and case results are placeholders too (numbered in text order). LIKE uses
+  `ESCAPE '!'`.
 - **Dates and times** are string literals; the database casts them.
 - **Decode** parses inlined SQL (not parameterized):
   - Supported: comparisons, `LIKE`/`ILIKE` patterns (`%x%`, `x%`, `%x`, with an ESCAPE char),

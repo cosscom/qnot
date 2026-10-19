@@ -1,0 +1,80 @@
+[
+  {
+    "db": "sqlite (bun:sqlite 3.51.0)",
+    "modeMismatches": 0,
+    "quirkSkipped": 6,
+    "queries": 504,
+    "refused": 84,
+    "mismatches": 0,
+    "errors": 0,
+    "timeouts": 0,
+    "canary": true,
+    "tamperedEmitted": [],
+    "samples": []
+  },
+  {
+    "db": "postgres 16.15 (Debian 16.15-1.pgdg13+2)",
+    "modeMismatches": 0,
+    "quirkSkipped": 0,
+    "queries": 496,
+    "refused": 104,
+    "mismatches": 0,
+    "errors": 0,
+    "timeouts": 0,
+    "canary": true,
+    "tamperedEmitted": [],
+    "samples": []
+  },
+  {
+    "db": "postgres 16.15 (Debian 16.15-1.pgdg13+2) (standard_conforming_strings=off)",
+    "modeMismatches": 0,
+    "quirkSkipped": 0,
+    "queries": 520,
+    "refused": 80,
+    "mismatches": 0,
+    "errors": 0,
+    "timeouts": 0,
+    "canary": true,
+    "tamperedEmitted": [],
+    "samples": []
+  },
+  {
+    "db": "mysql 8.4.11",
+    "modeMismatches": 0,
+    "quirkSkipped": 0,
+    "queries": 490,
+    "refused": 110,
+    "mismatches": 0,
+    "errors": 0,
+    "timeouts": 0,
+    "canary": true,
+    "tamperedEmitted": [],
+    "samples": []
+  },
+  {
+    "db": "mysql 8.4.11 (NO_BACKSLASH_ESCAPES)",
+    "modeMismatches": 0,
+    "quirkSkipped": 0,
+    "queries": 518,
+    "refused": 82,
+    "mismatches": 0,
+    "errors": 0,
+    "timeouts": 0,
+    "canary": true,
+    "tamperedEmitted": [],
+    "samples": []
+  },
+  {
+    "db": "mssql 15.0.2000.1574",
+    "modeMismatches": 0,
+    "quirkSkipped": 0,
+    "queries": 502,
+    "refused": 98,
+    "mismatches": 0,
+    "errors": 0,
+    "timeouts": 0,
+    "canary": true,
+    "tamperedEmitted": [],
+    "samples": []
+  }
+]

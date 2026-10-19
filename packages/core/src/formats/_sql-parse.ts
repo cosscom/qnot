@@ -17,21 +17,44 @@ type Tok =
   | { t: 'op'; v: string }
   | { t: 'end' };
 
+/** Untrusted input can be huge: quote at most this much of it in error messages. */
+const excerpt = (src: string) => (src.length > 120 ? `${src.slice(0, 120)}…` : src);
+/** Deepest nesting of parentheses / NOT the parser follows before refusing (no stack overflows). */
+const MAX_DEPTH = 200;
+const MAX_LENGTH = 1_000_000;
+
+// Sticky regexes, matched at the cursor: no per-token slicing of the remaining input.
+const NUM = /\d+(\.\d+)?([eE][-+]?\d+)?/y;
+const WORD = /[A-Za-z_][A-Za-z0-9_$]*/y;
+const SYM = /<>|!=|<=|>=|=|<|>|\(|\)|,|\.|-/y;
+const SPACE = /\s/;
+const at = (re: RegExp, src: string, i: number) => {
+  re.lastIndex = i;
+  return re.exec(src);
+};
+
 function tokenize(src: string, dialect: string): Tok[] {
   const out: Tok[] = [];
   let i = 0;
   const fail = (msg: string): never => {
-    throw new Error(`trawlnet/sql: ${msg} at position ${i} in: ${src}`);
+    throw new Error(`trawlnet/sql: ${msg} at position ${i} in: ${excerpt(src)}`);
   };
+  if (src.length > MAX_LENGTH) fail(`input longer than ${MAX_LENGTH} characters`);
   while (i < src.length) {
     const c = src[i]!;
-    if (/\s/.test(c)) {
+    if (SPACE.test(c)) {
       i++;
       continue;
     }
-    if (c === "'") {
+    // String literals, with the prefixes the encoder emits: N'…' (SQL Server), E'…' (Postgres,
+    // backslash escapes) and _utf8mb4 X'…' / X'…' (MySQL hex).
+    const prefix = /^(?:_utf8mb4\s+)?[xX]'|^[nNeE]'/.exec(src.slice(i, i + 12));
+    if (c === "'" || prefix) {
+      const kind = prefix ? prefix[0].replace(/^_utf8mb4\s+/, '')[0]!.toUpperCase() : '';
+      if (prefix) i += prefix[0].length - 1;
       let s = '';
       i++;
+      const backslashes = kind === 'E' || (kind === '' && dialect === 'mysql');
       for (;;) {
         if (i >= src.length) fail('unterminated string');
         const ch = src[i]!;
@@ -41,13 +64,17 @@ function tokenize(src: string, dialect: string): Tok[] {
         } else if (ch === "'") {
           i++;
           break;
-        } else if (ch === '\\' && dialect === 'mysql') {
+        } else if (ch === '\\' && backslashes) {
           s += src[i + 1] ?? '';
           i += 2;
         } else {
           s += ch;
           i++;
         }
+      }
+      if (kind === 'X') {
+        if (!/^(?:[0-9a-fA-F]{2})*$/.test(s)) fail('invalid hex literal');
+        s = new TextDecoder().decode(new Uint8Array(s.match(/../g)?.map((h) => parseInt(h, 16)) ?? []));
       }
       out.push({ t: 'str', v: s });
       continue;
@@ -69,19 +96,19 @@ function tokenize(src: string, dialect: string): Tok[] {
       out.push({ t: 'id', v: s, quoted: true });
       continue;
     }
-    const num = /^\d+(\.\d+)?([eE][-+]?\d+)?/.exec(src.slice(i));
+    const num = at(NUM, src, i);
     if (num) {
       out.push({ t: 'num', v: Number(num[0]) });
       i += num[0].length;
       continue;
     }
-    const word = /^[A-Za-z_][A-Za-z0-9_$]*/.exec(src.slice(i));
+    const word = at(WORD, src, i);
     if (word) {
       out.push({ t: 'id', v: word[0], quoted: false });
       i += word[0].length;
       continue;
     }
-    const sym = /^(<>|!=|<=|>=|=|<|>|\(|\)|,|\.|-)/.exec(src.slice(i));
+    const sym = at(SYM, src, i);
     if (sym) {
       out.push({ t: 'op', v: sym[0] });
       i += sym[0].length;
@@ -151,7 +178,11 @@ export function parseSqlWhere(src: string, fields: Fields, dialect: string): Gro
     return t.t === 'op' && t.v === op ? (p++, true) : false;
   };
   const fail = (msg: string): never => {
-    throw new Error(`trawlnet/sql: ${msg} in: ${src}`);
+    throw new Error(`trawlnet/sql: ${msg} in: ${excerpt(src)}`);
+  };
+  let depth = 0;
+  const enter = () => {
+    if (++depth > MAX_DEPTH) fail(`nesting deeper than ${MAX_DEPTH} levels`);
   };
   const expectOp = (op: string) => {
     if (!acceptOp(op)) fail(`expected "${op}"`);
@@ -182,11 +213,13 @@ export function parseSqlWhere(src: string, fields: Fields, dialect: string): Gro
       if (peek().t === 'op' && (peek() as { v: string }).v === '(') {
         p++;
         const args: Operandish[] = [];
+        enter();
         if (!acceptOp(')')) {
           do args.push(operand());
           while (acceptOp(','));
           expectOp(')');
         }
+        depth--;
         if (LENGTH_FNS.has(up) && args.length === 1 && args[0]!.k === 'col') return { k: 'len', name: (args[0] as { name: string }).name };
         const known = calls.get(up);
         if (!known || known.args.length !== args.length) return fail(`unknown function ${t.v}()`);
@@ -305,8 +338,10 @@ export function parseSqlWhere(src: string, fields: Fields, dialect: string): Gro
 
   function primary(): Parsed {
     if (acceptOp('(')) {
+      enter();
       const inner = or();
       expectOp(')');
+      depth--;
       return inner;
     }
     return predicate();
@@ -314,7 +349,9 @@ export function parseSqlWhere(src: string, fields: Fields, dialect: string): Gro
 
   function not(): Parsed {
     if (acceptKw('NOT')) {
+      enter();
       const inner = not();
+      depth--;
       if (typeof inner === 'boolean') return !inner;
       return inner.kind === 'group' ? group(inner.combinator, [...inner.children], !inner.not) : negated(inner);
     }

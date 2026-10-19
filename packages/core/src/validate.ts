@@ -1,5 +1,5 @@
-import { flattenOptions, registryOf, type AnyFieldDef, type Fields } from './fields';
-import { functionOf, isFnCall, type FnCall, type Operand } from './functions';
+import { fieldDef, flattenOptions, registryOf, type AnyFieldDef, type Fields } from './fields';
+import { functionOf, isFnCall, isWellFormedCall, type FnCall, type Operand } from './functions';
 import { operatorInfo } from './operators';
 import { elementFields, leftDef } from './scope';
 import type { Group, Query, QueryNode, QueryOf, Rule, StrictQueryOf } from './types';
@@ -22,6 +22,7 @@ export type IssueCode =
   | 'function'
   | 'emptyGroup'
   | 'arrayField'
+  | 'shape'
   | 'custom';
 
 export interface Issue {
@@ -75,6 +76,10 @@ function checkScalar(fields: Fields, def: AnyFieldDef, v: unknown, textMatch: bo
     case 'time':
       if (typeof v !== 'string' || !TIME.test(v)) return [err('type', 'Expected a time (HH:mm)')];
       break;
+    case 'enum':
+    case 'multiEnum':
+      if (typeof v !== 'string' && typeof v !== 'number') return [err('type', 'Expected one of the options')];
+      break;
   }
   if (def.options && !def.allowCustom && !def.search) {
     if (!flattenOptions(def.options, def.leafOnly).some((o) => o.value === v)) out.push(err('option', 'Not one of the allowed values'));
@@ -87,6 +92,7 @@ function checkScalar(fields: Fields, def: AnyFieldDef, v: unknown, textMatch: bo
 }
 
 function validateCall(fields: Fields, call: FnCall, expectKind?: string): Issue[] {
+  if (!isWellFormedCall(call)) return [issue(fields, 'shape', 'Malformed function call')];
   const def = functionOf(fields, call);
   if (!def) return [issue(fields, 'function', `Unknown function "${call.fn}"`)];
   if (expectKind && def.returns.kind !== expectKind) return [issue(fields, 'function', `${def.label ?? call.fn} returns ${def.returns.kind}, expected ${expectKind}`)];
@@ -101,17 +107,44 @@ function validateCall(fields: Fields, call: FnCall, expectKind?: string): Issue[
 }
 
 function validateOperand(fields: Fields, operand: Operand, def: AnyFieldDef): Issue[] {
+  if (typeof operand !== 'object' || operand === null || Array.isArray(operand)) return [issue(fields, 'shape', 'Malformed function argument')];
   if (isFnCall(operand)) return validateCall(fields, operand, def.kind);
   if ('ref' in operand) {
-    const target = fields[operand.ref];
+    const target = typeof operand.ref === 'string' ? fieldDef(fields, operand.ref) : undefined;
     if (!target) return [issue(fields, 'ref', `Unknown field "${operand.ref}"`)];
     return target.kind === def.kind ? [] : [issue(fields, 'ref', 'Can only use fields of the same type')];
   }
+  if (!('value' in operand)) return [issue(fields, 'shape', 'Malformed function argument')];
   return checkScalar(fields, def, operand.value, false);
+}
+
+/** What JSON can carry in a value slot: the codecs only ever emit these. */
+const isPlain = (v: unknown) => v === null || v === undefined || typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean';
+
+/**
+ * Shape checks for an untrusted rule (query JSON from a request): the right kinds of things in the
+ * right places, before any schema lookups.
+ */
+function ruleShape(fields: Fields, rule: Rule, def: AnyFieldDef | undefined): Issue[] {
+  const bad = (message: string) => [issue(fields, 'shape', message)];
+  if (typeof rule !== 'object' || rule === null || rule.kind !== 'rule') return bad('Malformed rule');
+  if (typeof rule.operator !== 'string') return bad('Malformed operator');
+  if (typeof rule.field !== 'string' && !isWellFormedCall(rule.field)) return bad('Malformed field');
+  const sources = (rule.ref !== undefined ? 1 : 0) + (rule.call !== undefined ? 1 : 0) + (rule.value !== undefined && rule.value !== null ? 1 : 0);
+  if (sources > 1) return bad('A rule compares against one value, field or function');
+  if (rule.ref !== undefined && typeof rule.ref !== 'string') return bad('Malformed field reference');
+  if (rule.call !== undefined && !isWellFormedCall(rule.call)) return bad('Malformed function call');
+  // Custom field kinds may hold structured values; built-in kinds only hold JSON scalars (or lists of them).
+  const builtin = !def || ['text', 'number', 'boolean', 'date', 'time', 'datetime', 'enum', 'multiEnum', 'array'].includes(def.kind);
+  const v = rule.value;
+  if (builtin && !isPlain(v) && !(Array.isArray(v) && v.every(isPlain))) return bad('Malformed value');
+  return [];
 }
 
 /** Problems with one rule, in schema order. An empty array means the rule is valid. */
 export function validateRule(fields: Fields, rule: Rule): Issue[] {
+  const shape = ruleShape(fields, rule, typeof rule?.field === 'string' ? fieldDef(fields, rule.field) : undefined);
+  if (shape.length) return shape;
   const fnIssues = isFnCall(rule.field) ? validateCall(fields, rule.field) : [];
   if (fnIssues.length) return fnIssues;
   const def = leftDef(fields, rule.field);
@@ -121,7 +154,7 @@ export function validateRule(fields: Fields, rule: Rule): Issue[] {
   if (!def.operators.includes(rule.operator)) return [issue(fields, 'operatorNotAllowed', `"${info.label}" is not allowed for this field`)];
 
   if (rule.ref !== undefined) {
-    const target = fields[rule.ref];
+    const target = fieldDef(fields, rule.ref);
     if (!info.comparable) return [issue(fields, 'ref', 'This operator cannot compare fields')];
     if (!target || target.comparable === false) return [issue(fields, 'ref', `Unknown field "${rule.ref}"`)];
     if (target.kind !== def.kind) return [issue(fields, 'ref', 'Can only compare fields of the same type')];
@@ -154,15 +187,28 @@ export function validateRule(fields: Fields, rule: Rule): Issue[] {
   }
 }
 
+const COUNT_OPS = new Set(['eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'between']);
+
 export function validateGroup(fields: Fields, group: Group): Issue[] {
   const out: Issue[] = [];
-  if (group.of) {
-    const def = fields[group.of.field];
-    if (!def?.of) out.push(issue(fields, 'arrayField', `"${group.of.field}" is not a list field`));
-    const m = group.of.match;
-    if (typeof m === 'object') {
-      const bad = Array.isArray(m.value) ? m.value.some((n) => typeof n !== 'number') : typeof m.value !== 'number';
-      if (bad) out.push(issue(fields, 'type', 'The count must be a number'));
+  const bad = (message: string) => [issue(fields, 'shape', message)];
+  if (typeof group !== 'object' || group === null || group.kind !== 'group' || !Array.isArray(group.children)) return bad('Malformed group');
+  if (group.combinator !== 'and' && group.combinator !== 'or') return bad('A group combines with "and" or "or"');
+  if (group.not !== undefined && typeof group.not !== 'boolean') return bad('Malformed NOT flag');
+  if (group.of !== undefined) {
+    const of = group.of as { field?: unknown; match?: unknown };
+    if (typeof of !== 'object' || of === null || typeof of.field !== 'string') return bad('Malformed list condition');
+    const def = fieldDef(fields, of.field);
+    if (!def?.of) out.push(issue(fields, 'arrayField', `"${of.field}" is not a list field`));
+    const m = of.match as { count?: unknown; value?: unknown } | string;
+    if (typeof m === 'string') {
+      if (m !== 'some' && m !== 'all' && m !== 'none') return bad('Malformed list quantifier');
+    } else if (typeof m !== 'object' || m === null || typeof m.count !== 'string' || !COUNT_OPS.has(m.count)) {
+      return bad('Malformed list quantifier');
+    } else {
+      const count = (n: unknown) => typeof n === 'number' && Number.isInteger(n) && n >= 0;
+      const ok = m.count === 'between' ? Array.isArray(m.value) && m.value.length === 2 && m.value.every(count) : count(m.value);
+      if (!ok) out.push(issue(fields, 'type', 'The count must be a whole number'));
     }
   }
   if (!group.children.length) out.push(issue(fields, 'emptyGroup', 'This group is empty', undefined, 'warning'));
@@ -170,15 +216,15 @@ export function validateGroup(fields: Fields, group: Group): Issue[] {
 }
 
 /** The schema that applies inside a group: the element schema for array groups, else unchanged. */
-export const groupScope = (fields: Fields, group: Group): Fields => (group.of && fields[group.of.field]?.of ? elementFields(fields, group.of.field) : fields);
+export const groupScope = (fields: Fields, group: Group): Fields => (group.of && fieldDef(fields, group.of.field)?.of ? elementFields(fields, group.of.field) : fields);
 
 /** Every issue in a query, with the path to the node it belongs to. */
 export function validateQuery(fields: Fields, query: Query): PathIssue[] {
   const out: PathIssue[] = [];
   const walk = (node: QueryNode, path: number[], scope: Fields) => {
-    const issues = node.kind === 'rule' ? validateRule(scope, node) : validateGroup(scope, node);
+    const issues = typeof node === 'object' && node !== null && node.kind === 'rule' ? validateRule(scope, node) : validateGroup(scope, node as Group);
     for (const i of issues) out.push({ ...i, path });
-    if (node.kind === 'group') {
+    if (typeof node === 'object' && node !== null && node.kind === 'group' && Array.isArray(node.children)) {
       const inner = groupScope(scope, node);
       node.children.forEach((c, i) => walk(c, [...path, i], inner));
     }

@@ -11,6 +11,10 @@ export type Operand = { readonly value: unknown } | { readonly ref: string } | F
 
 export const isFnCall = (x: unknown): x is FnCall => typeof x === 'object' && x !== null && 'fn' in x && 'args' in x;
 
+/** A call is well-formed JSON: a string `fn` and an `args` object. Query JSON is untrusted. */
+export const isWellFormedCall = (x: unknown): x is FnCall =>
+  isFnCall(x) && typeof x.fn === 'string' && typeof x.args === 'object' && x.args !== null && !Array.isArray(x.args);
+
 export interface FunctionDef {
   readonly label?: string;
   readonly description?: string;
@@ -29,7 +33,11 @@ export interface FunctionDef {
 
 export const defineFunction = (def: FunctionDef): FunctionDef => def;
 
-export const functionOf = (fields: Fields, call: FnCall): FunctionDef | undefined => registryOf(fields).functions[call.fn];
+export const functionOf = (fields: Fields, call: FnCall): FunctionDef | undefined => {
+  const fns = registryOf(fields).functions;
+  // Own keys only: an untrusted `fn` like "constructor" must not resolve to Object.prototype.
+  return typeof call.fn === 'string' && Object.hasOwn(fns, call.fn) ? fns[call.fn] : undefined;
+};
 
 /** Evaluate an operand against a row. */
 export function evaluateOperand(fields: Fields, operand: Operand, row: unknown, get: (row: any, field: string) => unknown): unknown {
@@ -47,6 +55,20 @@ export function evaluateOperand(fields: Fields, operand: Operand, row: unknown, 
 }
 
 const DAY = 864e5;
+const UNITS = new Set(['day', 'week', 'month', 'year']);
+const DIRECTIONS = new Set(['ago', 'from now']);
+
+/**
+ * relativeDate's formats interpolate its raw arguments (SQL has no placeholder inside INTERVAL '…'),
+ * so they're checked here as well as by validation: callers that skip validation still can't inject.
+ */
+function relativeArgs({ amount, unit, direction }: Readonly<Record<string, unknown>>): { amount: number; unit: string; direction: string } {
+  const n = Number(amount);
+  if (!Number.isInteger(n) || n < 0 || n > 1e6 || typeof unit !== 'string' || !UNITS.has(unit) || typeof direction !== 'string' || !DIRECTIONS.has(direction)) {
+    throw new Error('trawlnet: relativeDate needs a whole amount, a unit (day, week, month, year) and a direction (ago, from now)');
+  }
+  return { amount: n, unit, direction };
+}
 const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
 function shiftDate(amount: number, unit: string, direction: string): string {
@@ -141,9 +163,18 @@ export const builtinFunctions = {
     },
     evaluate: ({ amount, unit, direction }) => shiftDate(Number(amount ?? 0), String(unit), String(direction)),
     formats: {
-      sql: (_, { amount, unit, direction }) => `CURRENT_DATE ${direction === 'ago' ? '-' : '+'} INTERVAL '${Number(amount)} ${unit}'`,
-      elasticsearch: (_, { amount, unit, direction }) => `now${direction === 'ago' ? '-' : '+'}${Number(amount)}${({ day: 'd', week: 'w', month: 'M', year: 'y' } as Record<string, string>)[String(unit)]}/d`,
-      text: (_, { amount, unit, direction }) => `${amount} ${unit}${Number(amount) === 1 ? '' : 's'} ${direction}`,
+      sql: (_, raw) => {
+        const { amount, unit, direction } = relativeArgs(raw);
+        return `CURRENT_DATE ${direction === 'ago' ? '-' : '+'} INTERVAL '${amount} ${unit}'`;
+      },
+      elasticsearch: (_, raw) => {
+        const { amount, unit, direction } = relativeArgs(raw);
+        return `now${direction === 'ago' ? '-' : '+'}${amount}${({ day: 'd', week: 'w', month: 'M', year: 'y' } as Record<string, string>)[unit]}/d`;
+      },
+      text: (_, raw) => {
+        const { amount, unit, direction } = relativeArgs(raw);
+        return `${amount} ${unit}${amount === 1 ? '' : 's'} ${direction}`;
+      },
     },
   }),
 } satisfies Record<string, FunctionDef>;

@@ -42,6 +42,10 @@ function cacheFor(codec: Codec<any>, fields: Fields): WeakMap<QueryNode, unknown
 }
 
 function encodeNode<N>(codec: Codec<any, N>, node: QueryNode, ctx: CodecContext, cache: WeakMap<QueryNode, unknown>): N | undefined {
+  // Query JSON is untrusted: refuse anything that isn't a rule or a group with a children array.
+  if (typeof node !== 'object' || node === null || (node.kind !== 'rule' && (node.kind !== 'group' || !Array.isArray(node.children)))) {
+    throw new Error(`trawlnet/${codec.name}: malformed query node`);
+  }
   const hit = cache.get(node);
   if (hit !== undefined) return hit === SKIPPED ? undefined : (hit as N);
   let out: N | undefined;

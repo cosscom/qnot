@@ -74,11 +74,20 @@ Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment wh
   `e1->>'key'` and cast per kind (`::numeric`, `::boolean`, `::date`, `::timestamptz`, `::time`).
   `all` is `NOT EXISTS (… WHERE NOT COALESCE(cond, FALSE))`; counts use `(SELECT COUNT(*) …) op n`.
   Other dialects throw (or skip with `unsupported: 'skip'`).
-- **Function arguments** are always inlined, even in `params` mode, since a format may reorder
-  them. Custom operators get inlined literals too.
+- **Literals** are written so they mean the same under every server setting: Postgres uses `E'…'`
+  when a value has a backslash, MySQL a hex literal `_utf8mb4 X'…'`, SQL Server `N'…'`. Only JSON
+  scalars are written; NUL is refused.
+- **LIKE** escapes `%`, `_` and `!` (plus `[`/`]` on SQL Server) with `!` and always adds
+  `ESCAPE '!'`.
+- **Parameters:** with `params`, function arguments, custom operator values and case results are
+  placeholders too; placeholders are numbered in text order, so formats may reorder or repeat
+  arguments.
+- **Identifiers:** without `quoteIdentifiers`, column names must be plain identifiers (letters,
+  digits, `_`, `$`), otherwise encoding throws.
 - **Dates and times** are string literals; the database casts them.
 - **Decode** parses inlined SQL (not parameterized):
   - Supported: comparisons, `LIKE`/`ILIKE` patterns (`%x%`, `x%`, `%x`, with an ESCAPE char),
+    the literal forms the encoder writes (`N'…'`, `E'…'`, `X'…'`),
     `IN`, `BETWEEN`, `IS [NOT] NULL`, `AND`/`OR`/`NOT`, parentheses, quoted identifiers, and
     columns mapped back to fields.
   - Functions: registered ones whose sql format is `NAME(args)` or a constant such as
@@ -88,6 +97,7 @@ Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment wh
   - Rejected: `_` wildcards, inner `%`, `INTERVAL` arithmetic, subqueries (so no array groups and
     no sqlite/mssql multiEnum), and always-false queries.
   - Single-child groups collapse on export, so they come back flattened.
+  - Limits: 1,000,000 characters and 200 levels of nesting; errors quote at most 120 characters.
 
 ### mongo
 - Filter form where possible. `$expr` is used for function calls, field refs, setEq/setNeq,
@@ -169,6 +179,12 @@ Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment wh
 - Function calls and array groups throw, since neither library can represent them.
 - `locked` isn't mapped.
 - jqqb carries field refs in `data.trawlnetRef`.
+
+## Security
+
+The sql codec is audited and fuzzed against Postgres, MySQL, SQL Server and SQLite for injection;
+see [SECURITY.md](https://github.com/sean-brydon/trawlnet/blob/main/SECURITY.md) for the threat model, guarantees and results. The other codecs
+build data structures (Mongo filters, JsonLogic, Elasticsearch DSL), not SQL text.
 
 ## Known gaps
 
