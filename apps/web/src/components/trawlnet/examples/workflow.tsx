@@ -1,13 +1,14 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { compile, defineFields, f, type RowOf } from '@trawlnet/core';
 import { BellIcon, CalendarPlusIcon, MailIcon, MessageSquareIcon, WebhookIcon, ZapIcon } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { CossSelect } from '@/coss/controls';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
+import { CossSelect } from '@/components/trawlnet/controls';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
 import { cn } from '@/lib/utils';
-import { useExampleStore, useLiveQuery } from './shared';
+import { useExampleStore, useLiveQuery } from '@/components/trawlnet/examples/shared';
 
 
 

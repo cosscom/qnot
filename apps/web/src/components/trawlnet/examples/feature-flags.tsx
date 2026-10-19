@@ -1,16 +1,17 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { compile, defineFields, encode, f, type Query } from '@trawlnet/core';
 import { jsonlogic } from '@trawlnet/core/formats/jsonlogic';
 import { FlagIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { CodeBlock } from '@/components/code-block';
-import { ScrollBox } from '@/components/scroll-box';
+import { CodeBlock } from '@/components/trawlnet/code-block';
+import { ScrollBox } from '@/components/trawlnet/scroll-box';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
 import { cn } from '@/lib/utils';
-import { pickWith, rng, useExampleStore, useLiveQuery } from './shared';
+import { pickWith, rng, useExampleStore, useLiveQuery } from '@/components/trawlnet/examples/shared';
 
 
 

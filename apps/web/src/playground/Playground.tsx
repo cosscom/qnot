@@ -4,8 +4,8 @@ import { compile, createQueryStore, getPath, isValidQuery, type Query, type Quer
 import { QueryBuilder, QueryProvider, useHistory, useIsValid, useQuery } from '@trawlnet/react';
 import { Columns2Icon, Redo2Icon, Undo2Icon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollBox } from '@/components/scroll-box';
-import { Tip } from '@/components/tip';
+import { ScrollBox } from '@/components/trawlnet/scroll-box';
+import { Tip } from '@/components/trawlnet/tip';
 import { AlertDialog, AlertDialogClose, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogPopup, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,13 @@ import { Card, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
 import { sampleRows, type Customer } from './data';
+import { CodePanel } from './CodePanel';
 import { FormatsPanel } from './FormatsPanel';
 import { FORMATS } from './formats';
 import { Island, type IslandKind } from './islands';
-import { describeQuery } from '@/lib/describe';
+import { describeQuery } from '@/components/trawlnet/describe';
 import { cn } from '@/lib/utils';
 import { REGIONS, fields, initial, type Fields } from './schema';
 
@@ -171,7 +172,7 @@ interface Pending {
   resolve: (ok: boolean) => void;
 }
 
-export function PlaygroundPage() {
+export function PlaygroundPage({ schema, cossUrl }: { schema: { code: string; html: string }; cossUrl: string }) {
   const [store] = useState(() => createQueryStore({ fields, initial }));
   const [renderer, setRenderer] = useState<RendererId>('coss');
   const [settings, setSettings] = useState<PlaygroundSettings>(DEFAULT_SETTINGS);
@@ -225,12 +226,16 @@ export function PlaygroundPage() {
                 <TabsTab value="data">Data</TabsTab>
                 <TabsTab value="formats">Formats</TabsTab>
                 <TabsTab value="json">JSON</TabsTab>
+                <TabsTab value="code">Code</TabsTab>
               </TabsList>
               <TabsPanel value="data" className="pt-3">
                 <DataPanel />
               </TabsPanel>
               <TabsPanel value="formats" className="pt-3">
                 <FormatsPanel formats={FORMATS} />
+              </TabsPanel>
+              <TabsPanel value="code" className="pt-3">
+                <CodePanel cossUrl={cossUrl} renderer={renderer} schema={schema} settings={settings} />
               </TabsPanel>
               <TabsPanel value="json" className="pt-3">
                 <JsonPanel />

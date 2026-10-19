@@ -1,0 +1,61 @@
+---
+title: Install with shadcn
+description: Add the coss ui query builder or any example to your project as source, with one command.
+---
+
+The site is a [shadcn registry](https://ui.shadcn.com/docs/registry). `shadcn add` copies trawlnet's
+coss ui query builder, or a whole example, into your project as source you own, installs the npm
+packages it needs (`@trawlnet/core`, `@trawlnet/react`, `lucide-react`), and pulls the
+[coss ui](https://coss.com/ui) components it uses from coss's own registry.
+
+## Before you start
+
+Your project needs Tailwind CSS v4 and a `components.json`. If you don't use coss ui yet, set it up
+first:
+
+```sh
+pnpm dlx shadcn@latest init @coss/style
+```
+
+Files land under `components/trawlnet/` (your `components` alias), and their imports are rewritten
+to your aliases. Everything installed from this registry is MIT licensed.
+
+## The query builder
+
+<RegistryInstall name="query-builder" />
+
+```tsx
+'use client';
+import { createQueryStore, defineFields, f } from '@trawlnet/core';
+import { useState } from 'react';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
+
+const fields = defineFields({ name: f.text(), age: f.number({ min: 0 }), plan: f.enum(['free', 'pro']) });
+
+export function Filters() {
+  const [store] = useState(() => createQueryStore({ fields }));
+  return <CossQueryBuilder store={store} showLock />;
+}
+```
+
+## An example
+
+Every [example](/examples) is a registry block: the page shows its full source and the command to
+install it. Each example exports a `Demo` component:
+
+<RegistryInstall name="product-filters" />
+
+```tsx
+import { Demo as ProductFilters } from '@/components/trawlnet/examples/product-filters';
+
+export default function Page() {
+  return <ProductFilters />;
+}
+```
+
+## Every item
+
+<RegistryItems />
+
+Items depend on each other where they share code, so installing an example brings the builder and
+helpers it uses. Running `shadcn add` again asks before overwriting files you've changed.

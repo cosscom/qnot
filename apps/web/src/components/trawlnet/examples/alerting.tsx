@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { compile, defineFields, f } from '@trawlnet/core';
 import { BellRingIcon, CircleCheckIcon, PauseIcon, PlayIcon } from 'lucide-react';
@@ -5,9 +6,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
 import { cn } from '@/lib/utils';
-import { rng, useExampleStore, useLiveQuery } from './shared';
+import { rng, useExampleStore, useLiveQuery } from '@/components/trawlnet/examples/shared';
 
 
 
@@ -39,7 +40,9 @@ const rand = rng(21);
 const walk = (v: number, step: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v + (rand() - 0.5) * 2 * step));
 const round = (v: number, d = 0) => Math.round(v * 10 ** d) / 10 ** d;
 
+/** The starting readings: their own seeded generator, so server and browser render the same numbers. */
 function initial(): Sample[] {
+  const rand = rng(7);
   return SERVICES.map((s, i) => ({
     ...s,
     id: `${s.service}/${s.region}`,
@@ -161,7 +164,7 @@ export function Demo() {
                     <TableCell className={cn('text-end tabular-nums', s.p99 > s.slo && 'text-destructive-foreground')}>
                       {round(s.p99)} / {s.slo}
                     </TableCell>
-                    <TableCell className="text-end text-muted-foreground tabular-nums">{round(s.rps).toLocaleString()}</TableCell>
+                    <TableCell className="text-end text-muted-foreground tabular-nums">{round(s.rps).toLocaleString('en-US')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

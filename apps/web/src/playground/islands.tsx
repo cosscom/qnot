@@ -3,12 +3,13 @@
 // and imported at runtime. Each gets the page's live store, so edits in one show up in every other.
 import type { QueryStore } from '@trawlnet/core';
 import { useEffect, useRef, useState } from 'react';
+import { assetPath } from '@/lib/site';
 
 export type IslandKind = 'vanilla' | 'vue' | 'svelte' | 'solid';
 
 type Mount = (el: HTMLElement, store: QueryStore<any, any>) => () => void;
 
-const FILES: Record<IslandKind, string> = { vanilla: '/islands/dom.js', vue: '/islands/vue.js', svelte: '/islands/svelte.js', solid: '/islands/solid.js' };
+const FILES: Record<IslandKind, string> = { vanilla: assetPath('/islands/dom.js'), vue: assetPath('/islands/vue.js'), svelte: assetPath('/islands/svelte.js'), solid: assetPath('/islands/solid.js') };
 
 // The URL is resolved by the browser, not the bundler: these files are built separately.
 const load = (kind: IslandKind): Promise<{ mount: Mount }> => import(/* webpackIgnore: true */ /* turbopackIgnore: true */ FILES[kind]);

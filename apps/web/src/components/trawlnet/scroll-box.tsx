@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 import { ScrollArea as ScrollAreaPrimitive } from '@base-ui/react/scroll-area';
 import type { ReactNode } from 'react';
 import { ScrollBar } from '@/components/ui/scroll-area';

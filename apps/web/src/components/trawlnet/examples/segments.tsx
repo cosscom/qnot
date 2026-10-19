@@ -1,13 +1,14 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { compile, defineFields, encode, f, type Query } from '@trawlnet/core';
 import { sqlFormat } from '@trawlnet/core/formats/sql';
 import { UsersRoundIcon } from 'lucide-react';
 import { useMemo } from 'react';
-import { CodeBlock } from '@/components/code-block';
+import { CodeBlock } from '@/components/trawlnet/code-block';
 import { Meter } from '@/components/ui/meter';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
-import { describeQuery } from '@/lib/describe';
-import { pickWith, rng, useExampleStore, useLiveQuery } from './shared';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
+import { describeQuery } from '@/components/trawlnet/describe';
+import { pickWith, rng, useExampleStore, useLiveQuery } from '@/components/trawlnet/examples/shared';
 
 
 
@@ -87,13 +88,13 @@ export function Demo() {
             <div className="rounded-xl border p-4">
               <div className="text-muted-foreground text-xs">Audience</div>
               <div className="font-semibold text-2xl tabular-nums" data-audience>
-                {count.toLocaleString()}
+                {count.toLocaleString('en-US')}
               </div>
               <Meter className="mt-2" value={count} max={CONTACTS.length} aria-label="Share of contacts" />
             </div>
             <div className="rounded-xl border p-4">
               <div className="text-muted-foreground text-xs">MRR in segment</div>
-              <div className="font-semibold text-2xl tabular-nums">${mrr.toLocaleString()}</div>
+              <div className="font-semibold text-2xl tabular-nums">${mrr.toLocaleString('en-US')}</div>
               <div className="mt-2 text-muted-foreground text-xs">{((count / CONTACTS.length) * 100).toFixed(1)}% of contacts</div>
             </div>
           </div>

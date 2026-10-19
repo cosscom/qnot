@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { compile, defineFields, f, type RowOf } from '@trawlnet/core';
 import { CircleCheckIcon, CircleXIcon, ShieldCheckIcon } from 'lucide-react';
@@ -6,11 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { NumberField, NumberFieldGroup, NumberFieldInput } from '@/components/ui/number-field';
 import { Switch } from '@/components/ui/switch';
-import { CossSelect, toItems } from '@/coss/controls';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
-import { describeQuery } from '@/lib/describe';
+import { CossSelect, toItems } from '@/components/trawlnet/controls';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
+import { describeQuery } from '@/components/trawlnet/describe';
 import { cn } from '@/lib/utils';
-import { useExampleStore, useLiveQuery } from './shared';
+import { useExampleStore, useLiveQuery } from '@/components/trawlnet/examples/shared';
 
 
 

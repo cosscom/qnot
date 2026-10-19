@@ -1,4 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Metadata } from 'next';
+import { codeToHtml } from 'shiki';
+import { registryUrl } from '@/lib/registry';
 import { ClientOnly } from '@/components/client-only';
 import { PlaygroundPage } from '@/playground/Playground';
 
@@ -7,7 +11,12 @@ export const metadata: Metadata = {
   description: 'Build a query, watch it export to every format, filter sample data, and switch frameworks on one store.',
 };
 
-export default function Page() {
+// The playground's schema file, shown in its Code tab exactly as it runs (read at build time).
+const SCHEMA = join(process.cwd(), 'src', 'playground', 'schema.ts');
+
+export default async function Page() {
+  const code = readFileSync(SCHEMA, 'utf8');
+  const html = await codeToHtml(code, { lang: 'typescript', themes: { light: 'github-light', dark: 'github-dark' }, defaultColor: false });
   return (
     <main className="mx-auto w-full max-w-[1440px] flex-1">
       <section className="border-b">
@@ -20,7 +29,7 @@ export default function Page() {
       </section>
       <section className="drafting-grid border-b">
         <ClientOnly className="p-4 sm:p-6" minHeight={900}>
-          <PlaygroundPage />
+          <PlaygroundPage cossUrl={registryUrl('query-builder')} schema={{ code, html }} />
         </ClientOnly>
       </section>
     </main>

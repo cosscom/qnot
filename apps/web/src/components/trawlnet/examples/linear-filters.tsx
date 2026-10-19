@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { fieldLabel, compile, OPERATORS, type NodeId } from '@trawlnet/core';
 import { QueryProvider, useGroup, useRule, useStore } from '@trawlnet/react';
@@ -10,7 +11,7 @@ import { Menu, MenuCheckboxItem, MenuGroup, MenuGroupLabel, MenuItem, MenuPopup,
 import { NumberField, NumberFieldGroup, NumberFieldInput } from '@/components/ui/number-field';
 import { Popover, PopoverPopup, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { pickWith, rng, useExampleStore, useLiveQuery } from './shared';
+import { pickWith, rng, useExampleStore, useLiveQuery } from '@/components/trawlnet/examples/shared';
 
 
 

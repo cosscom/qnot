@@ -5,3 +5,5 @@ next-env.d.ts
 .twoslash/
 # Built by `pnpm islands` (predev/prebuild)
 public/islands/
+public/r/
+.registry/

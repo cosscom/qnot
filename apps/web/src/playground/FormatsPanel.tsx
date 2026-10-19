@@ -2,8 +2,8 @@ import { decode, encode, type Codec, type Fields, type Query, type QueryOf } fro
 import { useQuery, useStore } from '@trawlnet/react';
 import { CheckIcon, CircleAlertIcon, CopyIcon, DownloadIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { ScrollBox } from '@/components/scroll-box';
-import { Tip } from '@/components/tip';
+import { ScrollBox } from '@/components/trawlnet/scroll-box';
+import { Tip } from '@/components/trawlnet/tip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';

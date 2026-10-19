@@ -3,6 +3,7 @@
   "pages": [
     "react",
     "custom-ui",
+    "shadcn",
     "vue",
     "svelte",
     "solid",

@@ -39,3 +39,12 @@ listed here is used by, imported into, or shipped with any package under `packag
 
 - Cal Sans (`src/fonts/CalSansVF*.woff2`): SIL Open Font License 1.1, see `src/fonts/OFL.txt`.
 - JetBrains Mono, via `next/font/google`: SIL Open Font License 1.1.
+
+## The shadcn registry is MIT
+
+Everything served from `/r/*.json` (built from `registry/items.json` by `scripts/build-registry.mjs`)
+is our own code under `src/components/trawlnet/`, MIT licensed like the `@trawlnet/*` packages; each
+file says so in its header. None of the AGPL-3.0 files above is in the registry: the coss ui
+components it needs are pulled from coss's own registry (`https://coss.com/ui/r/<name>.json`), never
+copied into ours. `registry/resolve.mjs` rejects any registry file importing something outside npm,
+`@/components/ui/*`, `@/lib/utils` or another registry file.

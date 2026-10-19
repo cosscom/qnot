@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 import { encode, type Fields, type Query, type QueryNode } from '@trawlnet/core';
 import { textFormat } from '@trawlnet/core/formats/text';
 

@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { defineFields, encode, f, type Codec, type Query } from '@trawlnet/core';
 import { jsonlogic } from '@trawlnet/core/formats/jsonlogic';
@@ -5,9 +6,9 @@ import { mongo } from '@trawlnet/core/formats/mongo';
 import { sqlFormat } from '@trawlnet/core/formats/sql';
 import { ServerIcon } from 'lucide-react';
 import { useMemo } from 'react';
-import { CodeBlock } from '@/components/code-block';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
-import { useExampleStore, useLiveQuery } from './shared';
+import { CodeBlock } from '@/components/trawlnet/code-block';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
+import { useExampleStore, useLiveQuery } from '@/components/trawlnet/examples/shared';
 
 
 

@@ -1,11 +1,12 @@
 // apps/web smoke test: every route at desktop + phone widths, light or dark (DARK=1), console errors,
-// horizontal overflow, and the interactive checks (category filter, islands sync).
+// horizontal overflow, and the interactive checks (category filter, islands sync, example source +
+// install block, registry JSON, the playground's Code tab).
 import { chromium } from 'playwright';
 const S = process.argv[2];
 const BASE = process.env.BASE ?? 'http://localhost:5192';
 const dark = !!process.env.DARK;
 const SLUGS = ['linear-filters', 'workflow', 'saved-views', 'product-filters', 'segments', 'feature-flags', 'alerting', 'access-policy', 'rqb-dropin', 'server-side'];
-const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/docs'];
+const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/docs', '/docs/guides/shadcn'];
 const b = await chromium.launch();
 const report = [];
 for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['phone', { width: 390, height: 844 }]]) {
@@ -46,7 +47,31 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['p
     await p.waitForTimeout(400);
     await p.screenshot({ path: `${S}/web-playground-settings${dark ? '-dark' : ''}.png` });
     await p.keyboard.press('Escape');
-    console.log({ platformCards, sync });
+    // Example page: full source tabs and the shadcn install block; the registry item it points at.
+    await p.goto(BASE + '/examples/segments', { waitUntil: 'networkidle' });
+    const sourceTabs = await p.locator('[role=tab]').count();
+    const install = await p.locator('pre code').filter({ hasText: 'shadcn@latest add' }).first().innerText();
+    const item = await (await fetch(install.split(' ').pop())).json();
+    const registry = { sourceTabs, install, files: item.files.map((f) => f.target), deps: item.dependencies };
+    await p.locator('text=Add it to your project').scrollIntoViewIfNeeded();
+    await p.screenshot({ path: `${S}/web-example-source${dark ? '-dark' : ''}.png` });
+    // Playground Code tab: follows the renderer and the settings.
+    await p.goto(BASE + '/playground', { waitUntil: 'networkidle' });
+    await p.waitForSelector('[data-renderer=vue]', { timeout: 30_000 });
+    await p.locator('[data-settings-trigger]').click();
+    await p.getByRole('switch', { name: /read-only/i }).first().click();
+    await p.keyboard.press('Escape');
+    await p.locator('[data-renderer=vue]').click();
+    await p.getByRole('tab', { name: 'Code' }).click();
+    await p.waitForTimeout(2000);
+    const code = {
+      blocks: await p.locator('[data-code-block]').evaluateAll((els) => els.map((e) => e.getAttribute('data-code-block'))),
+      readOnly: (await p.locator('[data-code-block="store.ts"]').innerText()).includes('readOnly: true'),
+      highlighted: await p.locator('[data-code-block] .shiki').count(),
+    };
+    await p.locator('[data-code-panel]').scrollIntoViewIfNeeded();
+    await p.screenshot({ path: `${S}/web-playground-code${dark ? '-dark' : ''}.png` });
+    console.log({ platformCards, sync, registry, code });
   }
   await p.close();
 }

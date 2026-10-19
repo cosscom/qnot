@@ -1,3 +1,6 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+'use client';
+
 // A trawlnet query builder made entirely of coss ui components, on top of @trawlnet/react's
 // headless hooks. Nothing here touches the store directly except through those hooks, so this file
 // doubles as the "bring your own UI kit" recipe. Feature-for-feature it matches @trawlnet/react's
@@ -7,7 +10,7 @@ import { fieldLabel, functionOptions, isFnCall, type NodeId, type Quantifier, ty
 import { QueryProvider, useDragHandle, useDropTarget, useGroup, useGroupDropZone, useNode, useRule, useSettings, useStore } from '@trawlnet/react';
 import { CopyIcon, FolderPlusIcon, GripVerticalIcon, ListTreeIcon, LockIcon, LockOpenIcon, PlusIcon, SquareFunctionIcon, XIcon } from 'lucide-react';
 import { createContext, memo, useContext, useMemo, type ReactNode } from 'react';
-import { Tip } from '@/components/tip';
+import { Tip } from '@/components/trawlnet/tip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Menu, MenuGroup, MenuGroupLabel, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu';
@@ -16,7 +19,7 @@ import { Toggle } from '@/components/ui/toggle';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { CossSelect, FunctionEditor, SourceSwitch, ValueEditor, defaultCall, type Item, type Source } from './controls';
+import { CossSelect, FunctionEditor, SourceSwitch, ValueEditor, defaultCall, type Item, type Source } from '@/components/trawlnet/controls';
 
 export interface CossQueryBuilderOptions {
   /** `toggle`: NOT + AND/OR buttons. `sentence`: "If [all | any | none] of these rules are met". */

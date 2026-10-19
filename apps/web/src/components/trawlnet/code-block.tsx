@@ -1,7 +1,10 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+'use client';
+
 import { CheckIcon, CopyIcon } from 'lucide-react';
 import { useState } from 'react';
-import { ScrollBox } from '@/components/scroll-box';
-import { Tip } from '@/components/tip';
+import { ScrollBox } from '@/components/trawlnet/scroll-box';
+import { Tip } from '@/components/trawlnet/tip';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 

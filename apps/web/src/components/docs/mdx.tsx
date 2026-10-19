@@ -7,6 +7,7 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { AlertCircleIcon, InfoIcon, LightbulbIcon, TriangleAlertIcon } from 'lucide-react';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps, ReactNode } from 'react';
+import { RegistryInstall, RegistryItems } from '@/components/docs/registry';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -92,6 +93,8 @@ export function getMDXComponents(components?: MDXComponents) {
     Callout,
     Card: LinkCard,
     Cards,
+    RegistryInstall,
+    RegistryItems,
     CodeBlockTab,
     CodeBlockTabs: ({ className, ...props }: ComponentProps<typeof CodeBlockTabs>) => <CodeBlockTabs className={cn('my-6 rounded-xl bg-code shadow-none', className)} {...props} />,
     CodeBlockTabsList,

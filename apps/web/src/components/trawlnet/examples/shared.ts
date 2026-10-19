@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 import { createQueryStore, type Fields, type QueryOf, type QueryStore } from '@trawlnet/core';
 import { useState, useSyncExternalStore } from 'react';
 

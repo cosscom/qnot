@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { CodePanel, ExampleFrame } from '@/components/catalog';
+import { ExampleFrame } from '@/components/catalog';
+import { ExampleSource } from '@/components/catalog/example-source';
 import { ClientOnly } from '@/components/client-only';
 import { EXAMPLES, exampleBySlug } from '@/examples/catalog';
 import { DEMOS } from '@/examples/demos';
@@ -40,7 +41,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           </ClientOnly>
         </div>
       }
-      code={<CodePanel code={example.code} title={`${slug}.tsx`} />}
+      code={<ExampleSource name={slug} />}
     />
   );
 }

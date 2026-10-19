@@ -1,3 +1,6 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+'use client';
+
 // coss ui building blocks for trawlnet editors: field/operator selects, a value editor that adapts
 // to the field's EditorSpec, value-source switching and a function-call editor. Shared by the query
 // builder and the examples.
@@ -20,7 +23,7 @@ import {
 } from '@trawlnet/core';
 import { LoaderIcon, SquareFunctionIcon, TypeIcon, VariableIcon } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Tip } from '@/components/tip';
+import { Tip } from '@/components/trawlnet/tip';
 import {
   Combobox,
   ComboboxChip,

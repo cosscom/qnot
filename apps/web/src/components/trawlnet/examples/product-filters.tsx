@@ -1,10 +1,11 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { compile, defineFields, f } from '@trawlnet/core';
 import { HeadphonesIcon, HouseIcon, LaptopIcon, MountainIcon, StarIcon, WatchIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
-import { pickWith, rng, useExampleStore, useLiveQuery } from './shared';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
+import { pickWith, rng, useExampleStore, useLiveQuery } from '@/components/trawlnet/examples/shared';
 
 
 
@@ -76,7 +77,10 @@ export function Demo() {
           <Badge variant="outline">
             {rows.length} of {PRODUCTS.length} products
           </Badge>
-          <span className="text-muted-foreground text-xs">filtered in {ms.toFixed(2)} ms</span>
+          {/* Timing differs between the server render and the browser by nature. */}
+          <span className="text-muted-foreground text-xs" suppressHydrationWarning>
+            filtered in {ms.toFixed(2)} ms
+          </span>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
           {rows.map((p) => {

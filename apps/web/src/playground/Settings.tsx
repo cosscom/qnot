@@ -2,7 +2,7 @@
 import type { StoreSettings } from '@trawlnet/core';
 import { RotateCcwIcon, SettingsIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { ScrollBox } from '@/components/scroll-box';
+import { ScrollBox } from '@/components/trawlnet/scroll-box';
 import { Button } from '@/components/ui/button';
 import { NumberField, NumberFieldDecrement, NumberFieldGroup, NumberFieldIncrement, NumberFieldInput } from '@/components/ui/number-field';
 import { Popover, PopoverPopup, PopoverTrigger } from '@/components/ui/popover';

@@ -1,18 +1,19 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { compile, defineFields, f, type Query, type QueryOf } from '@trawlnet/core';
 import { QueryProvider, useHistory } from '@trawlnet/react';
 import { BookmarkIcon, BookmarkPlusIcon, Redo2Icon, SaveIcon, Undo2Icon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { ScrollBox } from '@/components/scroll-box';
-import { Tip } from '@/components/tip';
+import { ScrollBox } from '@/components/trawlnet/scroll-box';
+import { Tip } from '@/components/trawlnet/tip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
-import { describeQuery } from '@/lib/describe';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
+import { describeQuery } from '@/components/trawlnet/describe';
 import { cn } from '@/lib/utils';
-import { pickWith, rng, useExampleStore, useLiveQuery } from './shared';
+import { pickWith, rng, useExampleStore, useLiveQuery } from '@/components/trawlnet/examples/shared';
 
 
 
@@ -156,7 +157,7 @@ export function Demo() {
             <CossQueryBuilder store={store} />
             <div className="flex items-center gap-2 text-sm">
               <Badge variant="outline">{rows.length} deals</Badge>
-              <span className="text-muted-foreground text-xs">${total.toLocaleString()} total</span>
+              <span className="text-muted-foreground text-xs">${total.toLocaleString('en-US')} total</span>
             </div>
             <ScrollBox className="rounded-xl border" viewportClassName="max-h-80">
               <Table render={<div className="overflow-visible!" />}>
@@ -177,7 +178,7 @@ export function Demo() {
                       <TableCell>
                         <Badge variant="outline">{d.stage}</Badge>
                       </TableCell>
-                      <TableCell className="text-end tabular-nums">${d.amount.toLocaleString()}</TableCell>
+                      <TableCell className="text-end tabular-nums">${d.amount.toLocaleString('en-US')}</TableCell>
                       <TableCell>{d.owner}</TableCell>
                       <TableCell>{d.region}</TableCell>
                       <TableCell className="text-end tabular-nums">{d.daysInStage}</TableCell>

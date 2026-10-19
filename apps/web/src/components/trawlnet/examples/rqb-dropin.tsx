@@ -1,14 +1,15 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 'use client';
 import { defineFields, f } from '@trawlnet/core';
 import { rqb, type RQBRuleGroup } from '@trawlnet/core/formats/rqb';
 import { useQueryStore } from '@trawlnet/react';
 import { UploadIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { CodeBlock } from '@/components/code-block';
+import { CodeBlock } from '@/components/trawlnet/code-block';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CossQueryBuilder } from '@/coss/QueryBuilder';
+import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
 
 
 
