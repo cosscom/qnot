@@ -81,7 +81,7 @@ export default function Page() {
         intro: (
           <>
             The other framework-free query builders are jQuery QueryBuilder and the commercial Syncfusion and DevExtreme components. Here is how they measure up, with{' '}
-            <Link href="/#benchmarks">the same 1,000-rule tree</Link>.
+            <Link href="/benchmarks">the same 1,000-rule tree</Link>.
           </>
         ),
       }}

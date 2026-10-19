@@ -50,7 +50,7 @@ export function FrameworkPage(props: FrameworkPageProps) {
     { name: 'Drag and drop', tag: 'dnd', summary: `Move rules and groups anywhere. The ${props.name} binding ships the drag handle and drop target helpers.`, href: props.dndHref },
     { name: 'Any language', tag: 'labels · messages', summary: 'Every UI string and validation message is an override away. No i18n library required.', href: '/docs/guides/i18n' },
     { name: 'Same query on the server', tag: 'validate · compile', summary: 'Share fields.ts with your API. Validate the query, then run it as bound SQL or filter rows in memory.', href: '/docs/guides/server' },
-    { name: 'Fast at 1,000 rules', tag: 'per-node subscriptions', summary: 'Editing one rule updates one rule. A keystroke costs the same at ten rules or a thousand.', href: '/#benchmarks' },
+    { name: 'Fast at 1,000 rules', tag: 'per-node subscriptions', summary: 'Editing one rule updates one rule. A keystroke costs the same at ten rules or a thousand.', href: '/benchmarks' },
   ];
   return (
     <Sheet path={props.path}>

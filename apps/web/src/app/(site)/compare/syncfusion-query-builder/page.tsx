@@ -24,7 +24,7 @@ export const faq: FaqItem[] = [
   {
     q: 'Why is the Syncfusion number so high at 1,000 rules?',
     a: 'In our run its first render grows faster than linearly with the number of rules: about 0.27 s at 100 rules, 2 s at 500 and 6.6 s at 1,000. Typing into a rule stays fast. If your queries stay under a hundred rules, render time is unlikely to matter.',
-    links: [{ href: '/#benchmarks', label: 'Benchmarks' }],
+    links: [{ href: '/benchmarks', label: 'Benchmarks' }],
   },
   {
     q: 'Can I convert my saved Syncfusion rules?',

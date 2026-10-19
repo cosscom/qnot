@@ -28,6 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...EXAMPLES.map((e) => entry(`/examples/${e.slug}`, 0.6, [`src/components/qnot/examples/${e.slug}.tsx`, `${site}/examples/[slug]/page.tsx`])),
     entry('/playground', 0.7, [`${site}/playground/page.tsx`, 'src/playground/Playground.tsx']),
     entry('/kits', 0.7, [`${site}/kits/page.tsx`]),
+    entry('/benchmarks', 0.7, [`${site}/benchmarks/page.tsx`, 'src/lib/bench-suite.ts']),
     entry('/tools', 0.7, [`${site}/tools/page.tsx`, 'src/tools/catalog.ts']),
     ...TOOLS.map((t) => entry(`/tools/${t.slug}`, 0.8, [`${site}/tools/[slug]/page.tsx`, 'src/tools/catalog.ts', 'src/tools/converter.tsx'])),
     ...SEO_ROUTES.map((r) => entry(r.path, PRIORITY[r.group] ?? 0.6, [pageFileFor(r.path)])),

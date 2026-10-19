@@ -173,7 +173,7 @@ export function ComparePage(props: ComparePageProps) {
       <EndLinks
         items={[
           { href: '/compare', label: 'All comparisons' },
-          { href: '/#benchmarks', label: 'Benchmarks' },
+          { href: '/benchmarks', label: 'Benchmarks' },
           { href: '/playground', label: 'Try the playground' },
           { href: '/docs', label: 'Docs' },
         ]}

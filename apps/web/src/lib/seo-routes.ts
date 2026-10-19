@@ -17,6 +17,7 @@ export const SEO_ROUTES: SeoRoute[] = [
   { path: '/coss-ui-query-builder', label: 'coss ui query builder', group: 'UI kits' },
   { path: '/mui-query-builder', label: 'MUI query builder', group: 'UI kits' },
   { path: '/headless-query-builder', label: 'Headless query builder', group: 'UI kits' },
+  { path: '/benchmarks', label: 'Benchmarks', group: 'Compare' },
   { path: '/compare', label: 'All comparisons', group: 'Compare' },
   { path: '/compare/react-querybuilder', label: 'vs react-querybuilder', group: 'Compare' },
   { path: '/compare/react-awesome-query-builder', label: 'vs react-awesome-query-builder', group: 'Compare' },

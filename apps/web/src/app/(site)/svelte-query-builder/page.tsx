@@ -80,7 +80,7 @@ export default function Page() {
         intro: (
           <>
             Most Svelte query builders you'll find come inside commercial component suites. Below, their JavaScript builds against qnot's framework-free build on{' '}
-            <Link href="/#benchmarks">the same 1,000-rule tree</Link>. The Svelte binding shares that store but wasn't benchmarked on its own.
+            <Link href="/benchmarks">the same 1,000-rule tree</Link>. The Svelte binding has <Link href="/benchmarks">its own numbers</Link>.
           </>
         ),
       }}

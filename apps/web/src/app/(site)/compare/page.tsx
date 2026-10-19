@@ -110,7 +110,7 @@ export default function Page() {
       </Section>
       <EndLinks
         items={[
-          { href: '/#benchmarks', label: 'Benchmarks' },
+          { href: '/benchmarks', label: 'Benchmarks' },
           { href: '/react-query-builder', label: 'React query builder' },
           { href: '/javascript-query-builder', label: 'JavaScript query builder' },
           { href: '/playground', label: 'Playground' },

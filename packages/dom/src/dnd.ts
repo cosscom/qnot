@@ -47,7 +47,7 @@ export function bindDropTarget(
   id: NodeId,
   onPosition?: (position: DropPosition) => void,
 ): () => void {
-  row.dataset.tnId = id;
+  row.dataset.qnId = id;
   const onOver = (e: DragEvent) => {
     const n = store.get(id);
     if (!dnd.getState().dragging || !n || n.parent === null) return;

@@ -275,10 +275,13 @@ function Benchmarks() {
       </ScrollArea>
       <div className="flex flex-col gap-2 border-t px-4 py-5 text-muted-foreground text-sm sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <p className="max-w-3xl">
-          Run of {measured.date}: Apple M5, Chromium via Playwright 1.64, no CPU throttling; medians of 5 fresh pages, 10 fields, 100 groups of 10 rules. JS is gzipped
+          Run of {measured.date}: headless Chromium, production builds, no CPU throttling; medians of 5 to 9 fresh pages, 10 fields, 100 groups of 10 rules. JS is gzipped
           and excludes React (jQuery is included), and each bundle includes the library's own SQL/JSON export. With 4× CPU throttling the gaps widen.
         </p>
         <div className="flex shrink-0 flex-wrap gap-x-5 gap-y-2">
+          <Link className="inline-flex items-center gap-1.5 hover:text-foreground" href="/benchmarks">
+            All benchmarks <ArrowRightIcon className="size-3.5" />
+          </Link>
           <Link className="inline-flex items-center gap-1.5 hover:text-foreground" href="/compare">
             Compare <ArrowRightIcon className="size-3.5" />
           </Link>

@@ -86,8 +86,8 @@ export default function Page() {
         intro: (
           <>
             Search for a Vue query builder and you mostly find commercial suites. They are complete and well supported, but you pay per developer. Below, their JavaScript builds
-            against qnot's framework-free build on <Link href="/#benchmarks">the same 1,000-rule tree</Link>. The Vue binding shares that store but wasn't
-            benchmarked on its own.
+            against qnot's framework-free build on <Link href="/benchmarks">the same 1,000-rule tree</Link>. The Vue binding has{' '}
+            <Link href="/benchmarks">its own numbers</Link>.
           </>
         ),
       }}

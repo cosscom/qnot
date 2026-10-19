@@ -89,7 +89,7 @@ export default function Page() {
         intro: (
           <>
             The two established React options are react-querybuilder and react-awesome-query-builder. Both are good libraries; here is where each one fits, measured
-            with <Link href="/#benchmarks">the same 1,000-rule tree</Link>.
+            with <Link href="/benchmarks">the same 1,000-rule tree</Link>.
           </>
         ),
       }}

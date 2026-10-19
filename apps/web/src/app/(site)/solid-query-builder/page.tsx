@@ -83,7 +83,7 @@ export default function Page() {
         intro: (
           <>
             Without a Solid-native builder, the options are a framework-free library or one embedded from another framework. Below, those against qnot's framework-free
-            build on <Link href="/#benchmarks">the same 1,000-rule tree</Link>. The Solid binding shares that store but wasn't benchmarked on its own.
+            build on <Link href="/benchmarks">the same 1,000-rule tree</Link>. The Solid binding has <Link href="/benchmarks">its own numbers</Link>.
           </>
         ),
       }}
