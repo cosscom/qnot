@@ -187,8 +187,8 @@ async function mysqlDb(noBackslash: boolean): Promise<Db> {
 async function mssqlDb(): Promise<Db> {
   const base = { server: '127.0.0.1', port: 51433, user: 'sa', password: 'Str0ng!Passw0rd', options: { encrypt: false, trustServerCertificate: true }, requestTimeout: 2000 };
   const admin = await mssql.connect({ ...base, database: 'master' });
-  await admin.request().query("IF DB_ID('qn') IS NOT NULL BEGIN ALTER DATABASE tn SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE tn; END");
-  await admin.request().query('CREATE DATABASE tn COLLATE Latin1_General_100_BIN2_UTF8');
+  await admin.request().query("IF DB_ID('qn') IS NOT NULL BEGIN ALTER DATABASE qn SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE qn; END");
+  await admin.request().query('CREATE DATABASE qn COLLATE Latin1_General_100_BIN2_UTF8');
   await admin.close();
   const pool = await new mssql.ConnectionPool({ ...base, database: 'qn' }).connect();
   await pool.request().query('CREATE TABLE canary (x int); INSERT INTO canary VALUES (1)');
