@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { metricValue } from '@/components/seo/bench-tables';
 import type { FaqItem } from '@/components/seo/blocks';
 import { ComparePage } from '@/components/seo/compare-page';
 
-export const metadata: Metadata = {
-  title: 'qnot vs DevExtreme FilterBuilder: features, speed, licensing',
+export const metadata: Metadata = pageMetadata({
+  title: 'DevExtreme FilterBuilder vs qnot: speed, licensing',
   description:
-    "qnot and DevExtreme's FilterBuilder compared: licensing, features, measured speed at 1,000 rules, bundle size, when DevExtreme is the better choice, and converting filter expressions.",
-  alternates: { canonical: '/compare/devextreme-filterbuilder' },
-};
+    'qnot and the DevExtreme FilterBuilder compared: licensing, features, measured speed at 1,000 rules, bundle size, and when DevExtreme fits better.',
+  path: '/compare/devextreme-filterbuilder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -34,6 +35,7 @@ export default function Page() {
   const v = (id: 'qnot-dom' | 'devextreme', m: 'mount' | 'add' | 'js' | 'heap') => metricValue(id, m);
   return (
     <ComparePage
+      path="/compare/devextreme-filterbuilder"
       benchIntro={
         <>
           DevExtreme's widget is plain JavaScript, so it runs against qnot's framework-free build; the React build is listed too. DevExtreme renders values as text, which

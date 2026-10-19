@@ -1,4 +1,5 @@
 import { type Crumb, type FaqItem, type JsonLdObject, breadcrumbLd, faqLd } from '@/lib/seo';
+import { SEO_ROUTES } from '@/lib/seo-routes';
 
 /**
  * schema.org structured data as a `<script type="application/ld+json">`. A server component: the
@@ -18,4 +19,13 @@ export function FaqJsonLd({ faq }: { faq: readonly FaqItem[] | undefined }) {
 /** BreadcrumbList from the site root down to the page (the root is added for you). */
 export function BreadcrumbJsonLd({ crumbs }: { crumbs: Crumb[] }) {
   return <JsonLd data={breadcrumbLd(crumbs)} />;
+}
+
+/** BreadcrumbList for a search-landing page (lib/seo-routes.ts): Home › parent page (e.g. Compare) › the page. */
+export function SeoRouteJsonLd({ path }: { path: string }) {
+  const route = SEO_ROUTES.find((r) => r.path === path);
+  if (!route) return null;
+  const parent = SEO_ROUTES.find((r) => r.path !== path && path.startsWith(`${r.path}/`));
+  const crumbs: Crumb[] = [...(parent ? [{ name: parent.group, path: parent.path }] : []), { name: route.label.startsWith('vs ') ? `qnot ${route.label}` : route.label.replace(/^./, (c) => c.toUpperCase()), path }];
+  return <BreadcrumbJsonLd crumbs={crumbs} />;
 }

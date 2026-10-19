@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import type { FaqItem } from '@/components/seo/blocks';
 import { KitPage } from '@/components/seo/kit-page';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'coss ui Query Builder: Base UI components, MIT',
   description:
-    'qnot\'s reference query builder, made of coss ui components on Base UI: functions, list conditions, field references, locks. MIT, one shadcn command.',
-  alternates: { canonical: '/coss-ui-query-builder' },
-};
+    "qnot's reference query builder, made of coss ui components on Base UI: functions, list conditions, field references, locks. MIT, one shadcn command.",
+  path: '/coss-ui-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -42,6 +43,7 @@ export const faq: FaqItem[] = [
 export default function Page() {
   return (
     <KitPage
+      path="/coss-ui-query-builder"
       component="CossQueryBuilder"
       facts={[
         ['license', 'MIT'],

@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import type { FaqItem } from '@/components/seo/blocks';
 import { FrameworkPage } from '@/components/seo/framework-page';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Svelte Query Builder: open-source, typed, fast',
   description:
     'An MIT-licensed query builder for Svelte 5 with bind:value, rune-friendly helpers, drag and drop, undo and validation. Export to SQL, MongoDB and JsonLogic.',
-  alternates: { canonical: '/svelte-query-builder' },
-};
+  path: '/svelte-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -60,6 +61,7 @@ const sample = `<script lang="ts">
 export default function Page() {
   return (
     <FrameworkPage
+      path="/svelte-query-builder"
       api={
         <>
           <p>

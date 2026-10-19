@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import type { FaqItem } from '@/components/seo/blocks';
 import { FrameworkPage } from '@/components/seo/framework-page';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Vue Query Builder: open-source, typed, fast',
   description:
-    'An MIT-licensed query builder for Vue 3 with v-model, composables, drag and drop, undo and validation. Export to SQL, MongoDB and JsonLogic. Free, no license key.',
-  alternates: { canonical: '/vue-query-builder' },
-};
+    'An MIT-licensed query builder for Vue 3 with v-model, composables, drag and drop, undo and validation. Export to SQL, MongoDB and JsonLogic. No license key.',
+  path: '/vue-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -66,6 +67,7 @@ const where = computed(() => encode(pg, query.value, fields));
 export default function Page() {
   return (
     <FrameworkPage
+      path="/vue-query-builder"
       api={
         <>
           <p>

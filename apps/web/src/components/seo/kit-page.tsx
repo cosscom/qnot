@@ -23,6 +23,8 @@ export const KIT_PAGES: { kit: KitId; name: string; href: string; item: string }
 export const shadcnComponents = (item: string) => (registryItem(item)?.registryDependencies ?? []).filter((d) => !d.includes('://'));
 
 export interface KitPageProps {
+  /** The page's path, for its BreadcrumbList. */
+  path?: string;
   kit: KitId;
   /** "shadcn/ui", "MUI"… */
   name: string;
@@ -61,7 +63,7 @@ export function Filters({ onChange }: { onChange: (query: QueryOf<typeof fields>
     { name: 'Undo, drag and drop', tag: 'history · dnd', summary: 'Every edit is a step. Drag rules and groups by the handle; locks and limits are respected.', href: '/docs/reference/store#history' },
   ];
   return (
-    <Sheet>
+    <Sheet path={props.path}>
       <PageHero
         actions={
           <>

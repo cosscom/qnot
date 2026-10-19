@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { metricValue } from '@/components/seo/bench-tables';
 import type { FaqItem } from '@/components/seo/blocks';
 import { ComparePage } from '@/components/seo/compare-page';
 
-export const metadata: Metadata = {
-  title: 'qnot vs react-querybuilder: features, speed, migration',
+export const metadata: Metadata = pageMetadata({
+  title: 'react-querybuilder vs qnot: features, speed, migration',
   description:
-    'An honest comparison of qnot and react-querybuilder: features, measured speed at 1,000 rules, bundle size, where react-querybuilder is the better choice, and a drop-in path for saved queries.',
-  alternates: { canonical: '/compare/react-querybuilder' },
-};
+    'qnot and react-querybuilder compared: features, measured speed at 1,000 rules, bundle size, when react-querybuilder fits better, and keeping saved queries.',
+  path: '/compare/react-querybuilder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -35,6 +36,7 @@ export default function Page() {
   const k = (id: 'qnot' | 'rqb') => metricValue(id, 'keystroke');
   return (
     <ComparePage
+      path="/compare/react-querybuilder"
       benchIntro={
         <>
           The same tree in both, production builds, headless Chromium. react-querybuilder's cost per keystroke grows with the size of the query: {k('rqb')} ms at 1,000 rules against {k('qnot')} ms for qnot, whose rules each subscribe to their own node.

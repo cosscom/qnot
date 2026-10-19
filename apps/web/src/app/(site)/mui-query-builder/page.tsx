@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import type { FaqItem } from '@/components/seo/blocks';
 import { KitPage } from '@/components/seo/kit-page';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'MUI Query Builder: open-source, Material UI components',
   description:
-    'A query builder made of Material UI components (TextField, Select, Autocomplete, ToggleButtonGroup). MIT licensed, installs as source with one shadcn command. No MUI X license needed.',
-  alternates: { canonical: '/mui-query-builder' },
-};
+    'A query builder made of Material UI components: TextField, Select, Autocomplete. MIT licensed, installs as source with one shadcn command. No MUI X license.',
+  path: '/mui-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -42,6 +43,7 @@ export const faq: FaqItem[] = [
 export default function Page() {
   return (
     <KitPage
+      path="/mui-query-builder"
       component="QueryBuilder"
       facts={[
         ['license', 'MIT'],

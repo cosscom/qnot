@@ -19,6 +19,8 @@ export const FRAMEWORK_PAGES: { framework: DemoFramework; name: string; href: st
 ];
 
 export interface FrameworkPageProps {
+  /** The page's path, for its BreadcrumbList. */
+  path?: string;
   framework: DemoFramework;
   /** "Vue", "Svelte"… */
   name: string;
@@ -51,7 +53,7 @@ export function FrameworkPage(props: FrameworkPageProps) {
     { name: 'Fast at 1,000 rules', tag: 'per-node subscriptions', summary: 'Editing one rule updates one rule. A keystroke costs the same at ten rules or a thousand.', href: '/#benchmarks' },
   ];
   return (
-    <Sheet>
+    <Sheet path={props.path}>
       <PageHero
         actions={
           <>

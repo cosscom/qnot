@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { metricValue } from '@/components/seo/bench-tables';
 import type { FaqItem } from '@/components/seo/blocks';
 import { ComparePage } from '@/components/seo/compare-page';
 
-export const metadata: Metadata = {
-  title: 'qnot vs jQuery QueryBuilder: features, speed, migration',
+export const metadata: Metadata = pageMetadata({
+  title: 'jQuery QueryBuilder vs qnot: features, speed, migration',
   description:
-    'qnot and jQuery QueryBuilder compared: features, plugins, measured speed at 1,000 rules, bundle size, when the jQuery plugin is the better choice, and how to keep your getRules() JSON.',
-  alternates: { canonical: '/compare/jquery-querybuilder' },
-};
+    'qnot and jQuery QueryBuilder compared: features, plugins, measured speed at 1,000 rules, bundle size, when the plugin fits better, and keeping getRules() JSON.',
+  path: '/compare/jquery-querybuilder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -34,6 +35,7 @@ export default function Page() {
   const m = (id: 'qnot-dom' | 'jqqb') => Math.round(metricValue(id, 'mount') ?? 0);
   return (
     <ComparePage
+      path="/compare/jquery-querybuilder"
       benchIntro={
         <>
           jQuery QueryBuilder renders plain DOM, so the fair comparison is qnot's framework-free build, <code>@qnot/dom</code>; the React build is listed too. At 1,000 rules

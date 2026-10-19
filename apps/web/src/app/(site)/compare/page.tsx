@@ -1,5 +1,6 @@
 import { ArrowRightIcon } from 'lucide-react';
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { BenchNote, BenchTable, metricValue } from '@/components/seo/bench-tables';
 import { EndLinks, PageHero, Prose, Section, Sheet } from '@/components/seo/blocks';
@@ -8,12 +9,12 @@ import { COMPARES } from '@/components/seo/shared';
 import { LIBS, libInfo } from '@/lib/bench-series';
 import { GITHUB_URL } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Query builder comparison: qnot vs the alternatives',
   description:
-    'Six JavaScript query builders compared on features, licensing, bundle size and measured speed at 1,000 rules, with honest notes on when each one is the right pick.',
-  alternates: { canonical: '/compare' },
-};
+    'Six JavaScript query builders compared on features, licensing, bundle size and measured speed at 1,000 rules, with notes on when each is the right pick.',
+  path: '/compare',
+});
 
 const ORDER: Competitor[] = ['rqb', 'raqb', 'jqqb', 'syncfusion', 'devextreme'];
 
@@ -27,7 +28,7 @@ const FIT: Record<Competitor, string> = {
 
 export default function Page() {
   return (
-    <Sheet>
+    <Sheet path="/compare">
       <PageHero
         lede="Six JavaScript query builders, measured on the same 1,000-rule tree and compared feature by feature. Each page says where the other library is the better pick."
         tags={['measured', 'MIT and commercial', 'migration paths']}

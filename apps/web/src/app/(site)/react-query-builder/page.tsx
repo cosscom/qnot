@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import type { FaqItem } from '@/components/seo/blocks';
 import { FrameworkPage } from '@/components/seo/framework-page';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'React Query Builder: open-source, typed, fast',
   description:
-    'An MIT-licensed React query builder: typed from your schema to parameterized SQL, MongoDB and JsonLogic, with undo, drag and drop and validation. Stays fast at 1,000 rules.',
-  alternates: { canonical: '/react-query-builder' },
-};
+    'An MIT-licensed React query builder: typed from your schema to parameterized SQL, MongoDB and JsonLogic, with undo, drag and drop. Stays fast at 1,000 rules.',
+  path: '/react-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -69,6 +70,7 @@ export function Filters() {
 export default function Page() {
   return (
     <FrameworkPage
+      path="/react-query-builder"
       api={
         <>
           <p>

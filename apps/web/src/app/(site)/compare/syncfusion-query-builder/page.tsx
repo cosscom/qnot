@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { metricValue } from '@/components/seo/bench-tables';
 import type { FaqItem } from '@/components/seo/blocks';
 import { ComparePage } from '@/components/seo/compare-page';
 
-export const metadata: Metadata = {
-  title: 'qnot vs Syncfusion Query Builder: features, speed, licensing',
+export const metadata: Metadata = pageMetadata({
+  title: 'Syncfusion Query Builder vs qnot: speed, licensing',
   description:
-    'qnot and the Syncfusion Query Builder compared: licensing, features, measured speed at 100 and 1,000 rules, bundle size, when Syncfusion is the better choice, and converting saved rules.',
-  alternates: { canonical: '/compare/syncfusion-query-builder' },
-};
+    'qnot and the Syncfusion Query Builder compared: licensing, features, measured speed at 100 and 1,000 rules, bundle size, and when Syncfusion fits better.',
+  path: '/compare/syncfusion-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -35,6 +36,7 @@ export default function Page() {
   const m = (id: 'qnot-dom' | 'syncfusion', n: 100 | 1000 = 1000) => Math.round(metricValue(id, 'mount', n) ?? 0);
   return (
     <ComparePage
+      path="/compare/syncfusion-query-builder"
       benchIntro={
         <>
           Syncfusion's component is plain JavaScript, so it runs against qnot's framework-free build; the React build is listed too. At 100 rules Syncfusion renders in{' '}

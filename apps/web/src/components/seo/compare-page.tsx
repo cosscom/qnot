@@ -27,6 +27,8 @@ export interface FeatureRow {
 }
 
 export interface ComparePageProps {
+  /** The page's path, for its BreadcrumbList. */
+  path?: string;
   id: Competitor;
   title: string;
   lede: ReactNode;
@@ -58,7 +60,7 @@ export function ComparePage(props: ComparePageProps) {
   const v = (id: LibId, m: 'mount' | 'keystroke' | 'add' | 'heap' | 'js') => metricValue(id, m);
   const fmt = (n: number | null, unit: string) => (n === null ? 'n/a' : `${n >= 100 ? Math.round(n).toLocaleString('en-US') : n} ${unit}`);
   return (
-    <Sheet>
+    <Sheet path={props.path}>
       <PageHero
         actions={
           <>

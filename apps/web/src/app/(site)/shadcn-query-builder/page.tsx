@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import type { FaqItem } from '@/components/seo/blocks';
 import { KitPage, shadcnComponents } from '@/components/seo/kit-page';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'shadcn/ui Query Builder: free, MIT, one command',
   description:
     'A complete query builder made of shadcn/ui components. Free and MIT licensed, no API key, no account: one npx shadcn add puts the source in your project.',
-  alternates: { canonical: '/shadcn-query-builder' },
-};
+  path: '/shadcn-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -42,6 +43,7 @@ export default function Page() {
   const components = shadcnComponents('query-builder-shadcn');
   return (
     <KitPage
+      path="/shadcn-query-builder"
       component="QueryBuilder"
       facts={[
         ['license', 'MIT'],

@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import type { FaqItem } from '@/components/seo/blocks';
 import { FrameworkPage } from '@/components/seo/framework-page';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'JavaScript Query Builder: open-source, no framework',
   description:
     'A vanilla JavaScript query builder with no framework and no jQuery: mount it on any element, export to SQL, MongoDB and JsonLogic. MIT, about 23 KB gzipped.',
-  alternates: { canonical: '/javascript-query-builder' },
-};
+  path: '/javascript-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -61,6 +62,7 @@ store.subscribe(render);
 export default function Page() {
   return (
     <FrameworkPage
+      path="/javascript-query-builder"
       api={
         <>
           <p>

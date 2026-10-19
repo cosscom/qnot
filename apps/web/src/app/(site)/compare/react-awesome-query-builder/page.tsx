@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { metricValue } from '@/components/seo/bench-tables';
 import type { FaqItem } from '@/components/seo/blocks';
 import { ComparePage } from '@/components/seo/compare-page';
 
-export const metadata: Metadata = {
-  title: 'qnot vs react-awesome-query-builder: features, speed, migration',
+export const metadata: Metadata = pageMetadata({
+  title: 'react-awesome-query-builder vs qnot: speed, features',
   description:
-    'qnot and react-awesome-query-builder (RAQB) compared feature by feature, measured at 1,000 rules, with bundle sizes, where RAQB is the better choice, and a drop-in path for saved RAQB trees.',
-  alternates: { canonical: '/compare/react-awesome-query-builder' },
-};
+    'qnot and react-awesome-query-builder (RAQB) compared: features, measured speed at 1,000 rules, bundle size, when RAQB fits better, and keeping saved trees.',
+  path: '/compare/react-awesome-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -36,6 +37,7 @@ export default function Page() {
   const v = (id: 'qnot' | 'raqb', m: 'add' | 'js') => metricValue(id, m);
   return (
     <ComparePage
+      path="/compare/react-awesome-query-builder"
       benchIntro={
         <>
           The same tree in both, production builds, headless Chromium. The largest gaps are adding a rule ({v('raqb', 'add')} ms against {v('qnot', 'add')} ms) and size:

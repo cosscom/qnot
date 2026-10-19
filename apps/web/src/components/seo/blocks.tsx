@@ -2,6 +2,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { FaqJsonLd, SeoRouteJsonLd } from './json-ld';
 
 /*
  * The pieces the search-landing pages (frameworks, kits, comparisons, articles) are built from,
@@ -16,8 +17,14 @@ export interface FaqItem {
   links?: { href: string; label: string }[];
 }
 
-export function Sheet({ children }: { children: ReactNode }) {
-  return <main className="mx-auto w-full max-w-[1440px] flex-1">{children}</main>;
+/** The page's sheet. `path` adds the page's BreadcrumbList (structured data) from lib/seo-routes.ts. */
+export function Sheet({ children, path }: { children: ReactNode; path?: string }) {
+  return (
+    <main className="mx-auto w-full max-w-[1440px] flex-1">
+      {path && <SeoRouteJsonLd path={path} />}
+      {children}
+    </main>
+  );
 }
 
 /** The page head: a mono breadcrumb, the h1, a lede, mono tags and actions. */
@@ -137,6 +144,7 @@ export function LinkGrid({ items, columns = 4 }: { items: { name: string; tag?: 
 export function FaqSection({ items, title = 'Questions people ask' }: { items: readonly FaqItem[]; title?: string }) {
   return (
     <section aria-labelledby="faq-title" className="scroll-mt-14 overflow-hidden border-b" data-faq id="faq">
+      <FaqJsonLd faq={items} />
       <SectionHead id="faq-title" title={title} />
       <dl className="-me-px -mb-px grid grid-cols-1 lg:grid-cols-2">
         {items.map((item) => (

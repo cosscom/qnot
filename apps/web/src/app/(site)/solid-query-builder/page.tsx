@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import type { FaqItem } from '@/components/seo/blocks';
 import { FrameworkPage } from '@/components/seo/framework-page';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Solid Query Builder: open-source, typed, fast',
   description:
     'An MIT-licensed query builder for SolidJS with fine-grained primitives, drag and drop, undo and validation. Export to SQL, MongoDB and JsonLogic.',
-  alternates: { canonical: '/solid-query-builder' },
-};
+  path: '/solid-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -64,6 +65,7 @@ export function Filters() {
 export default function Page() {
   return (
     <FrameworkPage
+      path="/solid-query-builder"
       api={
         <>
           <p>

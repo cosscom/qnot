@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import type { FaqItem } from '@/components/seo/blocks';
 import { KitPage } from '@/components/seo/kit-page';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Headless Query Builder: build your own UI',
   description:
-    'A headless query builder: typed hooks over a fast store, plus a complete builder in plain HTML and Tailwind to start from. Swap in your design system piece by piece. MIT.',
-  alternates: { canonical: '/headless-query-builder' },
-};
+    'A headless query builder: typed hooks over a fast store, plus a complete plain HTML and Tailwind builder to start from. Swap in your design system. MIT.',
+  path: '/headless-query-builder',
+});
 
 export const faq: FaqItem[] = [
   {
@@ -46,6 +47,7 @@ export const faq: FaqItem[] = [
 export default function Page() {
   return (
     <KitPage
+      path="/headless-query-builder"
       component="QueryBuilder"
       facts={[
         ['license', 'MIT'],
