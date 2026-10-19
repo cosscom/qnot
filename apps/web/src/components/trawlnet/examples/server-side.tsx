@@ -54,13 +54,13 @@ export function Demo() {
     () =>
       CODECS.map(({ label, codec }) => {
         const out: unknown = encode(codec as Codec<unknown>, query as Query, fields);
-        if (typeof out === 'string') return { label, text: out };
+        if (typeof out === 'string') return { label, text: out, lang: 'sql' as const };
         // SQL with bound parameters: show the statement as-is with its params underneath.
         if (out && typeof out === 'object' && 'sql' in out && 'params' in out) {
           const { sql, params } = out as { sql: string; params: unknown };
-          return { label, text: `${sql}\n\n-- params\n${JSON.stringify(params, null, 2)}` };
+          return { label, text: `${sql}\n\n-- params: ${JSON.stringify(params)}`, lang: 'sql' as const };
         }
-        return { label, text: JSON.stringify(out, null, 2) };
+        return { label, text: JSON.stringify(out, null, 2), lang: 'json' as const };
       }),
     [query],
   );
@@ -70,7 +70,7 @@ export function Demo() {
         <CossQueryBuilder store={store} />
         <div className="grid gap-3 lg:grid-cols-2">
           {outputs.map((o) => (
-            <CodeBlock key={o.label} wrap label={o.label} code={o.text} />
+            <CodeBlock key={o.label} wrap label={o.label} code={o.text} lang={o.lang} />
           ))}
         </div>
       </div>

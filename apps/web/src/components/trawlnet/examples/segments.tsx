@@ -102,7 +102,7 @@ export function Demo() {
             <span className="text-muted-foreground">Contacts where </span>
             {describeQuery(fields, query as Query)}
           </p>
-          <CodeBlock wrap label="Postgres (parameterized)" code={sql} />
+          <CodeBlock wrap label="Postgres (parameterized)" code={sql} lang="sql" />
         </div>
       </div>
     </>

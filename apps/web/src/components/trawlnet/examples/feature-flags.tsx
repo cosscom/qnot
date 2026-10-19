@@ -91,7 +91,7 @@ export function Demo() {
             </div>
           </div>
           <CossQueryBuilder store={store} />
-          <CodeBlock label="Flag config (JsonLogic segment)" code={JSON.stringify(flag, null, 2)} />
+          <CodeBlock label="Flag config (JsonLogic segment)" code={JSON.stringify(flag, null, 2)} lang="json" />
         </div>
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 text-sm">

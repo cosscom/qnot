@@ -65,7 +65,7 @@ export function Demo() {
               {changes.current} onChange calls
             </span>
           </div>
-          <CodeBlock code={JSON.stringify(value, null, 2)} />
+          <CodeBlock code={JSON.stringify(value, null, 2)} lang="json" />
           <Textarea className="font-mono text-xs" rows={5} placeholder='Paste react-querybuilder JSON, e.g. {"combinator":"or","rules":[{"field":"age","operator":">","value":"30"}]}' value={draft} onChange={(e) => setDraft(e.target.value)} />
           <div className="flex items-center gap-2">
             <Button
