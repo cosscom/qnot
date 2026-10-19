@@ -4,3 +4,6 @@ bench/results/*.png
 .DS_Store
 dist/
 .svelte-kit/
+.vercel
+.env*.local
+.env*
