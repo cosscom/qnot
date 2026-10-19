@@ -40,7 +40,7 @@ const frameworks = {
 
 const shared = {
   bundle: true,
-  minify: true,
+  minify: process.env.MINIFY !== '0', // MINIFY=0 for readable profiles (sizes are then meaningless)
   format: 'esm',
   splitting: false,
   target: 'es2022',

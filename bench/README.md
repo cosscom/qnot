@@ -8,6 +8,7 @@ node build.mjs          # esbuild prod bundles -> dist/, sizes -> dist/sizes.jso
 node run.mjs            # -> results/results.json   (env: ONLY=rqb,raqb SIZES=10,100 PAGES=5 CPU=4)
 node report.mjs         # -> results/REPORT.md
 node dbg.mjs dist <page>.html "<js expr>" [shot.png]   # poke at one page
+MINIFY=0 node build.mjs && node profile.mjs qnot-svelte 1000 mount   # readable CPU profile
 ```
 
 ## Full suite

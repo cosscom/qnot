@@ -1,62 +1,130 @@
 {
   "qnot": {
-    "js": 292298,
-    "jsGz": 92049,
+    "js": 300867,
+    "jsGz": 94855,
+    "jsBr": 82458,
     "css": 1847,
-    "cssGz": 783
+    "cssGz": 786,
+    "cssBr": 646
   },
   "qnot-dom": {
-    "js": 65905,
-    "jsGz": 23619,
+    "js": 74370,
+    "jsGz": 26270,
+    "jsBr": 23669,
     "css": 1847,
-    "cssGz": 783
+    "cssGz": 786,
+    "cssBr": 646
+  },
+  "qnot-vue": {
+    "js": 140483,
+    "jsGz": 51281,
+    "jsBr": 46233,
+    "css": 1847,
+    "cssGz": 786,
+    "cssBr": 646
+  },
+  "qnot-svelte": {
+    "js": 153998,
+    "jsGz": 54155,
+    "jsBr": 48407,
+    "css": 1847,
+    "cssGz": 786,
+    "cssBr": 646
+  },
+  "qnot-solid": {
+    "js": 108604,
+    "jsGz": 36656,
+    "jsBr": 32829,
+    "css": 1847,
+    "cssGz": 786,
+    "cssBr": 646
   },
   "proto": {
-    "js": 231777,
-    "jsGz": 72062,
+    "js": 232745,
+    "jsGz": 72298,
+    "jsBr": 62359,
     "css": 0,
-    "cssGz": 0
+    "cssGz": 0,
+    "cssBr": 0
   },
   "proto-vanilla": {
-    "js": 7700,
-    "jsGz": 3197,
+    "js": 8661,
+    "jsGz": 3422,
+    "jsBr": 3054,
     "css": 0,
-    "cssGz": 0
+    "cssGz": 0,
+    "cssBr": 0
   },
   "rqb": {
-    "js": 420029,
-    "jsGz": 127941,
+    "js": 422133,
+    "jsGz": 128439,
+    "jsBr": 110398,
     "css": 22747,
-    "cssGz": 2227
+    "cssGz": 2227,
+    "cssBr": 1816
   },
   "raqb": {
-    "js": 934525,
-    "jsGz": 266841,
+    "js": 937430,
+    "jsGz": 267703,
+    "jsBr": 224973,
     "css": 26222,
-    "cssGz": 2597
+    "cssGz": 2597,
+    "cssBr": 2208
   },
   "jqqb": {
-    "js": 299724,
-    "jsGz": 69981,
+    "js": 301931,
+    "jsGz": 70552,
+    "jsBr": 60651,
     "css": 319214,
-    "cssGz": 45292
+    "cssGz": 45292,
+    "cssBr": 33956
   },
   "syncfusion": {
-    "js": 1364044,
-    "jsGz": 315169,
+    "js": 1366098,
+    "jsGz": 315696,
+    "jsBr": 242201,
     "css": 1400946,
-    "cssGz": 199318
+    "cssGz": 199318,
+    "cssBr": 167100
   },
   "devextreme": {
-    "js": 1042418,
-    "jsGz": 290123,
+    "js": 1044462,
+    "jsGz": 290639,
+    "jsBr": 239819,
     "css": 694245,
-    "cssGz": 94399
+    "cssGz": 94399,
+    "cssBr": 70005
   },
   "_react-baseline": {
     "js": 223452,
     "jsGz": 69093,
+    "jsBr": 59535,
     "css": 0,
-    "cssGz": 0
+    "cssGz": 0,
+    "cssBr": 0
+  },
+  "_vue": {
+    "js": 63443,
+    "jsGz": 25239,
+    "jsBr": 22911,
+    "css": 0,
+    "cssGz": 0,
+    "cssBr": 0
+  },
+  "_svelte": {
+    "js": 40736,
+    "jsGz": 15389,
+    "jsBr": 13949,
+    "css": 0,
+    "cssGz": 0,
+    "cssBr": 0
+  },
+  "_solid": {
+    "js": 10713,
+    "jsGz": 4258,
+    "jsBr": 3907,
+    "css": 0,
+    "cssGz": 0,
+    "cssBr": 0
   }
 }

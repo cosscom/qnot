@@ -69,20 +69,32 @@ const heapUsed = async (page, cdp) => {
 async function measure(name, n, cpu, opts) {
   const cold = [], warm = [], heap = [];
   const out = { rules: null, dom: null, errors: {} };
+  let retries = 0;
   for (let p = 0; p < opts.pages; p++) {
     const { page, cdp } = await freshPage(name, cpu);
     try {
       const h0 = await heapUsed(page, cdp);
       const m = await evalT(page, (n) => window.bench.mount(n), n);
-      cold.push(m.ms);
-      heap.push((await heapUsed(page, cdp)) - h0);
-      out.rules = m.rules;
-      if (p === 0) out.dom = await page.evaluate(() => window.bench.domNodes());
+      const h1 = (await heapUsed(page, cdp)) - h0;
+      if (out.dom == null) out.dom = await page.evaluate(() => window.bench.domNodes());
+      let w = null;
       if (opts.warm) {
         await page.evaluate(() => window.bench.unmount());
-        warm.push((await evalT(page, (n) => window.bench.mount(n), n)).ms);
+        w = (await evalT(page, (n) => window.bench.mount(n), n)).ms;
       }
+      // Recorded only once the page got through both mounts, so a retried page adds nothing twice.
+      cold.push(m.ms);
+      heap.push(h1);
+      if (w != null) warm.push(w);
+      out.rules = m.rules;
       if (p === opts.pages - 1 && !opts.mountOnly) await interact(page, cdp, n, opts, out);
+    } catch (e) {
+      // One retry per size for a page that fails to mount (a hung first render has been seen once
+      // in RAQB at 500 rules); recorded so the JSON shows it. A second failure fails the size.
+      if (retries++ > 0) throw e;
+      log(`    page ${p + 1} failed (${errText(e)}); retrying with a fresh page`);
+      out.retried = { page: p + 1, error: errText(e) };
+      p--;
     } finally {
       await page.close();
     }
