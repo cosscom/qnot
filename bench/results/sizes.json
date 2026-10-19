@@ -9,8 +9,8 @@
   },
   "qnot-dom": {
     "js": 74370,
-    "jsGz": 26270,
-    "jsBr": 23669,
+    "jsGz": 26271,
+    "jsBr": 23657,
     "css": 1847,
     "cssGz": 786,
     "cssBr": 646
@@ -24,17 +24,17 @@
     "cssBr": 646
   },
   "qnot-svelte": {
-    "js": 153998,
-    "jsGz": 54155,
-    "jsBr": 48407,
+    "js": 166430,
+    "jsGz": 56304,
+    "jsBr": 50211,
     "css": 1847,
     "cssGz": 786,
     "cssBr": 646
   },
   "qnot-solid": {
-    "js": 108604,
-    "jsGz": 36656,
-    "jsBr": 32829,
+    "js": 102070,
+    "jsGz": 35370,
+    "jsBr": 31639,
     "css": 1847,
     "cssGz": 786,
     "cssBr": 646

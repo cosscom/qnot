@@ -18,7 +18,7 @@ export const faq: FaqItem[] = [
   },
   {
     q: 'Which Svelte versions are supported?',
-    a: 'Svelte 5. The components use runes, and the reactive helpers are built on createSubscriber from svelte/reactivity.',
+    a: 'Svelte 5. The components use runes, and the reactive helpers subscribe once per node, so an edit only wakes the rows it changes.',
   },
   {
     q: 'Does it work with SvelteKit?',
