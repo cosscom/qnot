@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/site';
 import { source } from '@/lib/source';
+import { EXAMPLES } from '@/examples/catalog';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const pages = ['', '/examples', '/playground'].map((p) => ({ url: `${SITE_URL}${p}` }));
+  const pages = ['', '/examples', ...EXAMPLES.map((e) => `/examples/${e.slug}`), '/playground', '/parity'].map((p) => ({ url: `${SITE_URL}${p}` }));
   return [...pages, ...source.getPages().map((page) => ({ url: `${SITE_URL}${page.url}` }))];
 }

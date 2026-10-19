@@ -3,3 +3,5 @@
 next-env.d.ts
 *.tsbuildinfo
 .twoslash/
+# Built by `pnpm islands` (predev/prebuild)
+public/islands/

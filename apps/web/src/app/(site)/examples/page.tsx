@@ -1,14 +1,27 @@
 import type { Metadata } from 'next';
-import { CatalogCard, CatalogGrid, Sketch } from '@/components/catalog';
+import { CatalogCard } from '@/components/catalog';
+import { EXAMPLES } from '@/examples/catalog';
+import { CategoryFilter } from '@/examples/category-filter';
+import { SKETCHES } from '@/examples/sketches';
 
 export const metadata: Metadata = {
   title: 'Examples',
   description: 'What a query builder is for: routing forms, filter bars, segments, feature flags, alert rules, access policies and more, each built on trawlnet.',
 };
 
-// The catalog of coss.com/ui. These three cards are placeholders while apps/playground's
-// examples move here; each example draws its own preview from <Sketch> pieces.
 export default function Page() {
+  const cards = EXAMPLES.map((e) => {
+    const Drawing = SKETCHES[e.slug]!;
+    return {
+      slug: e.slug,
+      category: e.category,
+      node: (
+        <CatalogCard description={e.blurb} href={`/examples/${e.slug}`} key={e.slug} tag={e.category.toLowerCase()} title={e.title}>
+          <Drawing />
+        </CatalogCard>
+      ),
+    };
+  });
   return (
     <main className="mx-auto w-full max-w-[1440px] flex-1">
       <section className="border-b">
@@ -20,42 +33,7 @@ export default function Page() {
         </div>
       </section>
       <section className="px-4 py-8 sm:px-8 sm:py-10">
-        <CatalogGrid>
-          <CatalogCard description="Send each form response to the right event, page or teammate." href="/examples" tag="product" title="Cal.com routing forms">
-            <Sketch.Panel>
-              <Sketch.Row>
-                <Sketch.Bar tone="ink" w={4} />
-                <Sketch.Segmented active={0} />
-                <Sketch.Bar w={14} />
-              </Sketch.Row>
-              <Sketch.Row>
-                <Sketch.Select w={12} />
-                <Sketch.Select tone="soft" w={6} />
-                <Sketch.Select w={9} />
-              </Sketch.Row>
-              <Sketch.Divider />
-              <Sketch.Row className="justify-between">
-                <Sketch.Bar w={10} />
-                <Sketch.Toggle on />
-              </Sketch.Row>
-            </Sketch.Panel>
-          </CatalogCard>
-          <CatalogCard description="Inline filter chips: the same hooks, a completely different UI." href="/examples" tag="ui" title="Linear-style filter bar">
-            <Sketch.Row className="flex-wrap">
-              <Sketch.Chip active w={10} />
-              <Sketch.Chip w={8} />
-              <Sketch.Chip w={12} />
-              <Sketch.Button w={6} />
-            </Sketch.Row>
-            <div className="mt-3">
-              <Sketch.Grid accent={1} cols={3} rows={2} />
-            </div>
-          </CatalogCard>
-          <CatalogCard description="One query, exported to Postgres with parameters, MongoDB and JsonLogic." href="/examples" tag="server" title="One query, every backend">
-            <Sketch.Code lines={[18, 24, 14, 20]} />
-          </CatalogCard>
-        </CatalogGrid>
-        <p className="mt-8 font-mono text-muted-foreground text-xs">More examples are moving over from the playground.</p>
+        <CategoryFilter cards={cards} />
       </section>
     </main>
   );
