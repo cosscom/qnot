@@ -2,7 +2,22 @@
   "name": "@trawlnet/vue",
   "version": "0.0.0",
   "description": "Vue 3 bindings for trawlnet: composables plus a tiny unstyled <QueryBuilder>.",
+  "keywords": [
+    "vue",
+    "query builder",
+    "composables",
+    "headless"
+  ],
   "license": "MIT",
+  "homepage": "https://github.com/sean-brydon/trawlnet#readme",
+  "bugs": {
+    "url": "https://github.com/sean-brydon/trawlnet/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sean-brydon/trawlnet.git",
+    "directory": "packages/vue"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -10,10 +25,21 @@
   },
   "publishConfig": {
     "exports": {
-      ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
-    }
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "access": "public"
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc -p ."

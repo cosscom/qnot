@@ -25,7 +25,8 @@ import {
   type QueryOf,
   type QueryStore,
 } from '@trawlnet/core';
-import { createContext, memo, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ComponentType, type ReactNode } from 'react';
+import { createContext, memo, useContext, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
+import { useSync } from './sync';
 import { useDragHandle, useDropTarget, useGroupDropZone } from './dnd';
 import { QueryProvider, useGroup, useQueryStore, useRule, useStore, type UseQueryStoreOptions } from './hooks';
 
@@ -440,7 +441,7 @@ export const DefaultRule = memo(function DefaultRule({ id }: { id: NodeId }) {
 function NodeView({ id }: { id: NodeId }) {
   const store = useStore();
   const { components } = useUI();
-  const kind = useSyncExternalStore(
+  const kind = useSync(
     useMemo(() => (fn: () => void) => store.subscribe(id, fn), [store, id]),
     () => store.get(id)?.kind,
   );

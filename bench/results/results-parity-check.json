@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-18T21:27:56.154Z",
+  "cpuThrottle": 1,
+  "results": {
+    "trawlnet": {
+      "100": {
+        "rules": 100,
+        "dom": 3251,
+        "mountColdMs": 63.3,
+        "mountWarmMs": 40.1,
+        "heapKB": 2231,
+        "keystrokeMedianMs": 0.3,
+        "keystrokeP95Ms": 4,
+        "keystrokeCpuMs": 4.7,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 1,
+        "addRuleCpuMs": 8,
+        "sqlMs": 0.032,
+        "sqlSample": "(firstName = 'v0' OR age = 1 OR status = 'closed' OR city = 'v3' OR score = 4 OR tier = 'pro' OR verified = TRUE OR email = 'v7' OR visits = 8 OR country = 'JP'",
+        "error": null
+      },
+      "1000": {
+        "rules": 1000,
+        "dom": 32411,
+        "mountColdMs": 212.8,
+        "mountWarmMs": 179.9,
+        "heapKB": 16278,
+        "keystrokeMedianMs": 0.5,
+        "keystrokeP95Ms": 2.4,
+        "keystrokeCpuMs": 3.5,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 1.1,
+        "addRuleCpuMs": 4.9,
+        "sqlMs": 0.07,
+        "sqlSample": "(firstName = 'v0' OR age = 1 OR status = 'closed' OR city = 'v3' OR score = 4 OR tier = 'pro' OR verified = TRUE OR email = 'v7' OR visits = 8 OR country = 'JP'",
+        "error": null
+      }
+    },
+    "proto": {
+      "100": {
+        "rules": 100,
+        "dom": 2319,
+        "mountColdMs": 34.9,
+        "mountWarmMs": 20.3,
+        "heapKB": 1097,
+        "keystrokeMedianMs": 0.3,
+        "keystrokeP95Ms": 0.5,
+        "keystrokeCpuMs": 5.5,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 1.5,
+        "addRuleCpuMs": 6.8,
+        "sqlMs": 0.048,
+        "sqlSample": "(firstName = 'v0' or age = 1 or status = 'closed' or city = 'v3' or score = 4 or tier = 'pro' or verified = true or email = 'v7' or visits = 8 or country = 'JP'",
+        "error": null
+      },
+      "1000": {
+        "rules": 1000,
+        "dom": 23109,
+        "mountColdMs": 256,
+        "mountWarmMs": 223.8,
+        "heapKB": 7209,
+        "keystrokeMedianMs": 1.5,
+        "keystrokeP95Ms": 17,
+        "keystrokeCpuMs": 14.3,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 2.9,
+        "addRuleCpuMs": 16.6,
+        "sqlMs": 0.165,
+        "sqlSample": "(firstName = 'v0' or age = 1 or status = 'closed' or city = 'v3' or score = 4 or tier = 'pro' or verified = true or email = 'v7' or visits = 8 or country = 'JP'",
+        "error": null
+      }
+    },
+    "rqb": {
+      "100": {
+        "rules": 100,
+        "dom": 3539,
+        "mountColdMs": 80.3,
+        "mountWarmMs": 45.6,
+        "heapKB": 4481,
+        "keystrokeMedianMs": 5,
+        "keystrokeP95Ms": 9.1,
+        "keystrokeCpuMs": 11.3,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 5.3,
+        "addRuleCpuMs": 15.3,
+        "sqlMs": 0.091,
+        "sqlSample": "((firstName = 'v0' or age = '1' or status = 'closed' or city = 'v3' or score = '4' or tier = 'pro' or verified = TRUE or email = 'v7' or visits = '8' or country",
+        "error": null
+      },
+      "1000": {
+        "rules": 1000,
+        "dom": 35309,
+        "mountColdMs": 466.5,
+        "mountWarmMs": 430.8,
+        "heapKB": 34721,
+        "keystrokeMedianMs": 59.3,
+        "keystrokeP95Ms": 62.8,
+        "keystrokeCpuMs": 64.8,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 57.7,
+        "addRuleCpuMs": 69.2,
+        "sqlMs": 0.73,
+        "sqlSample": "((firstName = 'v0' or age = '1' or status = 'closed' or city = 'v3' or score = '4' or tier = 'pro' or verified = TRUE or email = 'v7' or visits = '8' or country",
+        "error": null
+      }
+    },
+    "raqb": {
+      "100": {
+        "rules": 100,
+        "dom": 4106,
+        "mountColdMs": 96.2,
+        "mountWarmMs": 62,
+        "heapKB": 5800,
+        "keystrokeMedianMs": 1.2,
+        "keystrokeP95Ms": 3.7,
+        "keystrokeCpuMs": 6.6,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 12.1,
+        "addRuleCpuMs": 18.2,
+        "sqlMs": 0.847,
+        "sqlSample": "(firstName = 'v0' OR age = 1 OR status = 'closed' OR city = 'v3' OR score = 4 OR tier = 'pro' OR verified = true OR email = 'v7' OR visits = 8 OR country = 'JP'",
+        "error": null
+      },
+      "1000": {
+        "rules": 1000,
+        "dom": 40916,
+        "mountColdMs": 595.1,
+        "mountWarmMs": 544.2,
+        "heapKB": 38688,
+        "keystrokeMedianMs": 8.3,
+        "keystrokeP95Ms": 13.4,
+        "keystrokeCpuMs": 21.6,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 94,
+        "addRuleCpuMs": 94.2,
+        "sqlMs": 7.455,
+        "sqlSample": "(firstName = 'v0' OR age = 1 OR status = 'closed' OR city = 'v3' OR score = 4 OR tier = 'pro' OR verified = true OR email = 'v7' OR visits = 8 OR country = 'JP'",
+        "error": null
+      }
+    }
+  }
+}

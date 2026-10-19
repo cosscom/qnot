@@ -7,7 +7,8 @@
     "build": "pnpm -r --filter './packages/*' build",
     "test": "vitest run",
     "typecheck": "pnpm -r --parallel typecheck",
-    "dev": "pnpm --filter playground dev"
+    "dev": "pnpm --filter playground dev",
+    "changeset": "changeset"
   },
   "devDependencies": {
     "typescript": "^6.0.3",
@@ -15,6 +16,7 @@
     "vitest": "^5.0.5",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "vite-plugin-solid": "^2.11.14",
-    "vite": "^8.3.4"
+    "vite": "^8.3.4",
+    "@changesets/cli": "^3.0.3"
   }
 }

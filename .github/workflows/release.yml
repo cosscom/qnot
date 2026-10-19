@@ -1,0 +1,36 @@
+name: Release
+
+# Manual on purpose: nothing reaches npm until someone runs this workflow (and the NPM_TOKEN secret
+# exists). With pending changesets it opens/updates the "Version packages" PR; with none pending
+# (after that PR is merged) it publishes the bumped packages.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - uses: changesets/action@v1
+        with:
+          version: pnpm changeset version
+          publish: pnpm changeset publish --provenance
+          title: Version packages
+          commit: Version packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  packages:
+    name: Typecheck, test, build packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Lint published packages
+        run: |
+          for p in packages/*; do (cd "$p" && npx -y publint@0.3 --strict); done
+
+  web:
+    name: Build website
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/content/**', 'packages/*/src/**') }}
+          restore-keys: next-${{ hashFiles('pnpm-lock.yaml') }}-
+      - run: pnpm --filter web build

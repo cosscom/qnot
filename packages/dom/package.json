@@ -2,7 +2,22 @@
   "name": "@trawlnet/dom",
   "version": "0.0.0",
   "description": "Vanilla DOM renderer for trawlnet: no framework, per-node patching.",
+  "keywords": [
+    "query builder",
+    "vanilla",
+    "dom",
+    "no framework"
+  ],
   "license": "MIT",
+  "homepage": "https://github.com/sean-brydon/trawlnet#readme",
+  "bugs": {
+    "url": "https://github.com/sean-brydon/trawlnet/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sean-brydon/trawlnet.git",
+    "directory": "packages/dom"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -10,10 +25,21 @@
   },
   "publishConfig": {
     "exports": {
-      ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
-    }
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "access": "public"
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc -p ."

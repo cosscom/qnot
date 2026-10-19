@@ -2,7 +2,27 @@
   "name": "@trawlnet/core",
   "version": "0.0.0",
   "description": "Framework-agnostic, fully typed query builder core: schema, store, validation, evaluation and format codecs.",
+  "keywords": [
+    "query builder",
+    "filter",
+    "rules",
+    "sql",
+    "mongodb",
+    "jsonlogic",
+    "typescript",
+    "headless",
+    "framework-agnostic"
+  ],
   "license": "MIT",
+  "homepage": "https://github.com/sean-brydon/trawlnet#readme",
+  "bugs": {
+    "url": "https://github.com/sean-brydon/trawlnet/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sean-brydon/trawlnet.git",
+    "directory": "packages/core"
+  },
   "type": "module",
   "sideEffects": [
     "*.css"
@@ -23,12 +43,18 @@
         "default": "./dist/formats/*.js"
       },
       "./styles.css": "./styles.css"
-    }
+    },
+    "access": "public"
   },
   "files": [
     "dist",
-    "styles.css"
+    "styles.css",
+    "README.md",
+    "LICENSE"
   ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc -p ."

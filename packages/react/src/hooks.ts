@@ -23,7 +23,8 @@ import {
   type StoreNode,
   type StoreOptions,
 } from '@trawlnet/core';
-import { createContext, createElement, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, createElement, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useSync } from './sync';
 
 interface Ctx {
   store: QueryStore<any, any>;
@@ -85,7 +86,7 @@ function useNodeSnapshot(store: QueryStore<any, any>, id: NodeId): StoreNode | u
   // drops it doesn't crash.
   const last = useRef<StoreNode | undefined>(undefined);
   const subscribe = useMemo(() => (fn: () => void) => store.subscribe(id, fn), [store, id]);
-  return useSyncExternalStore(subscribe, () => {
+  return useSync(subscribe, () => {
     const n = store.get(id);
     if (n) last.current = n;
     return last.current;
@@ -100,7 +101,7 @@ export const useNode = <F extends Fields = Fields>(id: NodeId): StoreNode<F> | u
  * components re-render only when an answer flips. Value edits never trigger it.
  */
 function usePermissions<A extends Action>(store: QueryStore<any, any>, id: NodeId, actions: readonly A[]): Record<A, boolean> {
-  const bits = useSyncExternalStore(store.subscribePermissions, () => {
+  const bits = useSync(store.subscribePermissions, () => {
     let b = 0;
     if (store.get(id)) actions.forEach((a, i) => store.can(a, id) && (b |= 1 << i));
     return b;
@@ -123,7 +124,7 @@ export function useRule<F extends Fields = Fields>(id: NodeId) {
   const fieldChoices = useMemo<FieldOption[]>(() => fieldOptions(fields).filter((o) => !o.isArray), [fields]);
   // Settings that change which sources are offered; read through the permissions channel so they
   // update live without subscribing rows to every edit.
-  const sources = useSyncExternalStore(store.subscribePermissions, () => (store.settings.allowRefs !== false ? 1 : 0) | (store.settings.allowFunctions !== false ? 2 : 0));
+  const sources = useSync(store.subscribePermissions, () => (store.settings.allowRefs !== false ? 1 : 0) | (store.settings.allowFunctions !== false ? 2 : 0));
   const refs = useMemo<Option[]>(
     () => (editor.allowsRef && sources & 1 && typeof rule.field === 'string' ? refOptions(fields, rule.field, def?.kind) : []),
     [fields, editor.allowsRef, rule.field, def, sources],
@@ -203,7 +204,7 @@ function innerFields(store: QueryStore<any, any>, id: NodeId): Fields {
   return g.of && outer[g.of.field]?.of ? elementFields(outer, g.of.field) : outer;
 }
 
-const useAll = <S>(store: QueryStore<any, any>, snapshot: () => S): S => useSyncExternalStore(store.subscribe as (fn: () => void) => () => void, snapshot);
+const useAll = <S>(store: QueryStore<any, any>, snapshot: () => S): S => useSync(store.subscribe as (fn: () => void) => () => void, snapshot);
 
 /** The whole native query. Re-renders on every change; use for previews and exports. */
 export function useQuery<F extends Fields = Fields>(): QueryOf<F> {
@@ -231,5 +232,5 @@ export function useHistory() {
 /** Current store settings, re-rendering when they change. */
 export function useSettings() {
   const store = useStore();
-  return useSyncExternalStore(store.subscribePermissions, () => store.settings);
+  return useSync(store.subscribePermissions, () => store.settings);
 }

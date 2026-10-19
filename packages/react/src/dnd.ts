@@ -1,5 +1,6 @@
 import { dropIndexFromPointer, type NodeId } from '@trawlnet/core';
-import { useMemo, useSyncExternalStore, type DragEvent } from 'react';
+import { useMemo, type DragEvent } from 'react';
+import { useSync } from './sync';
 import { useDndController, useStore } from './hooks';
 
 export type DropPosition = 'before' | 'after' | 'inside' | null;
@@ -7,7 +8,7 @@ export type DropPosition = 'before' | 'after' | 'inside' | null;
 /** Props for the element the user grabs, and whether this node is being dragged. */
 export function useDragHandle(id: NodeId) {
   const dnd = useDndController();
-  const isDragging = useSyncExternalStore(dnd.subscribe, () => dnd.getState().dragging === id);
+  const isDragging = useSync(dnd.subscribe, () => dnd.getState().dragging === id);
   const handleProps = useMemo(
     () => ({
       draggable: true,
@@ -30,7 +31,7 @@ export function useDragHandle(id: NodeId) {
 export function useDropTarget(id: NodeId) {
   const store = useStore();
   const dnd = useDndController();
-  const position = useSyncExternalStore(dnd.subscribe, (): DropPosition => {
+  const position = useSync(dnd.subscribe, (): DropPosition => {
     const over = dnd.getState().over;
     const n = over && store.get(id);
     if (!over || !n || n.parent !== over.parentId) return null;
@@ -65,7 +66,7 @@ export function useDropTarget(id: NodeId) {
 export function useGroupDropZone(groupId: NodeId) {
   const store = useStore();
   const dnd = useDndController();
-  const isOver = useSyncExternalStore(dnd.subscribe, () => {
+  const isOver = useSync(dnd.subscribe, () => {
     const over = dnd.getState().over;
     return over?.parentId === groupId && store.getGroup(groupId).children.length === 0;
   });

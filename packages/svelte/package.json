@@ -2,10 +2,24 @@
   "name": "@trawlnet/svelte",
   "version": "0.0.0",
   "description": "Svelte 5 bindings for trawlnet: rune-friendly reactive helpers plus a tiny unstyled <QueryBuilder>.",
+  "keywords": [
+    "svelte",
+    "svelte5",
+    "query builder",
+    "runes"
+  ],
   "license": "MIT",
+  "homepage": "https://github.com/sean-brydon/trawlnet#readme",
+  "bugs": {
+    "url": "https://github.com/sean-brydon/trawlnet/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sean-brydon/trawlnet.git",
+    "directory": "packages/svelte"
+  },
   "type": "module",
   "sideEffects": false,
-  "svelte": "./src/index.ts",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -21,11 +35,17 @@
         "svelte": "./dist/index.js",
         "default": "./dist/index.js"
       }
-    }
+    },
+    "access": "public"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "svelte-package -i src -o dist",
     "typecheck": "svelte-check --tsconfig ./tsconfig.json"
@@ -43,5 +63,6 @@
     "svelte": "^5.57.2",
     "svelte-check": "^4.7.7",
     "typescript": "^6.0.3"
-  }
+  },
+  "svelte": "./src/index.ts"
 }

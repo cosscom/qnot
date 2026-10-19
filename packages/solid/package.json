@@ -2,7 +2,22 @@
   "name": "@trawlnet/solid",
   "version": "0.0.0",
   "description": "Solid bindings for trawlnet: fine-grained primitives plus a tiny unstyled <QueryBuilder>.",
+  "keywords": [
+    "solid",
+    "solidjs",
+    "query builder",
+    "signals"
+  ],
   "license": "MIT",
+  "homepage": "https://github.com/sean-brydon/trawlnet#readme",
+  "bugs": {
+    "url": "https://github.com/sean-brydon/trawlnet/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sean-brydon/trawlnet.git",
+    "directory": "packages/solid"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -14,10 +29,22 @@
   },
   "publishConfig": {
     "exports": {
-      ".": { "types": "./dist/index.d.ts", "solid": "./dist/index.jsx", "default": "./dist/index.jsx" }
-    }
+      ".": {
+        "types": "./dist/index.d.ts",
+        "solid": "./dist/index.jsx",
+        "default": "./dist/index.jsx"
+      }
+    },
+    "access": "public"
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p ."
