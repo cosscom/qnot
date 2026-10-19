@@ -1,5 +1,6 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { benchData, libInfo, type BenchPoint, type BenchSize, type LibId } from '@/lib/bench-series';
+import { suite } from '@/lib/bench-suite';
 import { cn } from '@/lib/utils';
 
 // Benchmark tables drawn like the landing page's: numbers first, then a thin bar against the
@@ -101,9 +102,10 @@ export function BenchTable({ ids, size = 1000, metrics = ['mount', 'keystroke', 
 /** A footnote under a benchmark table: the run, the machine, the method in one breath. */
 export function BenchNote({ children }: { children?: React.ReactNode }) {
   const { date } = benchData();
+  const env = suite().env;
   return (
     <p className="border-t px-4 py-5 text-muted-foreground text-sm leading-relaxed sm:px-8">
-      Run of {date}: Apple M5, Chromium via Playwright 1.64, production builds, no CPU throttling. Medians of 5 fresh pages; the tree is 10 fields in groups of 10 rules. JS is
+      Run of {date}: {env.cpu}, Chromium {env.chromium.split('.')[0]} via Playwright {env.playwright?.split('.').slice(0, 2).join('.')}, production builds, no CPU throttling. Medians of fresh pages (5 to 9 per size); the tree is 10 fields in groups of 10 rules. JS is
       gzipped and excludes React for React libraries (jQuery is included). Lower is better. {children}
     </p>
   );

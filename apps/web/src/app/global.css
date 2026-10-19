@@ -15,6 +15,13 @@
 @theme inline {
   --font-heading: var(--font-sans);
   --color-code-foreground: var(--code-foreground);
+  /* bklit ui charts (components/charts), themed from the site tokens below. */
+  --color-chart-background: var(--chart-background);
+  --color-chart-foreground: var(--chart-foreground);
+  --color-chart-label: var(--chart-label);
+  --color-chart-tooltip-background: var(--chart-tooltip-background);
+  --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
+  --color-chart-tooltip-muted: var(--chart-tooltip-muted);
 }
 
 /* The coss ui sites' page width: header, sidebar, content and footer share it. */
@@ -72,6 +79,60 @@
   --iso-top: var(--background);
   --iso-left: color-mix(in srgb, var(--foreground) 5%, var(--background));
   --iso-right: color-mix(in srgb, var(--foreground) 12%, var(--background));
+}
+
+/* bklit ui chart tokens (components/charts) mapped onto the site's, so charts follow the theme. */
+:root {
+  --chart-background: var(--background);
+  --chart-foreground: var(--foreground);
+  --chart-foreground-muted: var(--muted-foreground);
+  --chart-label: var(--muted-foreground);
+  --chart-line-primary: var(--foreground);
+  --chart-line-secondary: var(--muted-foreground);
+  --chart-crosshair: color-mix(in srgb, var(--foreground) 35%, transparent);
+  --chart-grid: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --chart-brush-border: var(--chart-grid);
+  --chart-tooltip-background: var(--popover);
+  --chart-tooltip-foreground: var(--popover-foreground);
+  --chart-tooltip-muted: var(--muted-foreground);
+  --chart-marker-background: var(--background);
+  --chart-marker-border: var(--border);
+  --chart-marker-foreground: var(--foreground);
+  --chart-marker-badge-background: var(--foreground);
+  --chart-marker-badge-foreground: var(--background);
+  --chart-indicator-color: var(--chart-crosshair);
+  --chart-indicator-secondary-color: var(--muted-foreground);
+  --chart-segment-background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  --chart-segment-line: var(--chart-grid);
+
+  /* /benchmarks series: qnot in the landing page's teal, everyone else in distinct hues. */
+  --bench-us: var(--color-teal-600);
+  --bench-them: color-mix(in srgb, var(--foreground) 32%, transparent);
+  --bench-qnot: var(--color-teal-600);
+  --bench-qnot-dom: var(--color-teal-600);
+  --bench-qnot-vue: var(--color-lime-600);
+  --bench-qnot-svelte: var(--color-orange-600);
+  --bench-qnot-solid: var(--color-blue-600);
+  --bench-rqb: var(--color-violet-600);
+  --bench-raqb: var(--color-amber-500);
+  --bench-jqqb: var(--color-sky-600);
+  --bench-syncfusion: var(--color-rose-600);
+  --bench-devextreme: var(--color-stone-500);
+  --bench-throttled: var(--color-rose-600);
+}
+.dark {
+  --bench-us: var(--color-teal-400);
+  --bench-qnot: var(--color-teal-400);
+  --bench-qnot-dom: var(--color-teal-400);
+  --bench-qnot-vue: var(--color-lime-400);
+  --bench-qnot-svelte: var(--color-orange-400);
+  --bench-qnot-solid: var(--color-blue-400);
+  --bench-rqb: var(--color-violet-400);
+  --bench-raqb: var(--color-amber-300);
+  --bench-jqqb: var(--color-sky-400);
+  --bench-syncfusion: var(--color-rose-400);
+  --bench-devextreme: var(--color-stone-400);
+  --bench-throttled: var(--color-rose-400);
 }
 
 /* The drafting grid behind drawings. */

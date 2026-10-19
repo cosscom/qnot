@@ -40,6 +40,16 @@ listed here is used by, imported into, or shipped with any package under `packag
 - `src/styles/theme.css` (coss ui tokens) from `packages/ui/src/styles/theme.css`.
 - `src/components/ui/*` (coss ui components, Base UI based), installed from the coss ui registry.
 
+## bklit ui charts (MIT)
+
+- `src/components/charts/*` and `src/components/shimmering-text.tsx`: chart components from
+  [bklit ui](https://github.com/bklit/bklit-ui) (`@bklit/line-chart`, `@bklit/bar-chart` and their
+  registry dependencies), installed with the shadcn CLI. MIT License, Copyright (c) 2026 uixmat.
+  Local change: `line.tsx` and `series-path-utils.ts` skip rows without a value for a series
+  instead of drawing them at zero (used by `/benchmarks`), and `bar.tsx` sizes stacked horizontal
+  segments from their offset (upstream gave later series a negative width); `bar-y-axis.tsx` lets
+  category labels use the whole left margin.
+
 ## Fonts
 
 - Cal Sans (`src/fonts/CalSansVF*.woff2`): SIL Open Font License 1.1, see `src/fonts/OFL.txt`.

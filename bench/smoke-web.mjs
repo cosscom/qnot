@@ -10,6 +10,7 @@ const SLUGS = ['linear-filters', 'workflow', 'saved-views', 'product-filters', '
 const SEO = [
   '/react-query-builder', '/vue-query-builder', '/svelte-query-builder', '/solid-query-builder', '/javascript-query-builder',
   '/shadcn-query-builder', '/mui-query-builder', '/coss-ui-query-builder', '/headless-query-builder',
+  '/benchmarks',
   '/compare', '/compare/react-querybuilder', '/compare/react-awesome-query-builder', '/compare/jquery-querybuilder', '/compare/syncfusion-query-builder', '/compare/devextreme-filterbuilder',
 ];
 // Free converter tools (apps/web/src/tools/catalog.ts).
