@@ -29,7 +29,11 @@ describe('compile', () => {
     expect(run(g('and', { kind: 'rule', field: 'age', operator: 'lt', ref: 'minAge' }))).toEqual(['Grace Hopper']);
     expect(run({ ...g('or', { kind: 'rule', field: 'verified', operator: 'eq', value: true }), not: true })).toEqual(['Grace Hopper']);
     expect(run(g('and', { kind: 'rule', field: 'age', operator: 'eq', value: null }))).toHaveLength(3);
-    expect(compile(fields, g('and', { kind: 'rule', field: 'age', operator: 'eq', value: null }), { invalidRules: false })(rows[0])).toBe(false);
+    expect(compile(fields, g('and', { kind: 'rule', field: 'age', operator: 'eq', value: null }), { incompleteRules: false })(rows[0])).toBe(false);
+    // A present but invalid value (age must be an integer >= 0) matches nothing unless explicitly skipped.
+    const invalid = g('or', { kind: 'rule', field: 'age', operator: 'eq', value: -5 });
+    expect(run(invalid)).toEqual([]);
+    expect(compile(fields, invalid, { invalidRules: 'skip' })(rows[0])).toBe(true);
   });
 });
 

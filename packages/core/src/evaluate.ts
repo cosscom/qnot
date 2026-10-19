@@ -9,8 +9,13 @@ export interface CompileOptions<Row> {
   /** Read a field from a row (default: `row[field]`, following dotted struct paths). */
   get?: (row: Row, field: string) => unknown;
   /**
-   * What an invalid or incomplete rule evaluates to. `'skip'` (default) ignores it, like the SQL
-   * exporters do; `false` makes the containing group fail closed.
+   * What a rule that is only missing a value evaluates to: `'skip'` (default) leaves it out, like
+   * the export codecs, so a half-built query still filters; `false` makes its group fail closed.
+   */
+  incompleteRules?: 'skip' | false;
+  /**
+   * What a rule with a present but invalid value (wrong type, out of range, unknown field) evaluates
+   * to: `false` (default) matches nothing, so an untrusted query can never widen; `'skip'` leaves it out.
    */
   invalidRules?: 'skip' | false;
 }
@@ -82,8 +87,19 @@ const binary: Record<string, (a: any, b: any) => boolean> = {
   endsWith: (a, b) => String(a).endsWith(b),
 };
 
-function compileRule(fields: Fields, rule: Rule, get: Getter, custom: Getter | undefined, invalid: 'skip' | false): Compiled {
-  if (validateRule(fields, rule).length) return invalid === 'skip' ? SKIP : () => false;
+interface Modes {
+  incomplete: 'skip' | false;
+  invalid: 'skip' | false;
+}
+
+const NEVER: Predicate<any> = () => false;
+
+function compileRule(fields: Fields, rule: Rule, get: Getter, custom: Getter | undefined, modes: Modes): Compiled {
+  const errors = validateRule(fields, rule).filter((i) => i.severity === 'error');
+  if (errors.length) {
+    const mode = errors.every((i) => i.code === 'required') ? modes.incomplete : modes.invalid;
+    return mode === 'skip' ? SKIP : NEVER;
+  }
   const def = leftDef(fields, rule.field);
   const norm = normalizer(def);
   const op = rule.operator;
@@ -164,7 +180,7 @@ function compileRule(fields: Fields, rule: Rule, get: Getter, custom: Getter | u
   }
 
   const cmp = binary[op];
-  if (!cmp) return invalid === 'skip' ? SKIP : () => false;
+  if (!cmp) return modes.invalid === 'skip' ? SKIP : NEVER;
   const b = norm(value);
   // The common case, specialized: no normalization, a single strict comparison per row.
   if (def?.kind === 'text' && !def.caseSensitive && typeof b === 'string' && (op === 'eq' || op === 'neq')) {
@@ -203,9 +219,9 @@ function quantify(match: Quantifier, test: Predicate<unknown>): (items: readonly
   return (items) => cmp(count(items), target);
 }
 
-function compileNode(fields: Fields, node: QueryNode, get: Getter, custom: Getter | undefined, invalid: 'skip' | false): Compiled {
-  if (node.kind === 'rule') return compileRule(fields, node, get, custom, invalid);
-  return compileGroup(fields, node, get, custom, invalid);
+function compileNode(fields: Fields, node: QueryNode, get: Getter, custom: Getter | undefined, modes: Modes): Compiled {
+  if (node.kind === 'rule') return compileRule(fields, node, get, custom, modes);
+  return compileGroup(fields, node, get, custom, modes);
 }
 
 /** AND/OR over predicates, unrolled for small groups so the hot loop has no closure-per-call array walk. */
@@ -227,12 +243,12 @@ function combine(parts: Predicate<any>[], and: boolean): Predicate<any> {
       };
 }
 
-function compileGroup(fields: Fields, node: Group, get: Getter, custom: Getter | undefined, invalid: 'skip' | false): Compiled {
+function compileGroup(fields: Fields, node: Group, get: Getter, custom: Getter | undefined, modes: Modes): Compiled {
   const scope = groupScope(fields, node);
   // Inside an array group, rules read the element's own fields.
   const innerGet: Getter = node.of ? getPath : get;
   const innerCustom = node.of ? undefined : custom;
-  const parts = node.children.map((c) => compileNode(scope, c, innerGet, innerCustom, invalid)).filter((p): p is Predicate<any> => p !== SKIP);
+  const parts = node.children.map((c) => compileNode(scope, c, innerGet, innerCustom, modes)).filter((p): p is Predicate<any> => p !== SKIP);
   const all: Predicate<any> = !parts.length ? () => true : combine(parts, node.combinator === 'and');
   let pred: Predicate<any> = all;
   if (node.of) {
@@ -252,7 +268,7 @@ function compileGroup(fields: Fields, node: Group, get: Getter, custom: Getter |
  */
 export function compile<F extends Fields, Row = RowOf<F>>(fields: F, query: QueryOf<F>, options: CompileOptions<Row> = {}): Predicate<Row> {
   const get = (options.get ?? getPath) as Getter;
-  const p = compileNode(fields, query as Query, get, options.get as Getter | undefined, options.invalidRules ?? 'skip');
+  const p = compileNode(fields, query as Query, get, options.get as Getter | undefined, { incomplete: options.incompleteRules ?? 'skip', invalid: options.invalidRules ?? false });
   return p === SKIP ? () => true : p;
 }
 

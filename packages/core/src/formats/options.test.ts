@@ -28,7 +28,8 @@ describe('unsupported rules', () => {
     expect(() => encode(jsonlogic, withRelative, pfields)).toThrow(/at \[1, 1\].*"relativeDate" has no jsonlogic format/);
     expect(() => encode(spel, withRelative, pfields)).toThrow(/at \[1, 1\].*"relativeDate" has no spel format/);
     expect(() => encode(sql, and(orders('some', rule('qty', 'gt', 1))), pfields)).toThrow(/array group at \[0\] \(field "orders"\): array groups need the postgres dialect/);
-    expect(() => encode(sqlFormat({ dialect: 'postgres' }), and(orders('some', rule('qty', 'gt', 1), { kind: 'rule', field: 'qty', operator: 'gt', call: relative.kind === 'rule' ? relative.call : undefined } as QueryNode)), pfields)).not.toThrow();
+    // A date function compared with a number field is invalid, not merely incomplete: refused, never dropped.
+    expect(() => encode(sqlFormat({ dialect: 'postgres' }), and(orders('some', rule('qty', 'gt', 1), { kind: 'rule', field: 'qty', operator: 'gt', call: relative.kind === 'rule' ? relative.call : undefined } as QueryNode)), pfields)).toThrow(/at \[0, 1\].*invalid rule \(Relative date returns date, expected number\)/);
     expect(() => encode(elasticsearch, and(orders({ count: 'gte', value: 2 }, rule('qty', 'gt', 1))), pfields)).toThrow(/array group at \[0\].*needs an aggregation or script/);
     expect(() => encode(elasticsearch, and(rule('tags', 'setEq', ['vip'])), pfields)).toThrow(/set equality/);
     expect(() => encode(elasticsearch, and({ kind: 'rule', field: { fn: 'lower', args: { text: { ref: 'name' } } }, operator: 'eq', value: 'a' } as QueryNode), pfields)).toThrow(/value side/);
@@ -36,7 +37,7 @@ describe('unsupported rules', () => {
 
   it('reach inside array groups with their full path', () => {
     const q = and(rule('age', 'gt', 1), orders('some', rule('qty', 'gt', 1), { kind: 'rule', field: 'product', operator: 'eq', call: { fn: 'relativeDate', args: {} } } as QueryNode));
-    // relativeDate returns a date but product is text: invalid, so it's skipped, not unsupported.
+    // relativeDate returns a date but product is text: invalid (exports would refuse it).
     expect(validateQuery(pfields, q).some((i) => i.severity === 'error')).toBe(true);
     const custom = and(rule('age', 'gt', 1), orders('some', { kind: 'rule', field: 'qty', operator: 'eq', call: { fn: 'length', args: { text: { ref: 'product' } } } } as QueryNode));
     expect(() => encode(jsonlogic, custom, pfields)).toThrow(/rule at \[1, 0\] \(field "qty", operator "eq"\): function "length" has no jsonlogic format/);
@@ -177,5 +178,24 @@ describe('sql string safety', () => {
     const q = { kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'name', operator: 'eq', value: 'a\u0000b' }] } as const;
     expect(() => encode(sqlFormat({ dialect: 'postgres' }), q as never, fs)).toThrow(/NUL/);
     expect(() => encode(sqlFormat({ dialect: 'postgres', params: 'numbered' }), q as never, fs)).toThrow(/NUL/);
+  });
+});
+
+describe('invalid rules never widen an export', () => {
+  it('refuses a present-but-invalid value in every export codec, and still skips incomplete rules', async () => {
+    const fs = defineFields({ name: f.text(), age: f.number({ min: 0 }) });
+    const tampered = { kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'name', operator: 'eq', value: { $ne: null } }] };
+    const incomplete = { kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'name', operator: 'eq', value: '' }, { kind: 'rule', field: 'age', operator: 'gte', value: 21 }] };
+    const { sqlFormat } = await import('./sql');
+    const { mongo } = await import('./mongo');
+    const { jsonlogic } = await import('./jsonlogic');
+    const { elasticsearch } = await import('./elasticsearch');
+    const { spel } = await import('./spel');
+    for (const codec of [sqlFormat({ dialect: 'postgres' }), mongo, jsonlogic, elasticsearch, spel]) {
+      expect(() => encode(codec as never, tampered as never, fs), codec.name).toThrow(/invalid rule \(Expected text\)/);
+      expect(() => encode(codec as never, incomplete as never, fs), codec.name).not.toThrow();
+    }
+    expect(encode(sqlFormat({ dialect: 'postgres' }), incomplete as never, fs)).toBe('age >= 21');
+    expect(encode(sqlFormat({ dialect: 'postgres', unsupported: 'skip' }), tampered as never, fs)).toBe('1 = 1');
   });
 });

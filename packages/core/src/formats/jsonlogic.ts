@@ -14,6 +14,7 @@ import {
   infoOf,
   isArrayGroupIn,
   isCompleteRule,
+  ruleProblem,
   isFnCall,
   caseCondition,
   finishRoot,
@@ -43,7 +44,9 @@ const CMP: Record<ComparableOp, string> = { eq: '==', neq: '!=', lt: '<', lte: '
 const count = (arr: unknown, inner: unknown) => ({ reduce: [{ filter: [arr, inner] }, { '+': [1, { var: 'accumulator' }] }, 0] });
 
 function encodeRule(rule: Rule, ctx: CodecContext): Expr | Unsupported | undefined {
-  if (!isCompleteRule(ctx.fields, rule)) return undefined;
+  const problem = ruleProblem(ctx.fields, rule);
+  if (problem === 'incomplete') return undefined;
+  if (problem) return problem;
   return expressRule(rule, ctx) ?? new Unsupported(rule, unsupportedReason('jsonlogic', ctx.fields, rule));
 }
 

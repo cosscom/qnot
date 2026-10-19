@@ -3,9 +3,10 @@
 Every codec lives at `@trawlnet/core/formats/<name>` and works with `encode(codec, query, fields)`,
 `decode(codec, value, fields)` and (where noted) `encodeCases(codec, cases, fields)`.
 
-**Export codecs** (sql, mongo, jsonlogic, spel, text, elasticsearch) skip *incomplete or invalid*
-rules (missing values), as `compile()` does. A *valid rule the target can't express* throws by
-default, so an export never silently matches more than the query. Examples: a function with no
+**Export codecs** (sql, mongo, jsonlogic, spel, elasticsearch) skip *incomplete* rules (a value
+still missing), as `compile()` does. A rule with a *present but invalid* value (wrong type, out of
+range, unknown field) and a *valid rule the target can't express* both throw by default, so an
+export never silently matches more than the query (`text` renders what it can and never throws). Examples: a function with no
 format for the codec, array operators on ANSI SQL, array groups outside Postgres, counts in
 Elasticsearch. The error names the rule's path, field, operator and the reason, e.g.
 ``trawlnet/sql: can't express the rule at [1] (field "tags", operator "hasAny"): the ansi dialect has no array operators (use postgres, mysql, sqlite or mssql)``.

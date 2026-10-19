@@ -14,6 +14,7 @@ import {
   infoOf,
   isArrayGroupIn,
   isCompleteRule,
+  ruleProblem,
   isFnCall,
   liftChildren,
   negated,
@@ -64,7 +65,9 @@ function literal(def: AnyFieldDef | undefined, v: unknown): string {
 const list = (def: AnyFieldDef | undefined, vs: unknown) => `{${(vs as unknown[]).map((x) => literal(def, x)).join(', ')}}`;
 
 function encodeRule(rule: Rule, ctx: CodecContext): SpelFragment | Unsupported | undefined {
-  if (!isCompleteRule(ctx.fields, rule)) return undefined;
+  const problem = ruleProblem(ctx.fields, rule);
+  if (problem === 'incomplete') return undefined;
+  if (problem) return problem;
   return expressRule(rule, ctx) ?? new Unsupported(rule, unsupportedReason('spel', ctx.fields, rule));
 }
 

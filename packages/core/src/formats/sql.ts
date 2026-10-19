@@ -12,6 +12,7 @@ import {
   infoOf,
   isArrayGroupIn,
   isCompleteRule,
+  ruleProblem,
   isFnCall,
   liftChildren,
   ruleDef,
@@ -196,7 +197,9 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
   }
 
   function encodeRule(rule: Rule, ctx: SqlContext): SqlFragment | Unsupported | undefined {
-    if (!isCompleteRule(ctx.fields, rule)) return undefined;
+    const problem = ruleProblem(ctx.fields, rule);
+    if (problem === 'incomplete') return undefined;
+    if (problem) return problem;
     const out = expressRule(rule, ctx);
     return out ?? new Unsupported(rule, unsupportedReason('sql', ctx.fields, rule, ARRAY_OPS.has(rule.operator) ? `the ${dialect} dialect has no array operators (use postgres, mysql, sqlite or mssql)` : undefined));
   }

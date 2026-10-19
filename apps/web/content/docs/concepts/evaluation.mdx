@@ -26,8 +26,11 @@ const matches = compile<typeof fields, User>(fields, query, {
 
 ## Semantics
 
-- **Incomplete rules are skipped** by default, as the export codecs do; set `invalidRules: false` to
-  make a group with a bad rule fail closed instead. An empty query matches everything.
+- **Incomplete rules are skipped** by default, as the export codecs do, so a half-built query still
+  filters; `incompleteRules: false` makes them fail closed instead.
+- **Invalid rules match nothing** by default (a present value of the wrong type, out of range, or on
+  an unknown field), so an untrusted query can never widen; `invalidRules: 'skip'` leaves them out.
+  An empty query matches everything.
 - **Text compares case-insensitively** unless the field sets `caseSensitive: true`.
 - **Dates and date-times** compare as instants; times compare as `HH:mm[:ss]` strings.
 - **Null and undefined** fail every comparison except `isNull` and `isEmpty`; `notIn` and

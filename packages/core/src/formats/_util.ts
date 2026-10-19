@@ -12,6 +12,18 @@ export type { FnCall, Operand };
 
 export const isCompleteRule = (fields: Fields, rule: Rule): boolean => validateRule(fields, rule).length === 0;
 
+/**
+ * What an export codec should do with a rule: encode it (undefined), leave it out because it's only
+ * missing a value ('incomplete'), or refuse it because a value is present but wrong (an Unsupported
+ * marker, so `unsupported: 'throw'` names it and a tampered query never silently widens).
+ */
+export function ruleProblem(fields: Fields, rule: Rule): 'incomplete' | Unsupported | undefined {
+  const errors = validateRule(fields, rule).filter((i) => i.severity === 'error');
+  if (!errors.length) return undefined;
+  if (errors.every((i) => i.code === 'required')) return 'incomplete';
+  return new Unsupported(rule, `invalid rule (${errors.map((e) => e.message).join('; ')})`);
+}
+
 export const escapeRegex = (s: string): string => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 
 const numeric = /^\s*-?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?\s*$/i;

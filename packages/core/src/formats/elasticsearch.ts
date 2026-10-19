@@ -9,6 +9,7 @@ import {
   infoOf,
   isArrayGroupIn,
   isCompleteRule,
+  ruleProblem,
   isFnCall,
   liftChildren,
   ruleDef,
@@ -44,7 +45,9 @@ const not = (q: EsQuery): EsQuery => ({ bool: { must_not: [q] } });
 const escapeWildcard = (s: string) => s.replace(/[\\*?]/g, '\\$&');
 
 function encodeRule(rule: Rule, ctx: EsContext): EsQuery | Unsupported | undefined {
-  if (!isCompleteRule(ctx.fields, rule)) return undefined;
+  const problem = ruleProblem(ctx.fields, rule);
+  if (problem === 'incomplete') return undefined;
+  if (problem) return problem;
   // Function calls are only supported on the value side (date math like `now-7d/d`).
   if (isFnCall(rule.field)) return new Unsupported(rule, 'Elasticsearch can only use functions on the value side');
   if (rule.operator === 'setEq' || rule.operator === 'setNeq') return new Unsupported(rule, 'set equality needs a script over the whole array');

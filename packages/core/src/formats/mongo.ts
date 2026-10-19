@@ -15,6 +15,7 @@ import {
   infoOf,
   isArrayGroupIn,
   isCompleteRule,
+  ruleProblem,
   isFnCall,
   caseCondition,
   finishRoot,
@@ -194,7 +195,9 @@ function filterRule(rule: Rule, ctx: MongoContext): MongoFilter | undefined {
 }
 
 function encodeRule(rule: Rule, ctx: MongoContext): MongoNode | Unsupported | undefined {
-  if (!isCompleteRule(ctx.fields, rule)) return undefined;
+  const problem = ruleProblem(ctx.fields, rule);
+  if (problem === 'incomplete') return undefined;
+  if (problem) return problem;
   const x = infoOf(ctx.fields, rule.operator).formats?.mongo ? undefined : exprRule(rule, ctx);
   const f = filterRule(rule, ctx) ?? (x === undefined ? undefined : { $expr: x });
   return f === undefined && x === undefined ? new Unsupported(rule, unsupportedReason('mongo', ctx.fields, rule)) : { f, x };
