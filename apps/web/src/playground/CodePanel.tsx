@@ -48,7 +48,7 @@ function Block({ title, code, lang, html: preHtml, highlighter, note }: { title:
     [preHtml, highlighter, code, lang],
   );
   return (
-    <figure className="overflow-hidden rounded-xl border bg-code" data-code-block={title}>
+    <figure className="min-w-0 overflow-hidden rounded-xl border bg-code" data-code-block={title}>
       <figcaption className="flex items-center gap-2 border-b py-1 ps-3 pe-1">
         <span className="font-mono text-muted-foreground text-xs">{title}</span>
         {note && <span className="truncate text-muted-foreground text-xs">· {note}</span>}
@@ -231,7 +231,7 @@ ${result}`;
 
   const render = renderCode(renderer, settings, cossUrl);
   return (
-    <div className="flex flex-col gap-3" data-code-panel>
+    <div className="flex min-w-0 flex-col gap-3" data-code-panel>
       <p className="text-muted-foreground text-xs leading-relaxed">Everything on screen as code. The store and server blocks follow your edits and settings; the renderer follows the framework switch.</p>
       <Block code={schema.code} highlighter={highlighter} html={schema.html} lang="ts" note="the playground's fields" title="schema.ts" />
       <Block code={storeCode} highlighter={highlighter} lang="ts" note="live" title="store.ts" />

@@ -5,7 +5,7 @@ import { ArrowLeftIcon } from 'lucide-react';
 /**
  * An example's page: a ruled head (back link, title, what it's for, tags), the live demo on a
  * drafting grid, then notes and code. The examples port fills `demo` with a client component and
- * `code` with <CodePanel>s.
+ * `code` with <ExampleSource> (install command + full source).
  */
 export function ExampleFrame({
   title,

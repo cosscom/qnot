@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCopy } from '@/lib/use-copy';
+import { ScrollBox } from '@/components/trawlnet/scroll-box';
 import { cn } from '@/lib/utils';
 
 export interface SourceFile {
@@ -47,13 +48,13 @@ export function SourceTabs({ files }: { files: SourceFile[] }) {
           {copied ? <CheckIcon /> : <CopyIcon />}
         </Button>
       </div>
-      <ScrollArea className="max-h-[36rem]" clampContentMinWidth={false} scrollbarGutter>
+      <ScrollBox viewportClassName="max-h-[36rem]">
         <div
           className="text-[0.8125rem] leading-relaxed [&_.shiki]:bg-transparent! [&_.shiki]:p-4 [&_.shiki_span]:text-(--shiki-light) dark:[&_.shiki_span]:text-(--shiki-dark) [&_pre]:w-max [&_pre]:min-w-full"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: shiki output of our own source
           dangerouslySetInnerHTML={{ __html: file.html }}
         />
-      </ScrollArea>
+      </ScrollBox>
     </figure>
   );
 }

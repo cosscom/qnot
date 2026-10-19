@@ -192,7 +192,7 @@ export function PlaygroundPage({ schema, cossUrl }: { schema: { code: string; ht
 
   return (
     <QueryProvider store={store}>
-      <div className={cn('grid gap-4 p-4 sm:p-6', renderer === 'all' ? 'grid-cols-1' : 'xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]')}>
+      <div className={cn('grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:p-6', renderer !== 'all' && 'xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]')}>
         <Card>
           <CardHeader>
             <CardTitle>Query</CardTitle>
