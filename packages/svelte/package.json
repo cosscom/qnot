@@ -1,6 +1,6 @@
 {
   "name": "@qnot/svelte",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Svelte 5 bindings for qnot: rune-friendly reactive helpers plus a tiny unstyled <QueryBuilder>.",
   "keywords": [
     "svelte",

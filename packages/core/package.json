@@ -1,6 +1,6 @@
 {
   "name": "@qnot/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-agnostic, fully typed query builder core: schema, store, validation, evaluation and format codecs.",
   "keywords": [
     "query builder",

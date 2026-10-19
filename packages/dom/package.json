@@ -1,6 +1,6 @@
 {
   "name": "@qnot/dom",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Vanilla DOM renderer for qnot: no framework, per-node patching.",
   "keywords": [
     "query builder",

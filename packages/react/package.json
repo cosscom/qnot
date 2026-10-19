@@ -1,6 +1,6 @@
 {
   "name": "@qnot/react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React bindings for qnot: headless hooks plus a tiny unstyled <QueryBuilder>.",
   "keywords": [
     "react",

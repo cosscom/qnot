@@ -1,6 +1,6 @@
 {
   "name": "@qnot/solid",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Solid bindings for qnot: fine-grained primitives plus a tiny unstyled <QueryBuilder>.",
   "keywords": [
     "solid",

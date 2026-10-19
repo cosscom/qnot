@@ -1,5 +1,0 @@
----
-"@qnot/solid": patch
----
-
-Solid: about 1.9× faster first render and 5× less memory at 1,000 rules (now ahead of `@qnot/react`), with the same API. Rows no longer spread props onto elements or go through `<Dynamic>`/`<Show>`/`<Switch>`; each node has one shared store subscription; permissions, settings and drag-and-drop each use one channel per builder (drag state fans out through selectors, so a pointer move wakes only the rows whose drop line changes); option lists and editor specs are cached per schema; lazy selects build their options in a single effect.
