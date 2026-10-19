@@ -6,7 +6,10 @@ const S = process.argv[2];
 const BASE = process.env.BASE ?? 'http://localhost:5192';
 const dark = !!process.env.DARK;
 const SLUGS = ['linear-filters', 'workflow', 'saved-views', 'product-filters', 'segments', 'feature-flags', 'alerting', 'access-policy', 'rqb-dropin', 'server-side'];
-const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/kits', '/docs', '/docs/guides/shadcn'];
+// Free converter tools (apps/web/src/tools/catalog.ts).
+const TOOL_SLUGS = ['sql-to-mongodb', 'mongodb-to-sql', 'sql-to-jsonlogic', 'jsonlogic-to-sql', 'jsonlogic-to-mongodb', 'sql-to-elasticsearch', 'react-querybuilder-to-sql', 'raqb-to-sql'];
+const TOOLS = ['/tools', ...TOOL_SLUGS.map((s) => `/tools/${s}`)];
+const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/kits', '/docs', '/docs/guides/shadcn', ...TOOLS];
 const b = await chromium.launch();
 const report = [];
 for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['phone', { width: 390, height: 844 }]]) {
@@ -71,7 +74,17 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['p
     };
     await p.locator('[data-code-panel]').scrollIntoViewIfNeeded();
     await p.screenshot({ path: `${S}/web-playground-code${dark ? '-dark' : ''}.png` });
-    console.log({ platformCards, sync, registry, code });
+    // Tools: the sample converts (highlighted), and a broken input shows an error instead of output.
+    const tools = {};
+    for (const slug of TOOL_SLUGS) {
+      await p.goto(`${BASE}/tools/${slug}`, { waitUntil: 'networkidle' });
+      await p.waitForTimeout(400);
+      const ok = (await p.locator('[data-tool-status]').getAttribute('data-tool-status')) === 'ok' && (await p.locator('[data-tool-output] .shiki').count()) > 0;
+      await p.locator('[data-tool-input]').fill(slug.startsWith('sql') ? "status = 'active' AND" : '{ "a": ');
+      await p.waitForTimeout(300);
+      tools[slug] = ok && (await p.locator('[data-tool-error=input]').count()) === 1;
+    }
+    console.log({ platformCards, sync, registry, code, tools });
   }
   await p.close();
 }

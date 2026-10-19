@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { GITHUB_URL } from '@/lib/site';
+import { SEO_ROUTES } from '@/lib/seo-routes';
 import { Wordmark } from './wordmark';
 
 const LINKS = [
@@ -9,6 +10,7 @@ const LINKS = [
   { text: 'Examples', url: '/examples' },
   { text: 'Playground', url: '/playground' },
   { text: 'Kits', url: '/kits' },
+  { text: 'Tools', url: '/tools' },
   { text: 'llms.txt', url: '/llms.txt' },
   { text: 'GitHub', url: GITHUB_URL },
 ] as const;
@@ -36,11 +38,37 @@ function Colophon({ className }: { className?: string }) {
   );
 }
 
+/** Every search-landing page (lib/seo-routes.ts), one column per group, in the site's mono-label style. */
+function Directory() {
+  const order = [...new Set(SEO_ROUTES.map((r) => r.group))];
+  const groups = order.map((group) => ({ group, routes: SEO_ROUTES.filter((r) => r.group === group) }));
+  if (!groups.length) return null;
+  return (
+    <nav aria-label="More pages" className="container grid w-full grid-cols-2 gap-x-6 gap-y-8 px-4 pb-8 sm:grid-cols-3 sm:px-6 lg:grid-cols-5" data-footer-directory>
+      {groups.map(({ group, routes }) => (
+        <div className="flex min-w-0 flex-col gap-3" key={group}>
+          <span className="font-mono text-muted-foreground/72 text-xs lowercase">{group}</span>
+          <ul className="flex flex-col gap-2 text-sm">
+            {routes.map((r) => (
+              <li key={r.path}>
+                <Link className="hover:text-foreground" href={r.path}>
+                  {r.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
 /** Footer of the landing and catalog pages (full width, below the rails). */
 export function SiteFooter() {
   return (
     <footer className="relative mt-8 py-8 text-muted-foreground before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border/64">
-      <div className="container flex w-full flex-col gap-4 px-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+      <Directory />
+      <div className="container flex w-full flex-col gap-4 px-4 pt-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 relative before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-border/48 sm:before:inset-x-6">
         <Colophon />
         <FooterLinks className="flex flex-wrap gap-x-6 gap-y-2 text-sm" />
       </div>

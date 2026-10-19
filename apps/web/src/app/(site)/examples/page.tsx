@@ -3,11 +3,15 @@ import { CatalogCard } from '@/components/catalog';
 import { EXAMPLES } from '@/examples/catalog';
 import { CategoryFilter } from '@/examples/category-filter';
 import { SKETCHES } from '@/examples/sketches';
+import { BreadcrumbJsonLd } from '@/components/seo/json-ld';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Examples',
-  description: 'What a query builder is for: filter bars, segments, feature flags, alert rules, access policies and more, each built on qnot.',
-};
+export const metadata: Metadata = pageMetadata({
+  title: 'Query Builder Examples: Filters, Segments, Rules',
+  description:
+    'Query builder examples: filter bars, CRM segments, feature flags, alert rules, access policies and more, each a working app with full source you can install.',
+  path: '/examples',
+});
 
 export default function Page() {
   const cards = EXAMPLES.map((e) => {
@@ -24,6 +28,7 @@ export default function Page() {
   });
   return (
     <main className="mx-auto w-full max-w-[1440px] flex-1">
+      <BreadcrumbJsonLd crumbs={[{ name: 'Examples', path: '/examples' }]} />
       <section className="border-b">
         <div className="flex flex-col gap-6 px-4 pt-12 pb-10 sm:px-8 sm:pt-16 lg:grid lg:grid-cols-12 lg:items-end lg:gap-10">
           <h1 className="text-balance font-semibold text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[0.92] tracking-[-0.035em] lg:col-span-8">What people build with a query builder.</h1>

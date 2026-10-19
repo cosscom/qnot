@@ -6,11 +6,14 @@ import { codeToHtml } from 'shiki';
 import { registryUrl } from '@/lib/registry';
 import { ClientOnly } from '@/components/client-only';
 import { PlaygroundPage } from '@/playground/Playground';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Playground',
-  description: 'Build a query, watch it export to every format, filter sample data, and switch frameworks on one store.',
-};
+export const metadata: Metadata = pageMetadata({
+  title: 'Query Builder Playground: Try It in Your Browser',
+  description:
+    'Try the qnot query builder in your browser: build a query, export it to SQL, MongoDB and JsonLogic, filter 1,000 rows, and switch frameworks on one store.',
+  path: '/playground',
+});
 
 // The playground's schema file, shown in its Code tab exactly as it runs (read at build time).
 const SCHEMA = join(process.cwd(), 'src', 'playground', 'schema.ts');

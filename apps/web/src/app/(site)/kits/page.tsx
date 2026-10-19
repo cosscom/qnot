@@ -5,11 +5,15 @@ import { RegistrySource } from '@/components/catalog/registry-source';
 import { ClientOnly } from '@/components/client-only';
 import { KitsPreview, type KitId } from '@/kits/preview';
 import { registryItem } from '@/lib/registry';
+import { BreadcrumbJsonLd } from '@/components/seo/json-ld';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'UI kits',
-  description: 'The same query builder in coss ui, shadcn/ui, MUI and plain HTML, all editing one store.',
-};
+export const metadata: Metadata = pageMetadata({
+  title: 'Query Builder UI Kits: coss ui, shadcn/ui, MUI',
+  description:
+    'The same query builder in coss ui, shadcn/ui, MUI and plain HTML, all editing one store. Install the one that matches your app with a single shadcn command.',
+  path: '/kits',
+});
 
 /** The registry item behind each kit in the switcher. */
 const ITEMS: Record<KitId, string> = {
@@ -82,6 +86,7 @@ export default function Page() {
   ) as Record<KitId, ReactNode>;
   return (
     <main className="mx-auto w-full max-w-[1440px] flex-1">
+      <BreadcrumbJsonLd crumbs={[{ name: 'UI kits', path: '/kits' }]} />
       <section className="border-b">
         <div className="flex flex-col gap-4 px-4 pt-10 pb-8 sm:px-8 lg:grid lg:grid-cols-12 lg:items-end lg:gap-10">
           <h1 className="text-balance font-semibold text-[clamp(2.25rem,4.5vw,3.5rem)] leading-[0.95] tracking-[-0.03em] lg:col-span-7">Any UI kit</h1>

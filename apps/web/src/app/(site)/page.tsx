@@ -7,10 +7,17 @@ import { DropInDrawing, EditsDrawing, FormatsDrawing, FrameworksDrawing, HeroDra
 import { Stage } from '@/components/drawings/stage';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { GITHUB_URL, INSTALL, SITE_DESCRIPTION, SITE_TITLE } from '@/lib/site';
+import { JsonLd } from '@/components/seo/json-ld';
+import { homeLd, pageMetadata } from '@/lib/seo';
+import { GITHUB_URL, INSTALL, SITE_TITLE } from '@/lib/site';
 import { benchAt1000 } from '@/lib/bench';
 
-export const metadata: Metadata = { title: { absolute: SITE_TITLE }, description: SITE_DESCRIPTION };
+export const metadata: Metadata = pageMetadata({
+  title: SITE_TITLE,
+  absoluteTitle: true,
+  description: 'qnot is an open-source query builder that stays fast at a thousand rules: typed from schema to SQL, for React, Vue, Svelte, Solid or plain JS and any UI kit.',
+  path: '/',
+});
 
 // qnot's landing page, drawn like coss.com/shipyard's: one ruled sheet between the shell's
 // rails, each section closing with a hairline. The drawings are components/drawings; each sits in
@@ -18,6 +25,7 @@ export const metadata: Metadata = { title: { absolute: SITE_TITLE }, description
 export default function Page() {
   return (
     <main className="mx-auto w-full max-w-[1440px] flex-1">
+      <JsonLd data={homeLd()} />
       <Hero />
       <WorksWith />
       <Features />
@@ -60,8 +68,19 @@ function Hero() {
   );
 }
 
-const FRAMEWORKS = ['React', 'Vue', 'Svelte', 'Solid', 'Vanilla JS'];
-const KITS = ['coss ui', 'shadcn/ui', 'MUI', 'your own'];
+const FRAMEWORKS = [
+  { label: 'React', href: '/react-query-builder' },
+  { label: 'Vue', href: '/vue-query-builder' },
+  { label: 'Svelte', href: '/svelte-query-builder' },
+  { label: 'Solid', href: '/solid-query-builder' },
+  { label: 'Vanilla JS', href: '/javascript-query-builder' },
+];
+const KITS = [
+  { label: 'coss ui', href: '/coss-ui-query-builder' },
+  { label: 'shadcn/ui', href: '/shadcn-query-builder' },
+  { label: 'MUI', href: '/mui-query-builder' },
+  { label: 'your own', href: '/headless-query-builder' },
+];
 
 function WorksWith() {
   return (
@@ -70,7 +89,11 @@ function WorksWith() {
         <span className="w-24 shrink-0 font-mono text-muted-foreground text-xs">frameworks</span>
         <ul className="flex flex-1 flex-wrap gap-x-7 gap-y-2 font-medium text-foreground/80 text-lg">
           {FRAMEWORKS.map((f) => (
-            <li key={f}>{f}</li>
+            <li key={f.href}>
+              <Link className="transition-colors hover:text-foreground hover:underline hover:underline-offset-4" href={f.href}>
+                {f.label}
+              </Link>
+            </li>
           ))}
         </ul>
       </div>
@@ -78,7 +101,11 @@ function WorksWith() {
         <span className="w-24 shrink-0 font-mono text-muted-foreground text-xs">any UI kit</span>
         <ul className="flex flex-1 flex-wrap gap-x-7 gap-y-2 font-medium text-foreground/80 text-lg">
           {KITS.map((k) => (
-            <li key={k}>{k}</li>
+            <li key={k.href}>
+              <Link className="transition-colors hover:text-foreground hover:underline hover:underline-offset-4" href={k.href}>
+                {k.label}
+              </Link>
+            </li>
           ))}
         </ul>
       </div>
@@ -251,9 +278,14 @@ function Benchmarks() {
           Run of {measured.date}: Apple M5, Chromium via Playwright 1.64, no CPU throttling; medians of 5 fresh pages, 10 fields, 100 groups of 10 rules. JS is gzipped
           and excludes React (jQuery is included), and each bundle includes the library's own SQL/JSON export. With 4× CPU throttling the gaps widen.
         </p>
-        <a className="inline-flex shrink-0 items-center gap-1.5 hover:text-foreground" href={`${GITHUB_URL}/tree/main/bench`}>
-          Run the harness <ArrowRightIcon className="size-3.5" />
-        </a>
+        <div className="flex shrink-0 flex-wrap gap-x-5 gap-y-2">
+          <Link className="inline-flex items-center gap-1.5 hover:text-foreground" href="/compare">
+            Compare <ArrowRightIcon className="size-3.5" />
+          </Link>
+          <a className="inline-flex items-center gap-1.5 hover:text-foreground" href={`${GITHUB_URL}/tree/main/bench`}>
+            Run the harness <ArrowRightIcon className="size-3.5" />
+          </a>
+        </div>
       </div>
     </section>
   );
