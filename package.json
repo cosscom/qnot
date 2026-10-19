@@ -7,7 +7,7 @@
     "build": "pnpm -r --filter './packages/*' build",
     "test": "vitest run",
     "typecheck": "pnpm -r --parallel typecheck",
-    "dev": "pnpm --filter playground dev",
+    "dev": "pnpm --filter web dev",
     "changeset": "changeset"
   },
   "devDependencies": {
