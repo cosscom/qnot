@@ -52,8 +52,7 @@ Docs: [https://github.com/sean-brydon/trawlnet/tree/main/apps/web/content/docs](
 | Path | |
 |---|---|
 | `packages/*` | The published packages (MIT) |
-| `apps/web` | Website and docs (Next.js + Fumadocs, coss.com style; AGPL-3.0, see `apps/web/NOTICE.md`) |
-| `apps/playground` | Vite playground used during development |
+| `apps/web` | Website, docs, examples and playground (Next.js + Fumadocs, coss.com style; AGPL-3.0, see `apps/web/NOTICE.md`) |
 | `bench` | Browser benchmark harness against other query builders (`node build.mjs && node run.mjs`) |
 | `examples/server` | Server-side usage (validate + parameterized SQL) |
 
@@ -64,6 +63,26 @@ pnpm typecheck
 pnpm build         # builds every package to dist/
 pnpm --filter web dev
 ```
+
+## Going live
+
+**Website** (`apps/web`, Next.js): import the repository in Vercel and set
+
+| Setting | Value |
+|---|---|
+| Root Directory | `apps/web` (keep "include files outside the root directory" on: the site reads `docs/` and `bench/results/`) |
+| Framework | Next.js (build command: the default `pnpm run build`, which also prebuilds the Vue/Svelte/Solid islands) |
+| Environment | `NEXT_PUBLIC_SITE_URL=https://your-domain` once a domain is chosen (defaults to the Vercel production URL) |
+
+`pnpm --filter web build` is what CI runs; it prerenders every page, including `/llms.txt`, `/llms-full.txt` and each docs page as `.md`.
+
+**npm packages**: versioning uses [Changesets](https://github.com/changesets/changesets).
+
+1. Create the `@trawlnet` organization on npm and add an automation token as the `NPM_TOKEN` repository secret.
+2. Run the **Release** workflow (Actions → Release → Run workflow). It opens a "Version packages" PR from the pending changesets (the first release is `0.1.0`).
+3. Merge that PR and run **Release** again: it publishes every package with provenance.
+
+Nothing publishes automatically; the workflow only runs when started by hand.
 
 ## License
 

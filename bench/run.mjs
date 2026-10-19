@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
-const ADAPTERS = (process.env.ONLY ?? 'proto,proto-vanilla,rqb,raqb,jqqb,syncfusion,devextreme').split(',');
+const ADAPTERS = (process.env.ONLY ?? 'trawlnet,trawlnet-dom,rqb,raqb,jqqb,syncfusion,devextreme').split(',');
 const SIZES = (process.env.SIZES ?? '10,100,500,1000').split(',').map(Number);
 const PAGES = Number(process.env.PAGES ?? 5); // fresh pages per size (cold mounts)
 const KEYS = 30;

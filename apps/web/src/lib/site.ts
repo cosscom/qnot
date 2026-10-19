@@ -1,4 +1,8 @@
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://trawlnet.dev';
+// The canonical origin for metadata, OG images, the sitemap and llms.txt: set NEXT_PUBLIC_SITE_URL
+// once a domain is chosen; on Vercel the project's production domain is used until then.
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000');
 export const SITE_NAME = 'trawlnet';
 export const SITE_TITLE = 'trawlnet: a fast, fully typed query builder for every framework';
 export const SITE_DESCRIPTION =

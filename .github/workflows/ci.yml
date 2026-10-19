@@ -24,6 +24,9 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - uses: oven-sh/setup-bun@v2
+      - name: SQL injection fuzz against SQLite
+        run: bun bench/core/sql-fuzz.ts
       - name: Lint published packages
         run: |
           for p in packages/*; do (cd "$p" && npx -y publint@0.3 --strict); done

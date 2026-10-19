@@ -98,8 +98,12 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     return `'${s}'`;
   };
 
-  // A value either inlined or turned into a placeholder, with its param.
-  const val = (v: unknown): SqlFragment => (paramStyle ? { sql: PH, params: [v], compound: false } : { sql: literal(v), params: [], compound: false });
+  // A value either inlined or turned into a placeholder, with its param. NUL characters are refused:
+  // Postgres rejects them, SQLite cuts strings at them, so the database would see a different value.
+  const val = (v: unknown): SqlFragment => {
+    if (typeof v === 'string' && v.includes('\u0000')) throw new Error("trawlnet/sql: string values can't contain NUL (\\u0000) characters");
+    return paramStyle ? { sql: PH, params: [v], compound: false } : { sql: literal(v), params: [], compound: false };
+  };
   const frag = (sql: string, ...parts: SqlFragment[]): SqlFragment => ({ sql, params: parts.flatMap((p) => p.params), compound: false });
   const likePattern = (s: string, pre: string, post: string) => `${pre}${s.replace(/[\\%_]/g, '\\$&')}${post}`;
 

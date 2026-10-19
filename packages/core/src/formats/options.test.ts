@@ -167,3 +167,15 @@ describe('missing registry warning', () => {
     expect(near.id).toBe('near');
   });
 });
+
+describe('sql string safety', () => {
+  it('refuses NUL characters instead of letting the database truncate them', async () => {
+    const { sqlFormat } = await import('./sql');
+    const { encode } = await import('../codec');
+    const { defineFields, f } = await import('../fields');
+    const fs = defineFields({ name: f.text() });
+    const q = { kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'name', operator: 'eq', value: 'a\u0000b' }] } as const;
+    expect(() => encode(sqlFormat({ dialect: 'postgres' }), q as never, fs)).toThrow(/NUL/);
+    expect(() => encode(sqlFormat({ dialect: 'postgres', params: 'numbered' }), q as never, fs)).toThrow(/NUL/);
+  });
+});
