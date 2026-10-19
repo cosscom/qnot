@@ -6,10 +6,16 @@ const S = process.argv[2];
 const BASE = process.env.BASE ?? 'http://localhost:5192';
 const dark = !!process.env.DARK;
 const SLUGS = ['linear-filters', 'workflow', 'saved-views', 'product-filters', 'segments', 'feature-flags', 'alerting', 'access-policy', 'rqb-dropin', 'server-side'];
+// Search-landing pages (apps/web/src/lib/seo-routes.ts).
+const SEO = [
+  '/react-query-builder', '/vue-query-builder', '/svelte-query-builder', '/solid-query-builder', '/javascript-query-builder',
+  '/shadcn-query-builder', '/mui-query-builder', '/coss-ui-query-builder', '/headless-query-builder',
+  '/compare', '/compare/react-querybuilder', '/compare/react-awesome-query-builder', '/compare/jquery-querybuilder', '/compare/syncfusion-query-builder', '/compare/devextreme-filterbuilder',
+];
 // Free converter tools (apps/web/src/tools/catalog.ts).
 const TOOL_SLUGS = ['sql-to-mongodb', 'mongodb-to-sql', 'sql-to-jsonlogic', 'jsonlogic-to-sql', 'jsonlogic-to-mongodb', 'sql-to-elasticsearch', 'react-querybuilder-to-sql', 'raqb-to-sql'];
 const TOOLS = ['/tools', ...TOOL_SLUGS.map((s) => `/tools/${s}`)];
-const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/kits', '/docs', '/docs/guides/shadcn', ...TOOLS];
+const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/kits', '/docs', '/docs/guides/shadcn', ...SEO, ...TOOLS];
 const b = await chromium.launch();
 const report = [];
 for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['phone', { width: 390, height: 844 }]]) {
@@ -74,6 +80,30 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['p
     };
     await p.locator('[data-code-panel]').scrollIntoViewIfNeeded();
     await p.screenshot({ path: `${S}/web-playground-code${dark ? '-dark' : ''}.png` });
+    // Framework pages: each live builder (React natively, the rest as islands) edits the page's store,
+    // so typing a number shows up in the "Reads as" summary next to the exports.
+    const demos = {};
+    for (const [route, sel] of [
+      ['/react-query-builder', '[data-demo] input.qn-value[type=number]'],
+      ['/vue-query-builder', '[data-island=vue] input.qn-value[type=number]'],
+      ['/svelte-query-builder', '[data-island=svelte] input.qn-value[type=number]'],
+      ['/solid-query-builder', '[data-island=solid] input.qn-value[type=number]'],
+      ['/javascript-query-builder', '[data-island=vanilla] input.qn-value[type=number]'],
+    ]) {
+      await p.goto(BASE + route, { waitUntil: 'networkidle' });
+      await p.waitForSelector(sel, { timeout: 30_000 });
+      await p.locator(sel).first().fill('44');
+      await p.waitForTimeout(300);
+      demos[route] = (await p.locator('[data-demo-summary]').innerText()).includes('44') && (await p.locator('[data-faq] dt').count()) >= 5;
+    }
+    // Kit pages: the kit renders its rules, and the install block points at the kit's registry item.
+    for (const [route, item] of [['/shadcn-query-builder', 'query-builder-shadcn'], ['/mui-query-builder', 'query-builder-mui'], ['/coss-ui-query-builder', 'query-builder'], ['/headless-query-builder', 'query-builder-headless']]) {
+      await p.goto(BASE + route, { waitUntil: 'networkidle' });
+      await p.waitForSelector('[data-kit-root] [data-kit]', { timeout: 30_000 }).catch(() => {});
+      const kitRendered = (await p.locator('[data-kit-root]').innerText()).includes('Age');
+      const cmd = await p.locator(`[data-registry-source=${item}] pre code`).first().innerText();
+      demos[route] = kitRendered && cmd.endsWith(`/${item}.json`) && (await p.locator('[data-faq] dt').count()) >= 5;
+    }
     // Tools: the sample converts (highlighted), and a broken input shows an error instead of output.
     const tools = {};
     for (const slug of TOOL_SLUGS) {
@@ -84,7 +114,7 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['p
       await p.waitForTimeout(300);
       tools[slug] = ok && (await p.locator('[data-tool-error=input]').count()) === 1;
     }
-    console.log({ platformCards, sync, registry, code, tools });
+    console.log({ platformCards, sync, registry, code, demos, tools });
   }
   await p.close();
 }

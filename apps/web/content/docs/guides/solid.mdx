@@ -17,10 +17,10 @@ import { QueryBuilder } from '@qnot/solid';
 import { createSignal } from 'solid-js';
 
 const [query, setQuery] = createSignal(saved);
-<QueryBuilder fields={fields} value={query} onChange={setQuery} showLock />;
+<QueryBuilder fields={fields} value={query()} onChange={setQuery} showLock />;
 ```
 
-`QueryBuilder` takes `store`, or `fields` with `initial` or `value` (an accessor) / `onChange`,
+`QueryBuilder` takes `store`, or `fields` with `initial` or `value` / `onChange`,
 `format` and `settings`; plus `components`, `labels`, `class`, `showNot`, `showLock`.
 
 ## Primitives

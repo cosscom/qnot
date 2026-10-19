@@ -1,7 +1,7 @@
 // Write the shadcn registry: registry/items.json → .registry/registry.json (absolute URLs for this
 // deployment) → `shadcn build` → public/r/<name>.json, served at <site>/r/<name>.json.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { resolveRegistry } from '../registry/resolve.mjs';
 import { DEFAULT_PACKAGE_PREFIX, brand, packageOf, packagePrefix, registryBase, siteUrl } from '../registry/urls.mjs';
@@ -42,5 +42,6 @@ const registry = {
 
 mkdirSync('.registry', { recursive: true });
 writeFileSync('.registry/registry.json', `${JSON.stringify(registry, null, 2)}\n`);
+rmSync('public/r', { recursive: true, force: true }); // drop items removed from items.json
 execFileSync('pnpm', ['exec', 'shadcn', 'build', '.registry/registry.json', '--output', 'public/r'], { stdio: 'inherit' });
 console.log(`registry: ${items.length} items at ${base}/<name>.json`);
