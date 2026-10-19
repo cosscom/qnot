@@ -2,15 +2,15 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
 const LABEL = {
-  proto: 'prototype · React hooks',
-  'proto-vanilla': 'prototype · vanilla DOM',
+  trawlnet: '@trawlnet/react (default UI)',
+  'trawlnet-dom': '@trawlnet/dom (no framework)',
   rqb: 'react-querybuilder 8.25',
   raqb: 'react-awesome-query-builder 6.6',
   jqqb: 'jQuery QueryBuilder 3.0',
   syncfusion: 'Syncfusion ej2 QueryBuilder 35',
   devextreme: 'DevExtreme FilterBuilder 26',
 };
-const REACT = new Set(['proto', 'rqb', 'raqb']);
+const REACT = new Set(['trawlnet', 'rqb', 'raqb']);
 const sizes = JSON.parse(readFileSync('dist/sizes.json', 'utf8'));
 const kb = (b) => (b / 1024).toFixed(1);
 const f = (v, unit = '') => (v == null ? '—' : `${v}${unit}`);
@@ -22,7 +22,7 @@ const table = (head, rows) => {
   md += '\n';
 };
 
-md += '## Bundle size (minified + gzip)\n\n';
+md += `# Benchmark report\n\nHeadless Chromium (Playwright), production builds, the same tree of 10 fields in groups of 10 rules for every library, medians over fresh pages. Each bundle includes the library's own SQL/JSON export used to verify edits reached the model. Regenerate with \`node build.mjs && node run.mjs && node report.mjs\`.\n\n## Bundle size (minified + gzip)\n\n`;
 const reactGz = sizes['_react-baseline'].jsGz;
 table(
   ['Library', 'JS gz (total)', 'JS gz excl. React', 'CSS gz'],

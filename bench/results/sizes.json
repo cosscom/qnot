@@ -1,0 +1,62 @@
+{
+  "trawlnet": {
+    "js": 292298,
+    "jsGz": 92049,
+    "css": 1847,
+    "cssGz": 783
+  },
+  "trawlnet-dom": {
+    "js": 65905,
+    "jsGz": 23619,
+    "css": 1847,
+    "cssGz": 783
+  },
+  "proto": {
+    "js": 231777,
+    "jsGz": 72062,
+    "css": 0,
+    "cssGz": 0
+  },
+  "proto-vanilla": {
+    "js": 7700,
+    "jsGz": 3197,
+    "css": 0,
+    "cssGz": 0
+  },
+  "rqb": {
+    "js": 420029,
+    "jsGz": 127941,
+    "css": 22747,
+    "cssGz": 2227
+  },
+  "raqb": {
+    "js": 934525,
+    "jsGz": 266841,
+    "css": 26222,
+    "cssGz": 2597
+  },
+  "jqqb": {
+    "js": 299724,
+    "jsGz": 69981,
+    "css": 319214,
+    "cssGz": 45292
+  },
+  "syncfusion": {
+    "js": 1364044,
+    "jsGz": 315169,
+    "css": 1400946,
+    "cssGz": 199318
+  },
+  "devextreme": {
+    "js": 1042418,
+    "jsGz": 290123,
+    "css": 694245,
+    "cssGz": 94399
+  },
+  "_react-baseline": {
+    "js": 223452,
+    "jsGz": 69093,
+    "css": 0,
+    "cssGz": 0
+  }
+}

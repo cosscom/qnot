@@ -109,7 +109,7 @@ export function HeroDrawing({ className }: { className?: string }) {
       </Part>
       <Part className="callout" i={10}>
         <Callout anchor="middle" p={[222, 410]} sub="typed end to end" title="Your schema" />
-        <Callout anchor="middle" p={[690, 486]} sub="one rule re-renders · 0.5 ms" title="One store" />
+        <Callout anchor="middle" p={[690, 486]} sub="one rule re-renders · 0.4 ms" title="One store" />
         <Callout anchor="middle" p={[1162, 410]} sub="SQL · Mongo · JsonLogic · ES · SpEL" title="Every format" />
       </Part>
     </Drawing>
@@ -211,7 +211,7 @@ export function EditsDrawing() {
           notifies 1 subscriber
         </Caption>
         <Caption anchor="end" p={[690, 300]}>
-          0.5 ms at 1,000 rules
+          0.4 ms at 1,000 rules
         </Caption>
       </Part>
     </Drawing>

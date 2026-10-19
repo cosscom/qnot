@@ -6,7 +6,7 @@ SpEL, react-querybuilder or react-awesome-query-builder.
 
 - **Typed from your schema**: `defineFields({ age: f.number() })` narrows every rule's operators and value.
 - **Fast at scale**: a normalized store with per-node subscriptions; editing one rule re-renders one rule.
-  At 1,000 rules a keystroke costs ~0.5 ms (react-querybuilder: ~59 ms).
+  At 1,000 rules a keystroke costs ~0.4 ms (react-querybuilder: ~57 ms); see [bench/results/REPORT.md](bench/results/REPORT.md).
 - **Any framework, any UI kit**: React, Vue, Svelte 5, Solid and plain DOM bindings, each with headless
   hooks and a small unstyled default builder.
 - **Runs on the server**: validate untrusted queries, then turn them into parameterized SQL.

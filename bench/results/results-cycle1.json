@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-18T21:52:09.704Z",
+  "cpuThrottle": 1,
+  "results": {
+    "trawlnet": {
+      "100": {
+        "rules": 100,
+        "dom": 1401,
+        "mountColdMs": 48.5,
+        "mountWarmMs": 9.7,
+        "heapKB": 1943,
+        "keystrokeMedianMs": 0.3,
+        "keystrokeP95Ms": 2.2,
+        "keystrokeCpuMs": 3.8,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 1,
+        "addRuleCpuMs": 5.2,
+        "sqlMs": 0.011,
+        "sqlSample": "(firstName = 'v0' OR age = 1 OR status = 'closed' OR city = 'v3' OR score = 4 OR tier = 'pro' OR verified = TRUE OR email = 'v7' OR visits = 8 OR country = 'JP'",
+        "error": null
+      },
+      "1000": {
+        "rules": 1000,
+        "dom": 13911,
+        "mountColdMs": 131.8,
+        "mountWarmMs": 98.7,
+        "heapKB": 13223,
+        "keystrokeMedianMs": 0.5,
+        "keystrokeP95Ms": 2.8,
+        "keystrokeCpuMs": 7.3,
+        "keystrokeCommitted": true,
+        "addRuleMedianMs": 1.1,
+        "addRuleCpuMs": 7.2,
+        "sqlMs": 0.1,
+        "sqlSample": "(firstName = 'v0' OR age = 1 OR status = 'closed' OR city = 'v3' OR score = 4 OR tier = 'pro' OR verified = TRUE OR email = 'v7' OR visits = 8 OR country = 'JP'",
+        "error": null
+      }
+    }
+  }
+}

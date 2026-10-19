@@ -8,6 +8,7 @@ import { Stage } from '@/components/drawings/stage';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GITHUB_URL, INSTALL, SITE_DESCRIPTION, SITE_TITLE } from '@/lib/site';
+import { benchAt1000 } from '@/lib/bench';
 
 export const metadata: Metadata = { title: { absolute: SITE_TITLE }, description: SITE_DESCRIPTION };
 
@@ -37,7 +38,7 @@ function Hero() {
         <div className="flex flex-col gap-6 lg:col-span-4 lg:pb-2">
           <p className="max-w-md text-lg text-muted-foreground leading-snug">
             trawlnet is typed from your schema to the SQL it writes, runs in React, Vue, Svelte, Solid or plain JS, and wears any UI kit. Editing one rule re-renders one
-            rule. 17 KB.
+            rule. About 15 KB.
           </p>
           <div className="flex flex-wrap gap-2.5">
             <Button className="px-4" render={<Link href="/docs" />}>
@@ -178,12 +179,12 @@ function Features() {
   );
 }
 
-/** At 1,000 rules. Medians from bench/ (see BENCH_NOTE). */
-const BENCH = [
-  { name: 'trawlnet', version: '0.0 · React UI', mount: 213, keystroke: 0.5, add: 1.1, heap: 15.9, js: 16.7, us: true },
-  { name: 'react-querybuilder', version: '8.25', mount: 467, keystroke: 59.3, add: 57.7, heap: 33.9, js: 57.5 },
-  { name: 'react-awesome-query-builder', version: '6.6', mount: 595, keystroke: 8.3, add: 94, heap: 37.8, js: 193.1 },
-  { name: 'jQuery QueryBuilder', version: '3.0', mount: 874, keystroke: 9.3, add: 7.3, heap: 2.2, js: 68.3, note: 'incl. jQuery' },
+/** The libraries in the landing table, in order; numbers come from bench/results at build time. */
+const BENCH_LIBS = [
+  { id: 'trawlnet', name: 'trawlnet', version: '0.1 · React UI', us: true },
+  { id: 'rqb', name: 'react-querybuilder', version: '8.25' },
+  { id: 'raqb', name: 'react-awesome-query-builder', version: '6.6' },
+  { id: 'jqqb', name: 'jQuery QueryBuilder', version: '3.0', note: 'incl. jQuery' },
 ] as const;
 
 const COLUMNS = [
@@ -195,7 +196,9 @@ const COLUMNS = [
 ] as const;
 
 function Benchmarks() {
-  const worst = Object.fromEntries(COLUMNS.map((c) => [c.key, Math.max(...BENCH.map((b) => b[c.key]))])) as Record<(typeof COLUMNS)[number]['key'], number>;
+  const measured = benchAt1000(BENCH_LIBS.map((l) => l.id));
+  const BENCH = BENCH_LIBS.map((lib, i) => ({ ...lib, ...measured.rows[i]! }));
+  const worst = Object.fromEntries(COLUMNS.map((c) => [c.key, Math.max(...BENCH.map((b) => b[c.key] ?? 0))])) as Record<(typeof COLUMNS)[number]['key'], number>;
   return (
     <section aria-labelledby="bench-title" className="scroll-mt-14 border-b" id="benchmarks">
       <SectionHead id="bench-title" title="Measured, not claimed.">
@@ -225,6 +228,7 @@ function Benchmarks() {
                 </th>
                 {COLUMNS.map((c) => {
                   const v = row[c.key];
+                  if (v === null) return <td className="px-4 py-5 align-top font-mono text-muted-foreground" key={c.key}>—</td>;
                   return (
                     <td className="px-4 py-5 align-top" key={c.key}>
                       <div className="flex items-baseline gap-1 tabular-nums">
@@ -244,8 +248,8 @@ function Benchmarks() {
       </ScrollArea>
       <div className="flex flex-col gap-2 border-t px-4 py-5 text-muted-foreground text-sm sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <p className="max-w-3xl">
-          Apple M5, Chromium via Playwright 1.64, no CPU throttling; medians of fresh pages, 10 fields, 100 groups of 10 rules. JS excludes React (jQuery's is included). jQuery
-          QueryBuilder numbers come from an earlier run of the same harness. With 4× CPU throttling the gaps widen.
+          Run of {measured.date}: Apple M5, Chromium via Playwright 1.64, no CPU throttling; medians of 5 fresh pages, 10 fields, 100 groups of 10 rules. JS is gzipped
+          and excludes React (jQuery is included), and each bundle includes the library's own SQL/JSON export. With 4× CPU throttling the gaps widen.
         </p>
         <a className="inline-flex shrink-0 items-center gap-1.5 hover:text-foreground" href={`${GITHUB_URL}/tree/main/bench`}>
           Run the harness <ArrowRightIcon className="size-3.5" />

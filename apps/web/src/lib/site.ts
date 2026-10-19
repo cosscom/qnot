@@ -6,7 +6,7 @@ export const SITE_URL =
 export const SITE_NAME = 'trawlnet';
 export const SITE_TITLE = 'trawlnet: a fast, fully typed query builder for every framework';
 export const SITE_DESCRIPTION =
-  'A query builder that stays fast at a thousand rules. Fully typed from schema to SQL, framework-agnostic, any UI kit, 17 KB.';
+  'A query builder that stays fast at a thousand rules. Fully typed from schema to SQL, framework-agnostic, any UI kit, about 15 KB.';
 export const GITHUB_URL = 'https://github.com/sean-brydon/trawlnet';
 export const DOCS_ROUTE = '/docs';
 export const SEARCH_API = '/docs/search.json';

@@ -36,4 +36,6 @@ for (const name of [...ADAPTERS, '_react-baseline']) {
   sizes[name] = { js: raw(`dist/${name}.js`), jsGz: gz(`dist/${name}.js`), css: raw(`dist/${name}.css`), cssGz: gz(`dist/${name}.css`) };
 }
 writeFileSync('dist/sizes.json', JSON.stringify(sizes, null, 2));
+// Committed snapshot the website reads at build time (dist/ is gitignored).
+writeFileSync('results/sizes.json', JSON.stringify(sizes, null, 2));
 console.table(sizes);
