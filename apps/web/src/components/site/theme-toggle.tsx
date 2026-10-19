@@ -2,6 +2,7 @@
 import { MoonIcon, SunIcon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 /** Light/dark switch; follows the system until clicked (next-themes, via Fumadocs' RootProvider). */
 export function ThemeToggle() {
@@ -10,13 +11,14 @@ export function ThemeToggle() {
   useEffect(() => setMounted(true), []);
   const dark = mounted && resolvedTheme === 'dark';
   return (
-    <button
+    <Button
       aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
-      className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:size-8"
+      className="text-muted-foreground hover:text-foreground"
       onClick={() => setTheme(dark ? 'light' : 'dark')}
-      type="button"
+      size="icon-sm"
+      variant="ghost"
     >
-      {dark ? <SunIcon className="size-4.5" /> : <MoonIcon className="size-4.5" />}
-    </button>
+      {dark ? <SunIcon /> : <MoonIcon />}
+    </Button>
   );
 }

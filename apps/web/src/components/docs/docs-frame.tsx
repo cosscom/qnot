@@ -6,7 +6,7 @@ import { Card, CardFrame, CardPanel } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { DocsFooter } from '@/components/site/site-footer';
-import { DOCS_SIDEBAR_WIDTH } from '@/lib/site';
+import { DOCS_SIDEBAR_WIDTH } from '@/lib/nav';
 import { DocsCopyPage } from './docs-copy-page';
 import { DocsSidebar } from './docs-sidebar';
 import { DocsTableOfContents } from './docs-toc';

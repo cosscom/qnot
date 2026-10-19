@@ -44,7 +44,3 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Kits', href: '/kits' },
   { label: 'Benchmarks', href: '/#benchmarks' },
 ];
-
-/** The docs sidebar's width (coss ui's default); the header's wordmark cell matches it on docs pages. */
-export const DOCS_SIDEBAR_WIDTH = '16rem';
-export const SITE_SHELL_ID = 'site-shell';

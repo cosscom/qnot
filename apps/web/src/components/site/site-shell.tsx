@@ -2,7 +2,7 @@
 import type * as PageTree from 'fumadocs-core/page-tree';
 import type { CSSProperties, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { DOCS_SIDEBAR_WIDTH, SITE_SHELL_ID } from '@/lib/site';
+import { DOCS_SIDEBAR_WIDTH, SITE_SHELL_ID } from '@/lib/nav';
 import { SiteHeader } from './site-header';
 
 /**

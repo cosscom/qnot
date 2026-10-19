@@ -1,16 +1,15 @@
-'use client';
-import { usePathname } from 'next/navigation';
+// Adapted from cosscom/coss apps/site/src/components/section-label.tsx (AGPL-3.0); see NOTICE.md.
+import Link from 'next/link';
+import { SITE_NAME } from '@/lib/site';
 
-const SECTIONS = new Map([
-  ['docs', 'docs'],
-  ['examples', 'examples'],
-  ['playground', 'playground'],
-]);
-
-/** Next to the wordmark: the section the page belongs to (`qnot docs`), like coss.com/ui. */
+/**
+ * Next to the `coss.com` wordmark: the section this site is (`coss.com qnot`), as coss.com names
+ * Shipyard and kloq. Every page here belongs to it, so it always shows, and leads to qnot's home.
+ */
 export function SectionLabel() {
-  const section = usePathname().split('/')[1];
-  const label = section ? SECTIONS.get(section) : undefined;
-  if (!label) return null;
-  return <span className="font-normal text-muted-foreground/64">{label}</span>;
+  return (
+    <Link className="text-muted-foreground/64 transition-colors hover:text-muted-foreground" href="/">
+      {SITE_NAME}
+    </Link>
+  );
 }

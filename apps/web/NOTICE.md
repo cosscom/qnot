@@ -17,6 +17,11 @@ listed here is used by, imported into, or shipped with any package under `packag
 | `src/components/site/site-footer.tsx` | `src/components/site-footer.tsx` |
 | `src/components/site/command-menu.tsx` | `src/components/command-menu.tsx` |
 | `src/components/site/mobile-nav.tsx` | `src/components/mobile-nav.tsx` |
+| `src/components/site/mega-menu.tsx` | `src/components/mega-menu.tsx` |
+| `src/components/site/section-label.tsx` | `src/components/section-label.tsx` |
+| `src/components/site/header-links.tsx` | `src/components/account-links.tsx` |
+| `src/components/site/part-drawing.tsx` | `src/components/home/part-drawing.tsx`, `src/components/home/iso.tsx` |
+| `src/lib/nav.ts` (the "Products" menu's data, header ids) | `src/lib/nav.ts`, `src/components/home/parts.ts` |
 | `src/components/site/copy-line.tsx` | `src/components/shipyard/copy-line.tsx` |
 | `src/components/docs/docs-frame.tsx` | `src/components/docs-frame.tsx` |
 | `src/components/docs/docs-sidebar.tsx` | `src/components/docs-sidebar.tsx` |
