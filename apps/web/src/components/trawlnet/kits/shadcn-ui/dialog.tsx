@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
-import { Button } from "@/kits/shadcn/ui/button"
+import { Button } from "@/components/trawlnet/kits/shadcn-ui/button"
 
 function Dialog({
   ...props

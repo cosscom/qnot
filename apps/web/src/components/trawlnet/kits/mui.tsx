@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 // trawlnet's query builder in Material UI: TextField, Select, Autocomplete, ToggleButtonGroup and
 // Paper, themed to follow the page's light/dark mode, on @trawlnet/react's headless hooks. MIT licensed.
 'use client';
@@ -33,9 +34,9 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useMemo, useState, useSyncExternalStore, type ComponentProps, type ReactNode } from 'react';
-import { createQueryBuilder } from '../shared/builder';
-import { useNumberDraft } from '../shared/draft';
-import type { Item, Kit, Width } from '../shared/kit';
+import { createQueryBuilder } from '@/components/trawlnet/kits/shared/builder';
+import { useNumberDraft } from '@/components/trawlnet/kits/shared/draft';
+import type { Item, Kit, Width } from '@/components/trawlnet/kits/shared/kit';
 
 const WIDTH: Record<Width, string | number> = { auto: 'auto', full: '100%', xs: 104, sm: 152, md: 184, lg: 264 };
 const width = (w: Width | undefined, fallback: Width) => ({ width: WIDTH[w ?? fallback], minWidth: w === 'auto' || (!w && fallback === 'auto') ? 120 : undefined });

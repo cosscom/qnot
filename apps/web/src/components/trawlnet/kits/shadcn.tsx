@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 // trawlnet's query builder in shadcn/ui: Radix-based Select, Command-in-Popover comboboxes,
 // ToggleGroup segments and Tooltips, on @trawlnet/react's headless hooks. MIT licensed.
 'use client';
@@ -5,22 +6,22 @@
 import { CheckIcon, ChevronsUpDownIcon, CopyIcon, FolderPlusIcon, GripVerticalIcon, ListTreeIcon, LoaderIcon, LockIcon, LockOpenIcon, PlusIcon, SquareFunctionIcon, TypeIcon, VariableIcon, XIcon } from 'lucide-react';
 import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { createQueryBuilder } from '../shared/builder';
-import { useNumberDraft } from '../shared/draft';
-import type { Item, Kit, Width } from '../shared/kit';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Input } from './ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from './ui/select';
-import { Slider } from './ui/slider';
-import { Switch } from './ui/switch';
-import { Textarea } from './ui/textarea';
-import { Toggle } from './ui/toggle';
-import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { createQueryBuilder } from '@/components/trawlnet/kits/shared/builder';
+import { useNumberDraft } from '@/components/trawlnet/kits/shared/draft';
+import type { Item, Kit, Width } from '@/components/trawlnet/kits/shared/kit';
+import { Badge } from '@/components/trawlnet/kits/shadcn-ui/badge';
+import { Button } from '@/components/trawlnet/kits/shadcn-ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/trawlnet/kits/shadcn-ui/command';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/trawlnet/kits/shadcn-ui/dropdown-menu';
+import { Input } from '@/components/trawlnet/kits/shadcn-ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/trawlnet/kits/shadcn-ui/popover';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/trawlnet/kits/shadcn-ui/select';
+import { Slider } from '@/components/trawlnet/kits/shadcn-ui/slider';
+import { Switch } from '@/components/trawlnet/kits/shadcn-ui/switch';
+import { Textarea } from '@/components/trawlnet/kits/shadcn-ui/textarea';
+import { Toggle } from '@/components/trawlnet/kits/shadcn-ui/toggle';
+import { ToggleGroup, ToggleGroupItem } from '@/components/trawlnet/kits/shadcn-ui/toggle-group';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/trawlnet/kits/shadcn-ui/tooltip';
 
 const WIDTH: Record<Width, string> = { auto: 'w-auto', full: 'w-full', xs: 'w-24', sm: 'w-36', md: 'w-44', lg: 'w-64' };
 const w = (width: Width | undefined, fallback: Width = 'auto') => WIDTH[width ?? fallback];

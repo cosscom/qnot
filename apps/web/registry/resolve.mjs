@@ -8,8 +8,16 @@ import { join } from 'node:path';
 const DIR = 'trawlnet';
 const OWN_PREFIX = `src/components/${DIR}/`;
 const OWN_IMPORT = `@/components/${DIR}/`;
+const VENDORED_SHADCN = `${OWN_IMPORT}kits/shadcn-ui/`;
 /** coss ui components come from coss's own registry, never copied into ours. */
 const COSS = (name) => `https://coss.com/ui/r/${name}.json`;
+/**
+ * The site vendors shadcn/ui (new-york-v4) components for its shadcn kit preview; published files
+ * import the user's own `@/components/ui/*` instead and depend on the built-in shadcn items by bare
+ * name, so they resolve to the project's own style (radix or Base UI) and the CLI adapts our file
+ * to match. Pinning new-york-v4 URLs breaks Base UI projects (today's `shadcn init` default).
+ */
+const SHADCN = (name) => name;
 const IGNORED_PACKAGES = new Set(['react', 'react-dom', 'next']);
 
 export { registryBase } from './urls.mjs';
@@ -37,10 +45,13 @@ export function resolveRegistry({ root, base }) {
     const own = new Set();
     const files = item.files.map((path) => {
       if (!path.startsWith(OWN_PREFIX)) throw new Error(`registry: ${path} must live under ${OWN_PREFIX}`);
-      const content = readFileSync(join(root, path), 'utf8');
-      for (const [, spec] of content.matchAll(/(?:from|import)\s+'([^']+)'/g)) {
+      const source = readFileSync(join(root, path), 'utf8');
+      // What the user gets: vendored shadcn/ui imports point at their own components/ui.
+      const content = source.replaceAll(VENDORED_SHADCN, '@/components/ui/');
+      for (const [, spec] of source.matchAll(/(?:from|import)\s+'([^']+)'/g)) {
         if (spec.startsWith('.')) throw new Error(`registry: ${path} uses a relative import (${spec}); use ${OWN_IMPORT}…`);
-        if (spec.startsWith('@/components/ui/')) registryDependencies.add(COSS(spec.slice('@/components/ui/'.length)));
+        if (spec.startsWith(VENDORED_SHADCN)) registryDependencies.add(SHADCN(spec.slice(VENDORED_SHADCN.length)));
+        else if (spec.startsWith('@/components/ui/')) registryDependencies.add(COSS(spec.slice('@/components/ui/'.length)));
         else if (spec.startsWith(OWN_IMPORT)) {
           const target = `${OWN_PREFIX}${spec.slice(OWN_IMPORT.length)}`;
           const file = [`${target}.tsx`, `${target}.ts`].find((f) => owner.has(f));
@@ -56,6 +67,7 @@ export function resolveRegistry({ root, base }) {
       }
       return { path, target: `@components/${DIR}/${path.slice(OWN_PREFIX.length)}`, install: installPath(path), content };
     });
+    for (const dep of item.dependencies ?? []) dependencies.add(dep);
     return {
       name: item.name,
       type: item.type,

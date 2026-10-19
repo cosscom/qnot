@@ -4,7 +4,7 @@
 import { chromium } from 'playwright';
 
 const S = process.argv[2];
-const BASE = process.argv[3] ?? 'http://localhost:5193';
+const BASE = process.argv[3] ?? 'http://localhost:5192';
 const KITS = ['coss', 'shadcn', 'mui', 'mantine', 'headless'];
 const browser = await chromium.launch();
 let failed = 0;

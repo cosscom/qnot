@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 // trawlnet's query builder in Mantine: Select/MultiSelect with groups and server search,
 // NumberInput, SegmentedControl, Menu and Paper, following the page's light/dark mode, on
 // @trawlnet/react's headless hooks. Only Mantine's component styles are imported (layered, no
@@ -57,8 +58,8 @@ import {
 } from '@mantine/core';
 import { CopyIcon, FolderPlusIcon, GripVerticalIcon, ListTreeIcon, LockIcon, LockOpenIcon, PlusIcon, SquareFunctionIcon, TypeIcon, VariableIcon, XIcon } from 'lucide-react';
 import { useMemo, useState, useSyncExternalStore } from 'react';
-import { createQueryBuilder } from '../shared/builder';
-import type { Item, Kit, Width } from '../shared/kit';
+import { createQueryBuilder } from '@/components/trawlnet/kits/shared/builder';
+import type { Item, Kit, Width } from '@/components/trawlnet/kits/shared/kit';
 
 const WIDTH: Record<Width, string | number | undefined> = { auto: undefined, full: '100%', xs: 104, sm: 152, md: 184, lg: 264 };
 const w = (width: Width | undefined, fallback: Width) => ({ width: WIDTH[width ?? fallback], minWidth: (width ?? fallback) === 'auto' ? 132 : undefined });

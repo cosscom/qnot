@@ -3,11 +3,11 @@ import { createQueryStore, defineFields, f } from '@trawlnet/core';
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { headlessKit } from './headless';
-import { muiKit } from './mui';
-import { shadcnKit } from './shadcn';
-import { createQueryBuilder } from './shared/builder';
-import type { Kit } from './shared/kit';
+import { headlessKit } from '@/components/trawlnet/kits/headless';
+import { muiKit } from '@/components/trawlnet/kits/mui';
+import { shadcnKit } from '@/components/trawlnet/kits/shadcn';
+import { createQueryBuilder } from '@/components/trawlnet/kits/shared/builder';
+import type { Kit } from '@/components/trawlnet/kits/shared/kit';
 
 const fields = defineFields({ name: f.text(), city: f.text(), email: f.text() });
 const initial = {

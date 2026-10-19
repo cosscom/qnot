@@ -38,6 +38,46 @@ export function Filters() {
 }
 ```
 
+## Other UI kits
+
+The builder also comes in shadcn/ui, MUI, Mantine and plain-HTML variants, the ones on the
+[UI kits](/kits) page. Each one installs `query-builder-core`, the kit-agnostic builder they share
+(`components/trawlnet/kits/shared`), plus the kit's own controls:
+
+| Item | Install into | Brings |
+|---|---|---|
+| `query-builder-shadcn` | a Radix-based shadcn/ui project (`pnpm dlx shadcn@latest init --base radix`) | the shadcn/ui components it uses, in your project's style |
+| `query-builder-mui` | any React project | `@mui/material`, `@mui/icons-material`, Emotion |
+| `query-builder-mantine` | any React project | `@mantine/core`, `@mantine/hooks`, and Mantine's stylesheets for its components |
+| `query-builder-headless` | any Tailwind project | nothing else: plain HTML to restyle |
+
+<RegistryInstall name="query-builder-mui" />
+
+```tsx
+'use client';
+import { createQueryStore } from '@trawlnet/core';
+import { useState } from 'react';
+import { QueryBuilder } from '@/components/trawlnet/kits/mui';
+import { fields } from './fields';
+
+export function Filters() {
+  const [store] = useState(() => createQueryStore({ fields }));
+  return <QueryBuilder store={store} />;
+}
+```
+
+<Callout type="info" title="shadcn/ui on Base UI">
+  `query-builder-shadcn` is written against the Radix-based shadcn/ui components. Projects using a
+  Base UI style (`"style": "base-…"` in `components.json`, which plain `shadcn init` can create) get
+  type errors; use the coss ui builder there, which is built on Base UI.
+</Callout>
+
+<Callout type="warn" title="One component style per project">
+  The coss ui builder (`query-builder`) and the shadcn/ui variant (`query-builder-shadcn`) both
+  install their components into `components/ui`, and their components share names (`select`,
+  `button`, `tooltip`…). Pick one of the two per project; mixing them overwrites one with the other.
+</Callout>
+
 ## An example
 
 Every [example](/examples) is a registry block: the page shows its full source and the command to

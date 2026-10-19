@@ -8,6 +8,7 @@ const LINKS = [
   { text: 'Docs', url: '/docs' },
   { text: 'Examples', url: '/examples' },
   { text: 'Playground', url: '/playground' },
+  { text: 'Kits', url: '/kits' },
   { text: 'llms.txt', url: '/llms.txt' },
   { text: 'GitHub', url: GITHUB_URL },
 ] as const;

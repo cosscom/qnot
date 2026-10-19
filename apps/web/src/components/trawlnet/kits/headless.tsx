@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 // "Your own" UI: trawlnet's query builder from plain HTML elements and Tailwind classes, no component
 // library. It's the smallest complete kit, so read it as the recipe: every control below is a few
 // lines of markup, and ../shared/builder.tsx turns @trawlnet/react's hooks into the builder around
@@ -6,9 +7,9 @@
 
 import { CopyIcon, FolderPlusIcon, GripVerticalIcon, ListTreeIcon, LockIcon, LockOpenIcon, PlusIcon, SquareFunctionIcon, TypeIcon, VariableIcon, XIcon } from 'lucide-react';
 import { useId, useRef, useState, type ReactNode } from 'react';
-import { createQueryBuilder } from '../shared/builder';
-import { useNumberDraft } from '../shared/draft';
-import type { Item, Kit, Width } from '../shared/kit';
+import { createQueryBuilder } from '@/components/trawlnet/kits/shared/builder';
+import { useNumberDraft } from '@/components/trawlnet/kits/shared/draft';
+import type { Item, Kit, Width } from '@/components/trawlnet/kits/shared/kit';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
 const WIDTH: Record<Width, string> = { auto: 'w-auto', full: 'w-full', xs: 'w-24', sm: 'w-36', md: 'w-44', lg: 'w-64' };

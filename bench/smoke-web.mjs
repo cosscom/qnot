@@ -6,7 +6,7 @@ const S = process.argv[2];
 const BASE = process.env.BASE ?? 'http://localhost:5192';
 const dark = !!process.env.DARK;
 const SLUGS = ['linear-filters', 'workflow', 'saved-views', 'product-filters', 'segments', 'feature-flags', 'alerting', 'access-policy', 'rqb-dropin', 'server-side'];
-const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/docs', '/docs/guides/shadcn'];
+const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/kits', '/docs', '/docs/guides/shadcn'];
 const b = await chromium.launch();
 const report = [];
 for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['phone', { width: 390, height: 844 }]]) {

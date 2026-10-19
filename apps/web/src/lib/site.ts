@@ -36,6 +36,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Docs', href: DOCS_ROUTE },
   { label: 'Examples', href: '/examples' },
   { label: 'Playground', href: '/playground' },
+  { label: 'Kits', href: '/kits' },
   { label: 'Benchmarks', href: '/#benchmarks' },
 ];
 

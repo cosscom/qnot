@@ -1,3 +1,4 @@
+// Part of trawlnet (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
 // A UI-kit-agnostic trawlnet query builder: every behaviour lives here, built only on
 // @trawlnet/react's headless hooks; the look comes from the Kit it is given (./kit.ts). Feature for
 // feature it matches the coss builder and @trawlnet/react's default UI: grouped struct fields,
@@ -29,7 +30,7 @@ import {
 } from '@trawlnet/core';
 import { QueryProvider, useDragHandle, useDropTarget, useGroup, useGroupDropZone, useNode, useRule, useSettings, useStore } from '@trawlnet/react';
 import { createContext, memo, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Item, Kit, Width } from './kit';
+import type { Item, Kit, Width } from '@/components/trawlnet/kits/shared/kit';
 
 export interface QueryBuilderOptions {
   /** `toggle`: NOT + AND/OR controls. `sentence`: "If [all | any | none] of these rules are met". */

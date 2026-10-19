@@ -22,6 +22,64 @@
       "docs": "Render <CossQueryBuilder store={store} /> from @/components/trawlnet/query-builder with a store from createQueryStore() (@trawlnet/core)."
     },
     {
+      "name": "query-builder-core",
+      "type": "registry:lib",
+      "title": "Query builder core (any UI kit)",
+      "description": "The kit-agnostic trawlnet builder: layout, editors and wiring over @trawlnet/react, rendered through a small Kit interface. The kit variants below plug their controls into it.",
+      "files": [
+        "src/components/trawlnet/kits/shared/kit.ts",
+        "src/components/trawlnet/kits/shared/builder.tsx",
+        "src/components/trawlnet/kits/shared/draft.ts"
+      ]
+    },
+    {
+      "name": "query-builder-shadcn",
+      "type": "registry:component",
+      "title": "Query builder (shadcn/ui)",
+      "description": "The trawlnet query builder made of shadcn/ui components, for Radix-based shadcn/ui projects.",
+      "files": [
+        "src/components/trawlnet/kits/shadcn.tsx"
+      ],
+      "docs": "Render <QueryBuilder store={store} /> from @/components/trawlnet/kits/shadcn. Needs a Radix-based shadcn/ui project (shadcn init --base radix); Base UI styles (base-*) aren't supported, use the coss ui builder there."
+    },
+    {
+      "name": "query-builder-mui",
+      "type": "registry:component",
+      "title": "Query builder (MUI)",
+      "description": "The trawlnet query builder made of Material UI components, with its own light/dark theme.",
+      "files": [
+        "src/components/trawlnet/kits/mui.tsx"
+      ],
+      "dependencies": [
+        "@emotion/react",
+        "@emotion/styled"
+      ],
+      "docs": "Render <QueryBuilder store={store} /> from @/components/trawlnet/kits/mui. It wraps itself in a ThemeProvider that follows the .dark class on <html>."
+    },
+    {
+      "name": "query-builder-mantine",
+      "type": "registry:component",
+      "title": "Query builder (Mantine)",
+      "description": "The trawlnet query builder made of Mantine components, with Mantine's styles imported per component.",
+      "files": [
+        "src/components/trawlnet/kits/mantine.tsx"
+      ],
+      "dependencies": [
+        "@mantine/hooks"
+      ],
+      "docs": "Render <QueryBuilder store={store} /> from @/components/trawlnet/kits/mantine. It wraps itself in a MantineProvider that follows the .dark class on <html>."
+    },
+    {
+      "name": "query-builder-headless",
+      "type": "registry:component",
+      "title": "Query builder (plain HTML)",
+      "description": "The trawlnet query builder in plain HTML elements and Tailwind classes: the starting point for your own design system.",
+      "files": [
+        "src/components/trawlnet/kits/headless.tsx"
+      ],
+      "docs": "Render <QueryBuilder store={store} /> from @/components/trawlnet/kits/headless. Restyle the controls in that file."
+    },
+    {
       "name": "code-block",
       "type": "registry:component",
       "title": "Code block",
@@ -63,7 +121,7 @@
       "name": "workflow",
       "type": "registry:block",
       "title": "Workflow automation triggers",
-      "description": "\u201cWhen a booking is created and \u2026, then \u2026\u201d with a live event log",
+      "description": "“When a booking is created and …, then …” with a live event log",
       "files": [
         "src/components/trawlnet/examples/workflow.tsx"
       ]

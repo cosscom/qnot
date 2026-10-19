@@ -12,7 +12,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/kits/shadcn/ui/dialog"
+} from "@/components/trawlnet/kits/shadcn-ui/dialog"
 
 function Command({
   className,
