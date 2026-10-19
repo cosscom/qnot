@@ -2,8 +2,10 @@ import { createMDX } from 'fumadocs-mdx/next';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Mounted under a path on a bigger site (coss.com/qnot): set NEXT_PUBLIC_BASE_PATH=/qnot.
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/$/, '') || undefined,
   // The workspace packages ship TypeScript source.
-  transpilePackages: ['@trawlnet/core', '@trawlnet/react'],
+  transpilePackages: ['@qnot/core', '@qnot/react'],
   // Twoslash drives the TypeScript compiler while MDX compiles; it must not be bundled.
   serverExternalPackages: ['typescript', 'twoslash'],
   poweredByHeader: false,

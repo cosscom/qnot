@@ -43,7 +43,7 @@ export const functionOf = (fields: Fields, call: FnCall): FunctionDef | undefine
 export function evaluateOperand(fields: Fields, operand: Operand, row: unknown, get: (row: any, field: string) => unknown): unknown {
   if (isFnCall(operand)) {
     const def = functionOf(fields, operand);
-    if (!def) throw new Error(`trawlnet: unknown function "${operand.fn}"`);
+    if (!def) throw new Error(`qnot: unknown function "${operand.fn}"`);
     const args: Record<string, unknown> = {};
     for (const name of Object.keys(def.args)) {
       const a = operand.args[name];
@@ -65,7 +65,7 @@ const DIRECTIONS = new Set(['ago', 'from now']);
 function relativeArgs({ amount, unit, direction }: Readonly<Record<string, unknown>>): { amount: number; unit: string; direction: string } {
   const n = Number(amount);
   if (!Number.isInteger(n) || n < 0 || n > 1e6 || typeof unit !== 'string' || !UNITS.has(unit) || typeof direction !== 'string' || !DIRECTIONS.has(direction)) {
-    throw new Error('trawlnet: relativeDate needs a whole amount, a unit (day, week, month, year) and a direction (ago, from now)');
+    throw new Error('qnot: relativeDate needs a whole amount, a unit (day, week, month, year) and a direction (ago, from now)');
   }
   return { amount: n, unit, direction };
 }

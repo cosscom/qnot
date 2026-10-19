@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { withBrand } from '@/lib/site';
 import { join } from 'node:path';
 import type { Metadata } from 'next';
 import { codeToHtml } from 'shiki';
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 const SCHEMA = join(process.cwd(), 'src', 'playground', 'schema.ts');
 
 export default async function Page() {
-  const code = readFileSync(SCHEMA, 'utf8');
+  const code = withBrand(readFileSync(SCHEMA, 'utf8'));
   const html = await codeToHtml(code, { lang: 'typescript', themes: { light: 'github-light', dark: 'github-dark' }, defaultColor: false });
   return (
     <main className="mx-auto w-full max-w-[1440px] flex-1">

@@ -1,5 +1,5 @@
 /** @jsxImportSource solid-js */
-import { createQueryStore, defineFields, f, type QueryOf } from '@trawlnet/core';
+import { createQueryStore, defineFields, f, type QueryOf } from '@qnot/core';
 import { createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -44,8 +44,8 @@ describe('Solid <QueryBuilder>', () => {
   it('renders, edits and reports changes', () => {
     const changes: Q[] = [];
     const host = mountIt(() => <QueryBuilder<Q> fields={fields} initial={initial} onChange={(v) => changes.push(v)} />);
-    expect(host.querySelectorAll('.tn-rule')).toHaveLength(3);
-    type(host.querySelector('input.tn-value[type="text"]')!, 'Grace');
+    expect(host.querySelectorAll('.qn-rule')).toHaveLength(3);
+    type(host.querySelector('input.qn-value[type="text"]')!, 'Grace');
     expect(changes.at(-1)!.children[0]).toEqual({ kind: 'rule', field: 'name', operator: 'eq', value: 'Grace' });
   });
 
@@ -77,29 +77,29 @@ describe('Solid <QueryBuilder>', () => {
   it('works controlled, including external changes', () => {
     const [q, setQ] = createSignal<Q>(initial);
     const host = mountIt(() => <QueryBuilder<Q> fields={fields} value={q()} onChange={setQ} />);
-    type(host.querySelector('input.tn-value[type="number"]')!, '41');
+    type(host.querySelector('input.qn-value[type="number"]')!, '41');
     expect(q().children[1]).toEqual({ kind: 'rule', field: 'age', operator: 'gt', value: 41 });
     setQ({ ...q(), children: q().children.slice(1) });
-    expect(host.querySelectorAll('.tn-rule')).toHaveLength(2);
+    expect(host.querySelectorAll('.qn-rule')).toHaveLength(2);
   });
 
   it('adds groups/rules, switches operators, toggles NOT, follows undo', () => {
     const store = createQueryStore({ fields, initial });
     const host = mountIt(() => <QueryBuilder store={store} />);
     [...host.querySelectorAll('button')].find((b) => b.textContent === '+ Group')!.click();
-    expect(host.querySelectorAll('.tn-group')).toHaveLength(2);
-    const nested = host.querySelectorAll('.tn-group')[1]!;
+    expect(host.querySelectorAll('.qn-group')).toHaveLength(2);
+    const nested = host.querySelectorAll('.qn-group')[1]!;
     [...nested.querySelectorAll('button')].find((b) => b.textContent === '+ Rule')!.click();
     // New groups start with one rule (RAQB default), so this is the second.
     expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }, { kind: 'rule', field: 'name' }] });
-    choose(host.querySelectorAll<HTMLSelectElement>('select.tn-operator')[1]!, 'between');
-    expect(host.querySelectorAll('.tn-value-pair input')).toHaveLength(2);
-    const notBox = host.querySelector<HTMLInputElement>('.tn-not input')!;
+    choose(host.querySelectorAll<HTMLSelectElement>('select.qn-operator')[1]!, 'between');
+    expect(host.querySelectorAll('.qn-value-pair input')).toHaveLength(2);
+    const notBox = host.querySelector<HTMLInputElement>('.qn-not input')!;
     notBox.checked = true;
     notBox.dispatchEvent(new Event('change', { bubbles: true }));
     expect(store.getQuery().not).toBe(true);
     store.undo();
     store.undo();
-    expect(host.querySelectorAll('.tn-value-pair')).toHaveLength(0);
+    expect(host.querySelectorAll('.qn-value-pair')).toHaveLength(0);
   });
 });

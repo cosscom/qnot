@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import type { Fields, Format, QueryStore, StoreSettings } from '@trawlnet/core';
+  import type { Fields, Format, QueryStore, StoreSettings } from '@qnot/core';
   import type { Components, Labels } from './ui';
 
   export interface QueryBuilderProps<T> {
@@ -24,7 +24,7 @@
 
 <script lang="ts" generics="T = unknown">
   // Ready-made builder. Pass a `store`, or `fields` (+ `initial` / `bind:value`, `format`) and it creates one.
-  import { CLASS, createQueryStore } from '@trawlnet/core';
+  import { CLASS, createQueryStore } from '@qnot/core';
   import { onDestroy } from 'svelte';
   import Group from './Group.svelte';
   import Rule from './Rule.svelte';
@@ -52,7 +52,7 @@
   const store: QueryStore<any, T> =
     given ??
     (() => {
-      if (!fields) throw new Error('trawlnet: <QueryBuilder> needs a `store` or `fields`');
+      if (!fields) throw new Error('qnot: <QueryBuilder> needs a `store` or `fields`');
       return createQueryStore({ fields, initial: value !== undefined ? value : initial, format, ...(settings && { settings }) } as never) as QueryStore<any, T>;
     })();
 

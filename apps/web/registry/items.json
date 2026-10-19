@@ -5,79 +5,79 @@
       "name": "tip",
       "type": "registry:component",
       "title": "Tip",
-      "description": "A coss tooltip around any element, used by the trawlnet builder's actions.",
+      "description": "A coss tooltip around any element, used by the qnot builder's actions.",
       "files": [
-        "src/components/trawlnet/tip.tsx"
+        "src/components/qnot/tip.tsx"
       ]
     },
     {
       "name": "query-builder",
       "type": "registry:component",
       "title": "Query builder (coss ui)",
-      "description": "A complete trawlnet query builder made of coss ui components: typed fields, value/field/function operands, list conditions, locks, drag and drop, undo-ready.",
+      "description": "A complete qnot query builder made of coss ui components: typed fields, value/field/function operands, list conditions, locks, drag and drop, undo-ready.",
       "files": [
-        "src/components/trawlnet/query-builder.tsx",
-        "src/components/trawlnet/controls.tsx"
+        "src/components/qnot/query-builder.tsx",
+        "src/components/qnot/controls.tsx"
       ],
-      "docs": "Render <CossQueryBuilder store={store} /> from @/components/trawlnet/query-builder with a store from createQueryStore() (@trawlnet/core)."
+      "docs": "Render <CossQueryBuilder store={store} /> from @/components/qnot/query-builder with a store from createQueryStore() (@qnot/core)."
     },
     {
       "name": "query-builder-core",
       "type": "registry:lib",
       "title": "Query builder core (any UI kit)",
-      "description": "The kit-agnostic trawlnet builder: layout, editors and wiring over @trawlnet/react, rendered through a small Kit interface. The kit variants below plug their controls into it.",
+      "description": "The kit-agnostic qnot builder: layout, editors and wiring over @qnot/react, rendered through a small Kit interface. The kit variants below plug their controls into it.",
       "files": [
-        "src/components/trawlnet/kits/shared/kit.ts",
-        "src/components/trawlnet/kits/shared/builder.tsx",
-        "src/components/trawlnet/kits/shared/draft.ts"
+        "src/components/qnot/kits/shared/kit.ts",
+        "src/components/qnot/kits/shared/builder.tsx",
+        "src/components/qnot/kits/shared/draft.ts"
       ]
     },
     {
       "name": "query-builder-shadcn",
       "type": "registry:component",
       "title": "Query builder (shadcn/ui)",
-      "description": "The trawlnet query builder made of shadcn/ui components, for Radix-based shadcn/ui projects.",
+      "description": "The qnot query builder made of shadcn/ui components, for Radix-based shadcn/ui projects.",
       "files": [
-        "src/components/trawlnet/kits/shadcn.tsx"
+        "src/components/qnot/kits/shadcn.tsx"
       ],
-      "docs": "Render <QueryBuilder store={store} /> from @/components/trawlnet/kits/shadcn. Needs a Radix-based shadcn/ui project (shadcn init --base radix); Base UI styles (base-*) aren't supported, use the coss ui builder there."
+      "docs": "Render <QueryBuilder store={store} /> from @/components/qnot/kits/shadcn. Needs a Radix-based shadcn/ui project (shadcn init --base radix); Base UI styles (base-*) aren't supported, use the coss ui builder there."
     },
     {
       "name": "query-builder-mui",
       "type": "registry:component",
       "title": "Query builder (MUI)",
-      "description": "The trawlnet query builder made of Material UI components, with its own light/dark theme.",
+      "description": "The qnot query builder made of Material UI components, with its own light/dark theme.",
       "files": [
-        "src/components/trawlnet/kits/mui.tsx"
+        "src/components/qnot/kits/mui.tsx"
       ],
       "dependencies": [
         "@emotion/react",
         "@emotion/styled"
       ],
-      "docs": "Render <QueryBuilder store={store} /> from @/components/trawlnet/kits/mui. It wraps itself in a ThemeProvider that follows the .dark class on <html>."
+      "docs": "Render <QueryBuilder store={store} /> from @/components/qnot/kits/mui. It wraps itself in a ThemeProvider that follows the .dark class on <html>."
     },
     {
       "name": "query-builder-mantine",
       "type": "registry:component",
       "title": "Query builder (Mantine)",
-      "description": "The trawlnet query builder made of Mantine components, with Mantine's styles imported per component.",
+      "description": "The qnot query builder made of Mantine components, with Mantine's styles imported per component.",
       "files": [
-        "src/components/trawlnet/kits/mantine.tsx"
+        "src/components/qnot/kits/mantine.tsx"
       ],
       "dependencies": [
         "@mantine/hooks"
       ],
-      "docs": "Render <QueryBuilder store={store} /> from @/components/trawlnet/kits/mantine. It wraps itself in a MantineProvider that follows the .dark class on <html>."
+      "docs": "Render <QueryBuilder store={store} /> from @/components/qnot/kits/mantine. It wraps itself in a MantineProvider that follows the .dark class on <html>."
     },
     {
       "name": "query-builder-headless",
       "type": "registry:component",
       "title": "Query builder (plain HTML)",
-      "description": "The trawlnet query builder in plain HTML elements and Tailwind classes: the starting point for your own design system.",
+      "description": "The qnot query builder in plain HTML elements and Tailwind classes: the starting point for your own design system.",
       "files": [
-        "src/components/trawlnet/kits/headless.tsx"
+        "src/components/qnot/kits/headless.tsx"
       ],
-      "docs": "Render <QueryBuilder store={store} /> from @/components/trawlnet/kits/headless. Restyle the controls in that file."
+      "docs": "Render <QueryBuilder store={store} /> from @/components/qnot/kits/headless. Restyle the controls in that file."
     },
     {
       "name": "code-block",
@@ -85,27 +85,27 @@
       "title": "Code block",
       "description": "A copyable code block in a content-sized coss scroll area, with optional lazy syntax highlighting (sql, json, typescript).",
       "files": [
-        "src/components/trawlnet/code-block.tsx",
-        "src/components/trawlnet/scroll-box.tsx",
-        "src/components/trawlnet/highlight.ts"
+        "src/components/qnot/code-block.tsx",
+        "src/components/qnot/scroll-box.tsx",
+        "src/components/qnot/highlight.ts"
       ]
     },
     {
       "name": "describe",
       "type": "registry:lib",
       "title": "Describe a query",
-      "description": "Render a trawlnet query as a plain-English sentence with the text codec.",
+      "description": "Render a qnot query as a plain-English sentence with the text codec.",
       "files": [
-        "src/components/trawlnet/describe.ts"
+        "src/components/qnot/describe.ts"
       ]
     },
     {
       "name": "example-utils",
       "type": "registry:lib",
       "title": "Example helpers",
-      "description": "useExampleStore, useLiveQuery and a seeded random generator, shared by the trawlnet examples.",
+      "description": "useExampleStore, useLiveQuery and a seeded random generator, shared by the qnot examples.",
       "files": [
-        "src/components/trawlnet/examples/shared.ts"
+        "src/components/qnot/examples/shared.ts"
       ]
     },
     {
@@ -114,7 +114,7 @@
       "title": "Linear-style filter bar",
       "description": "Inline filter chips: the same hooks, a completely different UI",
       "files": [
-        "src/components/trawlnet/examples/linear-filters.tsx"
+        "src/components/qnot/examples/linear-filters.tsx"
       ]
     },
     {
@@ -123,7 +123,7 @@
       "title": "Workflow automation triggers",
       "description": "“When a booking is created and …, then …” with a live event log",
       "files": [
-        "src/components/trawlnet/examples/workflow.tsx"
+        "src/components/qnot/examples/workflow.tsx"
       ]
     },
     {
@@ -132,7 +132,7 @@
       "title": "Saved views & undo",
       "description": "Named views, dirty tracking, undo/redo, and queries as plain English",
       "files": [
-        "src/components/trawlnet/examples/saved-views.tsx"
+        "src/components/qnot/examples/saved-views.tsx"
       ]
     },
     {
@@ -141,7 +141,7 @@
       "title": "E-commerce product filters",
       "description": "Faceted search over a catalogue, filtered client-side with compile()",
       "files": [
-        "src/components/trawlnet/examples/product-filters.tsx"
+        "src/components/qnot/examples/product-filters.tsx"
       ]
     },
     {
@@ -150,7 +150,7 @@
       "title": "CRM audience segments",
       "description": "Marketing segments with a live audience count and parameterized SQL",
       "files": [
-        "src/components/trawlnet/examples/segments.tsx"
+        "src/components/qnot/examples/segments.tsx"
       ]
     },
     {
@@ -159,7 +159,7 @@
       "title": "Feature-flag targeting",
       "description": "Segment rules + percentage rollout, shipped to the edge as JsonLogic",
       "files": [
-        "src/components/trawlnet/examples/feature-flags.tsx"
+        "src/components/qnot/examples/feature-flags.tsx"
       ]
     },
     {
@@ -168,7 +168,7 @@
       "title": "Monitoring alert rules",
       "description": "Thresholds, ranges and field-vs-field checks over a live metric stream",
       "files": [
-        "src/components/trawlnet/examples/alerting.tsx"
+        "src/components/qnot/examples/alerting.tsx"
       ]
     },
     {
@@ -177,7 +177,7 @@
       "title": "Access-control policies",
       "description": "Allow-if rules with NOT-group denies, plus a request simulator",
       "files": [
-        "src/components/trawlnet/examples/access-policy.tsx"
+        "src/components/qnot/examples/access-policy.tsx"
       ]
     },
     {
@@ -186,7 +186,7 @@
       "title": "Drop-in for react-querybuilder",
       "description": "Keep your saved RQB JSON: the store speaks its format via `format: rqb`",
       "files": [
-        "src/components/trawlnet/examples/rqb-dropin.tsx"
+        "src/components/qnot/examples/rqb-dropin.tsx"
       ]
     },
     {
@@ -195,7 +195,7 @@
       "title": "One query, every backend",
       "description": "The same query as Postgres, MySQL, SQL Server, MongoDB and JsonLogic",
       "files": [
-        "src/components/trawlnet/examples/server-side.tsx"
+        "src/components/qnot/examples/server-side.tsx"
       ]
     }
   ]

@@ -27,7 +27,7 @@ import {
   type RuleNode,
   type StoreNode,
   type StoreSettings,
-} from '@trawlnet/core';
+} from '@qnot/core';
 import { getContext, setContext } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 
@@ -36,7 +36,7 @@ interface Ctx {
   dnd: DndController;
 }
 
-const KEY = Symbol('trawlnet');
+const KEY = Symbol('qnot');
 
 /** Make `store` available to descendant components. Call during component initialisation. */
 export function setQueryStore(store: QueryStore<any, any>): void {
@@ -45,7 +45,7 @@ export function setQueryStore(store: QueryStore<any, any>): void {
 
 function ctx(): Ctx {
   const c = getContext<Ctx | undefined>(KEY);
-  if (!c) throw new Error('trawlnet: call setQueryStore(store) in an ancestor (or use <QueryBuilder>)');
+  if (!c) throw new Error('qnot: call setQueryStore(store) in an ancestor (or use <QueryBuilder>)');
   return c;
 }
 
@@ -320,7 +320,7 @@ export function createDragHandle(dnd: DndController, id: NodeId) {
         if (e.dataTransfer) {
           e.dataTransfer.effectAllowed = 'move';
           e.dataTransfer.setData('text/plain', id);
-          const row = (e.currentTarget as HTMLElement).closest('[data-tn-id]');
+          const row = (e.currentTarget as HTMLElement).closest('[data-qn-id]');
           if (row) e.dataTransfer.setDragImage(row, 12, 12);
         }
         dnd.start(id);
@@ -346,7 +346,7 @@ export function createDropTarget(store: QueryStore<any, any>, dnd: DndController
       return position();
     },
     dropProps: {
-      'data-tn-id': id,
+      'data-qn-id': id,
       ondragover(e: DragEvent) {
         const n = store.get(id);
         if (!dnd.getState().dragging || !n || n.parent === null) return;

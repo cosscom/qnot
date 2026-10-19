@@ -1,4 +1,4 @@
-import { dropIndexFromPointer, type DndController, type NodeId, type QueryStore } from '@trawlnet/core';
+import { dropIndexFromPointer, type DndController, type NodeId, type QueryStore } from '@qnot/core';
 
 export type DropPosition = 'before' | 'after' | 'inside' | null;
 
@@ -10,7 +10,7 @@ export function bindDragHandle(handle: HTMLElement, dnd: DndController, id: Node
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', id);
-      const row = handle.closest('[data-tn-id]');
+      const row = handle.closest('[data-qn-id]');
       if (row) e.dataTransfer.setDragImage(row, 12, 12);
     }
     dnd.start(id);

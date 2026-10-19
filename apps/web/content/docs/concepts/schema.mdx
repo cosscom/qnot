@@ -8,7 +8,7 @@ literal types (so `'free' | 'pro'` stays a union, not `string`), flattens struct
 paths, and attaches custom operators, functions and messages to the field set.
 
 ```ts twoslash
-import { defineFields, f } from '@trawlnet/core';
+import { defineFields, f } from '@qnot/core';
 
 export const fields = defineFields({
   name: f.text({ minLength: 2 }),
@@ -84,7 +84,7 @@ A rule's right side is exactly one of `value` (a literal), `ref` (another field)
 over every field and operator, so checking `field` and `operator` narrows `value`:
 
 ```ts twoslash
-import { defineFields, f, isLiteralRule, type RuleOf } from '@trawlnet/core';
+import { defineFields, f, isLiteralRule, type RuleOf } from '@qnot/core';
 const fields = defineFields({ age: f.number(), plan: f.enum(['free', 'pro']) });
 // ---cut---
 declare const rule: RuleOf<typeof fields>;
@@ -100,7 +100,7 @@ compile errors:
 
 ```ts twoslash
 // @errors: 2322
-import { defineFields, f, type RuleOf } from '@trawlnet/core';
+import { defineFields, f, type RuleOf } from '@qnot/core';
 const fields = defineFields({ age: f.number(), plan: f.enum(['free', 'pro']) });
 // ---cut---
 const bad: RuleOf<typeof fields> = { kind: 'rule', field: 'plan', operator: 'eq', value: 'gold' };
@@ -112,7 +112,7 @@ While someone is typing, values can be missing, so `QueryOf` allows `null` in va
 query passes validation it can be narrowed to `StrictQueryOf`, where they can't:
 
 ```ts twoslash
-import { defineFields, f, isValidQuery, isLiteralRule, type QueryOf } from '@trawlnet/core';
+import { defineFields, f, isValidQuery, isLiteralRule, type QueryOf } from '@qnot/core';
 const fields = defineFields({ age: f.number() });
 declare const query: QueryOf<typeof fields>;
 // ---cut---

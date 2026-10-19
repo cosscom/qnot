@@ -4,13 +4,13 @@ description: mountQueryBuilder with no framework, and DOM helpers for drag and d
 ---
 
 ```bash
-pnpm add @trawlnet/core @trawlnet/dom
+pnpm add @qnot/core @qnot/dom
 ```
 
 ```ts
-import '@trawlnet/core/styles.css';
-import { createQueryStore } from '@trawlnet/core';
-import { mountQueryBuilder } from '@trawlnet/dom';
+import '@qnot/core/styles.css';
+import { createQueryStore } from '@qnot/core';
+import { mountQueryBuilder } from '@qnot/dom';
 
 const store = createQueryStore({ fields, initial: saved });
 const dispose = mountQueryBuilder(document.getElementById('filters')!, store, { showLock: true });

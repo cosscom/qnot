@@ -2,7 +2,7 @@
   "date": "2026-10-19T02:55:37.660Z",
   "cpuThrottle": 1,
   "results": {
-    "trawlnet": {
+    "qnot": {
       "10": {
         "rules": 10,
         "dom": 141,
@@ -68,7 +68,7 @@
         "error": null
       }
     },
-    "trawlnet-dom": {
+    "qnot-dom": {
       "10": {
         "rules": 10,
         "dom": 185,

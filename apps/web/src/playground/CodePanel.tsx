@@ -1,11 +1,12 @@
 'use client';
-import { encode, type Query } from '@trawlnet/core';
-import { sqlFormat } from '@trawlnet/core/formats/sql';
-import { useQuery } from '@trawlnet/react';
+import { withBrand } from '@/lib/site';
+import { encode, type Query } from '@qnot/core';
+import { sqlFormat } from '@qnot/core/formats/sql';
+import { useQuery } from '@qnot/react';
 import { CheckIcon, CopyIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { HighlighterCore } from 'shiki/core';
-import { ScrollBox } from '@/components/trawlnet/scroll-box';
+import { ScrollBox } from '@/components/qnot/scroll-box';
 import { Button } from '@/components/ui/button';
 import { useCopy } from '@/lib/use-copy';
 import { fields, type Fields } from './schema';
@@ -39,8 +40,9 @@ function useHighlighter() {
 }
 
 /** A titled, copyable, highlighted block; plain text until the highlighter has loaded. */
-function Block({ title, code, lang, html: preHtml, highlighter, note }: { title: string; code: string; lang: Lang; html?: string; highlighter: HighlighterCore | null; note?: string }) {
+function Block({ title, code: source, lang, html: preHtml, highlighter, note }: { title: string; code: string; lang: Lang; html?: string; highlighter: HighlighterCore | null; note?: string }) {
   const { copied, copy } = useCopy();
+  const code = useMemo(() => withBrand(source), [source]);
   const html = useMemo(
     () =>
       preHtml ??
@@ -112,7 +114,7 @@ function renderCode(renderer: CodeRenderer, s: PlaygroundSettings, cossUrl: stri
         note: 'coss ui builder, installed with shadcn',
         code: `// pnpm dlx shadcn@latest add ${cossUrl}
 'use client';
-import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
+import { CossQueryBuilder } from '@/components/qnot/query-builder';
 import { store } from './store';
 
 export function Filters() {
@@ -124,8 +126,8 @@ export function Filters() {
         title: 'Filters.vue',
         lang: 'vue',
         code: `<script setup lang="ts">
-import '@trawlnet/core/styles.css';
-import { QueryBuilder } from '@trawlnet/vue';
+import '@qnot/core/styles.css';
+import { QueryBuilder } from '@qnot/vue';
 import { store } from './store';
 </script>
 
@@ -138,8 +140,8 @@ import { store } from './store';
         title: 'Filters.svelte',
         lang: 'svelte',
         code: `<script lang="ts">
-  import '@trawlnet/core/styles.css';
-  import { QueryBuilder } from '@trawlnet/svelte';
+  import '@qnot/core/styles.css';
+  import { QueryBuilder } from '@qnot/svelte';
   import { store } from './store';
 </script>
 
@@ -149,8 +151,8 @@ import { store } from './store';
       return {
         title: 'filters.tsx',
         lang: 'tsx',
-        code: `import '@trawlnet/core/styles.css';
-import { QueryBuilder } from '@trawlnet/solid';
+        code: `import '@qnot/core/styles.css';
+import { QueryBuilder } from '@qnot/solid';
 import { store } from './store';
 
 export const Filters = () => <QueryBuilder store={store} />;`,
@@ -159,8 +161,8 @@ export const Filters = () => <QueryBuilder store={store} />;`,
       return {
         title: 'filters.ts',
         lang: 'ts',
-        code: `import '@trawlnet/core/styles.css';
-import { mountQueryBuilder } from '@trawlnet/dom';
+        code: `import '@qnot/core/styles.css';
+import { mountQueryBuilder } from '@qnot/dom';
 import { store } from './store';
 
 const dispose = mountQueryBuilder(document.getElementById('filters')!, store);
@@ -172,8 +174,8 @@ store.subscribe(() => console.log(store.getQuery()));`,
         lang: 'tsx',
         note: renderer === 'all' ? 'React shown; every renderer takes the same store' : undefined,
         code: `'use client';
-import '@trawlnet/core/styles.css';
-import { QueryBuilder } from '@trawlnet/react';
+import '@qnot/core/styles.css';
+import { QueryBuilder } from '@qnot/react';
 import { store } from './store';
 
 export function Filters() {
@@ -193,7 +195,7 @@ export function CodePanel({ renderer, settings, schema, cossUrl }: { renderer: C
   const storeCode = useMemo(() => {
     const changed = changedSettings(settings);
     const settingsLine = changed.length ? `\n  settings: {\n${changed.map((c) => `    ${c},`).join('\n')}\n  },` : '';
-    return `import { createQueryStore, type QueryOf } from '@trawlnet/core';
+    return `import { createQueryStore, type QueryOf } from '@qnot/core';
 import { fields } from './schema';
 
 // The query on screen right now.
@@ -213,8 +215,8 @@ export const store = createQueryStore({
     } catch (e) {
       result = `// For the query on screen, encode() refuses:\n//   ${(e as Error).message}`;
     }
-    return `import { assertValidQuery, encode, type QueryOf } from '@trawlnet/core';
-import { sqlFormat } from '@trawlnet/core/formats/sql';
+    return `import { assertValidQuery, encode, type QueryOf } from '@qnot/core';
+import { sqlFormat } from '@qnot/core/formats/sql';
 import { fields } from './schema';
 
 const postgres = sqlFormat({ dialect: 'postgres', params: 'numbered' });

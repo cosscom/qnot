@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CLASS, fieldLabel, type NodeId } from '@trawlnet/core';
+  import { CLASS, fieldLabel, type NodeId } from '@qnot/core';
   import MatchEditor from './MatchEditor.svelte';
   import Node from './Node.svelte';
   import { createDragHandle, createDropTarget, createGroup, createGroupDropZone, getDndController, getQueryStore } from './reactive';
@@ -56,7 +56,7 @@
     <button type="button" class={CLASS.action} disabled={!can.addGroup} onclick={() => g.addGroup()}>{ui.labels.addGroup}</button>
     {#if g.arrayFields.length > 0}
       <select
-        class="tn-add-array"
+        class="qn-add-array"
         value=""
         disabled={!can.addGroup}
         onchange={(e) => {

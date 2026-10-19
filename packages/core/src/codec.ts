@@ -6,7 +6,7 @@ export interface CodecContext {
 }
 
 /**
- * Converts between trawlnet's native query and another representation (react-querybuilder JSON,
+ * Converts between qnot's native query and another representation (react-querybuilder JSON,
  * JsonLogic, SQL…). Encoding is node-wise so results can be memoized per node: native queries are
  * structurally shared, so re-encoding after an edit only redoes the edited node and its ancestors.
  */
@@ -44,7 +44,7 @@ function cacheFor(codec: Codec<any>, fields: Fields): WeakMap<QueryNode, unknown
 function encodeNode<N>(codec: Codec<any, N>, node: QueryNode, ctx: CodecContext, cache: WeakMap<QueryNode, unknown>): N | undefined {
   // Query JSON is untrusted: refuse anything that isn't a rule or a group with a children array.
   if (typeof node !== 'object' || node === null || (node.kind !== 'rule' && (node.kind !== 'group' || !Array.isArray(node.children)))) {
-    throw new Error(`trawlnet/${codec.name}: malformed query node`);
+    throw new Error(`qnot/${codec.name}: malformed query node`);
   }
   const hit = cache.get(node);
   if (hit !== undefined) return hit === SKIPPED ? undefined : (hit as N);
@@ -75,7 +75,7 @@ export function encodeCases<N>(
   cases: { readonly cases: readonly { readonly when: Query; readonly then: unknown }[]; readonly otherwise?: unknown },
   fields: Fields,
 ): unknown {
-  if (!codec.encodeCases) throw new Error(`trawlnet: the ${codec.name} codec can't export switch/cases`);
+  if (!codec.encodeCases) throw new Error(`qnot: the ${codec.name} codec can't export switch/cases`);
   const ctx: CodecContext = { fields };
   const cache = cacheFor(codec, fields);
   const whens = cases.cases.map((c) => ({ when: encodeNode(codec, c.when, ctx, cache), then: c.then }));
@@ -83,11 +83,11 @@ export function encodeCases<N>(
 }
 
 export function decode<T>(codec: Codec<T>, input: T, fields: Fields): Query {
-  if (!codec.decode) throw new Error(`trawlnet: the ${codec.name} codec is export-only`);
+  if (!codec.decode) throw new Error(`qnot: the ${codec.name} codec is export-only`);
   return codec.decode(input, { fields });
 }
 
-/** The identity format: trawlnet's own JSON. */
+/** The identity format: qnot's own JSON. */
 export const native: Format<Query, QueryNode> = {
   name: 'native',
   encodeRule: (rule) => rule,

@@ -1,6 +1,6 @@
 <script lang="ts">
   // Keeps in-progress text ("1.", "3, ") while committing parsed values.
-  import { CLASS } from '@trawlnet/core';
+  import { CLASS } from '@qnot/core';
 
   interface Props {
     type: string;

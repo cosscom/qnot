@@ -39,7 +39,7 @@ export const EXAMPLES: ExampleInfo[] = [
     ...registryMeta('workflow'),
     category: "Product",
     tags: ["compile", "sentence builder"],
-    description: "The classic automation shape: a trigger, conditions, then an action. The conditions are a trawlnet query over the booking's properties; the log on the right replays recent bookings and shows which would have fired.",
+    description: "The classic automation shape: a trigger, conditions, then an action. The conditions are a qnot query over the booking's properties; the log on the right replays recent bookings and shows which would have fired.",
   },
   {
     slug: 'saved-views',
@@ -67,7 +67,7 @@ export const EXAMPLES: ExampleInfo[] = [
     ...registryMeta('feature-flags'),
     category: "Platform",
     tags: ["formats/jsonlogic", "compile"],
-    description: "Target internal users, big customers on recent versions, or beta opt-ins, then roll out to a percentage of that segment. The segment ships as JsonLogic, so your edge function or Go/Python service can evaluate it without trawlnet.",
+    description: "Target internal users, big customers on recent versions, or beta opt-ins, then roll out to a percentage of that segment. The segment ships as JsonLogic, so your edge function or Go/Python service can evaluate it without qnot.",
   },
   {
     slug: 'alerting',

@@ -34,11 +34,11 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['p
     await p.goto(BASE + '/playground', { waitUntil: 'networkidle' });
     await p.waitForTimeout(800);
     await p.locator('[data-renderer=all]').click();
-    await p.waitForSelector('[data-panel=vue] input.tn-value[type=number]', { timeout: 30_000 });
-    await p.locator('[data-panel=vue] input.tn-value[type=number]').first().fill('44');
+    await p.waitForSelector('[data-panel=vue] input.qn-value[type=number]', { timeout: 30_000 });
+    await p.locator('[data-panel=vue] input.qn-value[type=number]').first().fill('44');
     await p.waitForTimeout(300);
     const sync = {};
-    for (const id of ['react', 'vanilla', 'vue', 'svelte', 'solid']) sync[id] = await p.locator(`[data-panel=${id}] input.tn-value[type=number]`).first().inputValue();
+    for (const id of ['react', 'vanilla', 'vue', 'svelte', 'solid']) sync[id] = await p.locator(`[data-panel=${id}] input.qn-value[type=number]`).first().inputValue();
     sync.coss = await p.locator('[data-panel=coss] [data-slot=number-field-input]').first().inputValue();
     await p.screenshot({ path: `${S}/web-playground-all${dark ? '-dark' : ''}.png` });
     // Settings popover.

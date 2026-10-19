@@ -12,7 +12,7 @@ The schema is the one place you describe what can be queried. Everything else, f
 editors to the types of rule values and the SQL, follows from it.
 
 ```ts twoslash title="fields.ts"
-import { defineFields, f } from '@trawlnet/core';
+import { defineFields, f } from '@qnot/core';
 
 export const fields = defineFields({
   name: f.text(),
@@ -31,9 +31,9 @@ export const fields = defineFields({
 `<QueryBuilder>` creates a store from your fields and renders the default, unstyled UI.
 
 ```tsx title="Filters.tsx"
-import '@trawlnet/core/styles.css';
-import { QueryBuilder } from '@trawlnet/react';
-import type { QueryOf } from '@trawlnet/core';
+import '@qnot/core/styles.css';
+import { QueryBuilder } from '@qnot/react';
+import type { QueryOf } from '@qnot/core';
 import { fields } from './fields';
 
 export function Filters({ onChange }: { onChange: (q: QueryOf<typeof fields>) => void }) {
@@ -46,10 +46,10 @@ export function Filters({ onChange }: { onChange: (q: QueryOf<typeof fields>) =>
 
 ### Use the query
 
-The value is trawlnet's own JSON: a tree of groups and rules, typed by your schema.
+The value is qnot's own JSON: a tree of groups and rules, typed by your schema.
 
 ```ts twoslash
-import { defineFields, f, type QueryOf } from '@trawlnet/core';
+import { defineFields, f, type QueryOf } from '@qnot/core';
 const fields = defineFields({ age: f.number(), plan: f.enum(['free', 'pro', 'team']) });
 // ---cut---
 const query: QueryOf<typeof fields> = {
@@ -65,8 +65,8 @@ const query: QueryOf<typeof fields> = {
 Turn it into SQL, or filter rows directly:
 
 ```ts
-import { compile, encode } from '@trawlnet/core';
-import { sqlFormat } from '@trawlnet/core/formats/sql';
+import { compile, encode } from '@qnot/core';
+import { sqlFormat } from '@qnot/core/formats/sql';
 
 const { sql, params } = encode(sqlFormat({ dialect: 'postgres', params: 'numbered' }), query, fields);
 // sql: "age >= $1 AND plan IN ($2, $3)", params: [21, 'pro', 'team']
@@ -84,7 +84,7 @@ the page need the query (a preview, a results table, undo buttons), create the s
 share it:
 
 ```tsx
-import { QueryBuilder, QueryProvider, useHistory, useQuery, useQueryStore } from '@trawlnet/react';
+import { QueryBuilder, QueryProvider, useHistory, useQuery, useQueryStore } from '@qnot/react';
 
 function Page() {
   const store = useQueryStore({ fields, initial: savedQuery });

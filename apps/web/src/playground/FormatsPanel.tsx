@@ -1,9 +1,9 @@
-import { decode, encode, type Codec, type Fields, type Query, type QueryOf } from '@trawlnet/core';
-import { useQuery, useStore } from '@trawlnet/react';
+import { decode, encode, type Codec, type Fields, type Query, type QueryOf } from '@qnot/core';
+import { useQuery, useStore } from '@qnot/react';
 import { CheckIcon, CircleAlertIcon, CopyIcon, DownloadIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { ScrollBox } from '@/components/trawlnet/scroll-box';
-import { Tip } from '@/components/trawlnet/tip';
+import { ScrollBox } from '@/components/qnot/scroll-box';
+import { Tip } from '@/components/qnot/tip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';

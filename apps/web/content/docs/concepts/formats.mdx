@@ -3,12 +3,12 @@ title: Formats
 description: Export a query to SQL, MongoDB, JsonLogic, Elasticsearch, SpEL or text, and read other libraries' JSON both ways.
 ---
 
-A codec converts between trawlnet's query JSON and another representation. Each lives at its own
+A codec converts between qnot's query JSON and another representation. Each lives at its own
 subpath, so you only bundle the ones you import.
 
 ```ts
-import { encode, decode } from '@trawlnet/core';
-import { sqlFormat } from '@trawlnet/core/formats/sql';
+import { encode, decode } from '@qnot/core';
+import { sqlFormat } from '@qnot/core/formats/sql';
 
 const sql = encode(sqlFormat({ dialect: 'postgres' }), query, fields);
 const back = decode(sqlFormat({ dialect: 'postgres' }), "age >= 21 AND plan IN ('pro', 'team')", fields);
@@ -50,7 +50,7 @@ Postgres) **throws** by default, naming the rule's path, field, operator and the
 export never silently matches more than the query:
 
 ```text
-trawlnet/sql: can't express the rule at [1] (field "tags", operator "hasAny"): the ansi dialect has no array operators (use postgres, mysql, sqlite or mssql)
+qnot/sql: can't express the rule at [1] (field "tags", operator "hasAny"): the ansi dialect has no array operators (use postgres, mysql, sqlite or mssql)
 ```
 
 Each codec has a factory with options; the ready-made instance (`sql`, `mongo`, …) uses the defaults.
@@ -92,7 +92,7 @@ A codec is an object with `encodeRule`, `encodeGroup`, an optional `finish`, and
 two-way formats:
 
 ```ts
-import type { Codec } from '@trawlnet/core';
+import type { Codec } from '@qnot/core';
 
 const prefix: Codec<string, string> = {
   name: 'prefix',

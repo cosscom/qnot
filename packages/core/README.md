@@ -1,14 +1,14 @@
-# @trawlnet/core
+# @qnot/core
 
-Framework-agnostic core of trawlnet: typed schema builders, the query store, validation, evaluation and format codecs.
+Framework-agnostic core of qnot: typed schema builders, the query store, validation, evaluation and format codecs.
 
 ```sh
-pnpm add @trawlnet/core
+pnpm add @qnot/core
 ```
 
 ```ts
-import { compile, createQueryStore, defineFields, encode, f } from '@trawlnet/core';
-import { sqlFormat } from '@trawlnet/core/formats/sql';
+import { compile, createQueryStore, defineFields, encode, f } from '@qnot/core';
+import { sqlFormat } from '@qnot/core/formats/sql';
 
 const fields = defineFields({ age: f.number({ min: 0 }), plan: f.enum(['free', 'pro']) });
 const query = {
@@ -22,9 +22,9 @@ const matches = compile(fields, store.getQuery());               // (row) => boo
 const { sql, params } = encode(sqlFormat({ dialect: 'postgres', params: 'numbered' }), store.getQuery(), fields);
 ```
 
-Formats live under `@trawlnet/core/formats/*`: `sql`, `mongo`, `jsonlogic`, `elasticsearch`, `spel`, `text`, `rqb`, `raqb`, `jqqb`.
-The default UI styles are in `@trawlnet/core/styles.css`.
+Formats live under `@qnot/core/formats/*`: `sql`, `mongo`, `jsonlogic`, `elasticsearch`, `spel`, `text`, `rqb`, `raqb`, `jqqb`.
+The default UI styles are in `@qnot/core/styles.css`.
 
 Docs: https://github.com/sean-brydon/trawlnet/tree/main/apps/web/content/docs
 
-MIT licensed. Part of [trawlnet](https://github.com/sean-brydon/trawlnet).
+MIT licensed. Part of [qnot](https://github.com/sean-brydon/trawlnet).

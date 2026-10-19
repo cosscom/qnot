@@ -100,10 +100,10 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
 
   const quote = (name: string) => {
     if (!options.quoteIdentifiers) {
-      if (!BARE_IDENTIFIER.test(name)) throw new Error(`trawlnet/sql: column name "${name}" isn't a plain identifier; pass \`quoteIdentifiers: true\``);
+      if (!BARE_IDENTIFIER.test(name)) throw new Error(`qnot/sql: column name "${name}" isn't a plain identifier; pass \`quoteIdentifiers: true\``);
       return name;
     }
-    if (name.includes('\u0000')) throw new Error('trawlnet/sql: column names cannot contain NUL characters');
+    if (name.includes('\u0000')) throw new Error('qnot/sql: column names cannot contain NUL characters');
     if (dialect === 'mysql') return `\`${name.replace(/`/g, '``')}\``;
     if (dialect === 'mssql') return `[${name.replace(/]/g, ']]')}]`;
     return `"${name.replace(/"/g, '""')}"`;
@@ -114,7 +114,7 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
   // literals for backslashes (safe with or without NO_BACKSLASH_ESCAPES), N'' on SQL Server.
   const encoder = new TextEncoder();
   const quoteString = (s: string): string => {
-    if (s.includes('\u0000')) throw new Error("trawlnet/sql: string values can't contain NUL (\\u0000) characters");
+    if (s.includes('\u0000')) throw new Error("qnot/sql: string values can't contain NUL (\\u0000) characters");
     const q = s.replace(/'/g, "''");
     if (s.includes('\\')) {
       if (dialect === 'postgres') return `E'${q.replace(/\\/g, '\\\\')}'`;
@@ -128,7 +128,7 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     if (v === null || v === undefined) return null;
     if (typeof v === 'string' || typeof v === 'boolean') return v;
     if (typeof v === 'number') return Number.isFinite(v) ? v : null;
-    throw new Error(`trawlnet/sql: refusing to write a ${typeof v === 'object' ? 'non-scalar' : typeof v} value into SQL`);
+    throw new Error(`qnot/sql: refusing to write a ${typeof v === 'object' ? 'non-scalar' : typeof v} value into SQL`);
   };
 
   const literal = (raw: unknown): string => {
@@ -143,7 +143,7 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
   const val = (raw: unknown): SqlFragment => {
     const v = scalar(raw);
     if (!paramStyle) return { sql: literal(v), params: [], compound: false };
-    if (typeof v === 'string' && v.includes('\u0000')) throw new Error("trawlnet/sql: string values can't contain NUL (\\u0000) characters");
+    if (typeof v === 'string' && v.includes('\u0000')) throw new Error("qnot/sql: string values can't contain NUL (\\u0000) characters");
     const id = nextParamId++;
     return { sql: `\u0000${id}\u0000`, params: [{ id, value: v }], compound: false };
   };
@@ -159,7 +159,7 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
   function column(ctx: SqlContext, name: string, asJson = false): string {
     // Only the schema's own fields become columns, whatever the (untrusted) query says.
     const def = fieldDef(ctx.fields, name);
-    if (!def) throw new Error(`trawlnet/sql: unknown field "${String(name).slice(0, 80)}"`);
+    if (!def) throw new Error(`qnot/sql: unknown field "${String(name).slice(0, 80)}"`);
     const col = columnOf(ctx.fields, name);
     if (!ctx.alias) return col.split('.').map(quote).join('.');
     const parts = col.split('.');
@@ -411,7 +411,7 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     // A malformed group (bad combinator, NOT flag or list quantifier) is tampering, not a dialect
     // gap: always refused, even with `unsupported: 'skip'`.
     const problem = groupProblem(ctx.fields, g);
-    if (problem) throw new Error(`trawlnet/sql: ${problem.reason}`);
+    if (problem) throw new Error(`qnot/sql: ${problem.reason}`);
     if (g.of) return arrayGroup(g, ctx);
     const lifted = liftChildren<SqlFragment>(g, children, modes.unsupported);
     if ('bad' in lifted) return lifted.bad;
@@ -426,7 +426,7 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
     const byId = new Map(params.map((p) => [p.id, p.value]));
     const values: unknown[] = [];
     const text = sql.replace(TOKEN, (_, id: string) => {
-      if (!byId.has(Number(id))) throw new Error('trawlnet/sql: internal error: a placeholder has no value');
+      if (!byId.has(Number(id))) throw new Error('qnot/sql: internal error: a placeholder has no value');
       values.push(byId.get(Number(id)));
       const n = values.length;
       if (paramStyle === 'positional') return '?';
@@ -448,7 +448,7 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
         // A case with no rules follows `emptyQuery`, like a whole query would.
         let c = caseCondition('sql', when);
         if (!c) {
-          if (modes.emptyQuery === 'throw') throw new Error('trawlnet/sql: a case has no rules to export');
+          if (modes.emptyQuery === 'throw') throw new Error('qnot/sql: a case has no rules to export');
           c = frag(modes.emptyQuery === 'none' ? '1 = 0' : '1 = 1');
         }
         const t = val(then);
@@ -461,7 +461,7 @@ export function sqlFormat(options: SqlOptions = {}): SqlCodec<string | SqlWithPa
       return render({ sql, params: parts.flatMap((p) => p.params), compound: false });
     },
     decode(input, ctx) {
-      if (paramStyle || typeof input !== 'string') throw new Error('trawlnet/sql: parameterized SQL cannot be decoded; use a codec without `params`');
+      if (paramStyle || typeof input !== 'string') throw new Error('qnot/sql: parameterized SQL cannot be decoded; use a codec without `params`');
       return parseSqlWhere(input, ctx.fields as Fields, dialect);
     },
   };

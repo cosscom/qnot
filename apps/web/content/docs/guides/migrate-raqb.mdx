@@ -8,8 +8,8 @@ JSON tree (`QbUtils.getTree` output), including `rule_group` array groups, funct
 BasicFuncs, and locks.
 
 ```tsx
-import { QueryBuilder } from '@trawlnet/react';
-import { raqb } from '@trawlnet/core/formats/raqb';
+import { QueryBuilder } from '@qnot/react';
+import { raqb } from '@qnot/core/formats/raqb';
 
 <QueryBuilder fields={fields} format={raqb} value={tree} onChange={setTree} />;
 ```
@@ -18,7 +18,7 @@ There's no Immutable.js and no Redux store: the value is plain JSON.
 
 ## Config to schema
 
-| RAQB `config` | trawlnet |
+| RAQB `config` | qnot |
 | --- | --- |
 | `fields.x.type: 'text' \| 'number' \| 'boolean' \| 'date' \| 'time' \| 'datetime'` | `f.text()`, `f.number()`, … |
 | `type: 'select'` + `listValues` | `f.enum([...])` |

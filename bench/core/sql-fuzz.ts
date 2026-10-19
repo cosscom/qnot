@@ -1,5 +1,5 @@
 // SQL injection fuzz against a real database: hostile strings are stored in SQLite, then queried with
-// trawlnet's inline-escaped and parameterized SQL; the rows must match compile() exactly and the
+// qnot's inline-escaped and parameterized SQL; the rows must match compile() exactly and the
 // table must survive. Run with `bun sql-fuzz.ts` (uses bun:sqlite).
 import { Database } from 'bun:sqlite';
 import { compile, defineFields, encode, f, type Query } from '../../packages/core/src/index';

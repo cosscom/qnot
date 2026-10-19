@@ -4,7 +4,7 @@ Source: RAQB README + CONFIG.adoc. Status: ✅ done · ⏭ not supported or inte
 
 ## Field types and widgets
 
-| RAQB | trawlnet | Status |
+| RAQB | qnot | Status |
 |---|---|---|
 | text, number, boolean, date | `f.text/number/boolean/date` | ✅ |
 | time, datetime | `f.time()`, `f.datetime()` | ✅ |
@@ -26,7 +26,7 @@ Source: RAQB README + CONFIG.adoc. Status: ✅ done · ⏭ not supported or inte
 
 ## Operators
 
-| RAQB | trawlnet | Status |
+| RAQB | qnot | Status |
 |---|---|---|
 | equal, not_equal, less(_or_equal), greater(_or_equal) | `eq neq lt lte gt gte` | ✅ |
 | like, not_like, starts_with, ends_with | `contains notContains startsWith endsWith` | ✅ |
@@ -40,7 +40,7 @@ Source: RAQB README + CONFIG.adoc. Status: ✅ done · ⏭ not supported or inte
 
 ## Values
 
-| RAQB | trawlnet | Status |
+| RAQB | qnot | Status |
 |---|---|---|
 | valueSources: value | `value` | ✅ |
 | valueSources: field | `ref` | ✅ |
@@ -50,7 +50,7 @@ Source: RAQB README + CONFIG.adoc. Status: ✅ done · ⏭ not supported or inte
 
 ## Structure and behaviour
 
-| RAQB | trawlnet | Status |
+| RAQB | qnot | Status |
 |---|---|---|
 | AND / OR conjunctions, NOT | `combinator`, `not` | ✅ |
 | custom conjunctions (NOR, XOR…) | ⏭ NOR = NOT+OR; XOR has no portable SQL/Mongo meaning | ⏭ |
@@ -73,7 +73,7 @@ Source: RAQB README + CONFIG.adoc. Status: ✅ done · ⏭ not supported or inte
 
 Per-codec support and lossy mappings: [formats.md](formats.md).
 
-| RAQB | trawlnet | Status |
+| RAQB | qnot | Status |
 |---|---|---|
 | export SQL | `formats/sql`: 5 dialects, params, CASE WHEN; Postgres jsonb array groups; multiEnum via arrays / JSON functions | ✅ |
 | import SQL | `formats/sql` decode: hand-written WHERE parser (comparisons, LIKE, IN, BETWEEN, IS NULL, AND/OR/NOT, functions) | ✅ |
@@ -87,4 +87,4 @@ Per-codec support and lossy mappings: [formats.md](formats.md).
 
 ## UI frameworks
 
-RAQB: React only (antd, MUI, Bootstrap, Fluent, vanilla widgets). trawlnet: headless core + React, vanilla DOM, Vue, Svelte, Solid bindings; any UI kit via hooks (coss ui recipe in the playground).
+RAQB: React only (antd, MUI, Bootstrap, Fluent, vanilla widgets). qnot: headless core + React, vanilla DOM, Vue, Svelte, Solid bindings; any UI kit via hooks (coss ui recipe in the playground).

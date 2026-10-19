@@ -9,7 +9,7 @@ Validation comes from the schema: `required`, `min`/`max`/`integer` on numbers,
 own `validate` function.
 
 ```ts
-import { defineFields, f, validateQuery } from '@trawlnet/core';
+import { defineFields, f, validateQuery } from '@qnot/core';
 
 const fields = defineFields({
   age: f.number({ min: 0, integer: true }),
@@ -34,7 +34,7 @@ store.isValid();      // no error anywhere
 ```
 
 The hooks expose them as `issues` on each rule and group, so a UI can mark just the invalid row.
-The default builders add the `tn-invalid` class and a tooltip with the messages.
+The default builders add the `qn-invalid` class and a tooltip with the messages.
 
 ## Narrowing to strict
 
@@ -43,9 +43,9 @@ The default builders add the `tn-invalid` class and a tooltip with the messages.
 handler:
 
 ```ts
-import { assertValidQuery } from '@trawlnet/core';
+import { assertValidQuery } from '@qnot/core';
 
-assertValidQuery(fields, body); // throws: "trawlnet: invalid query:\n  at [0] Must be at least 0"
+assertValidQuery(fields, body); // throws: "qnot: invalid query:\n  at [0] Must be at least 0"
 // body is StrictQueryOf<typeof fields> from here on
 ```
 
@@ -55,7 +55,7 @@ Queries saved months ago may not fit today's schema. `sanitizeQuery` cleans one 
 same object when nothing needed fixing:
 
 ```ts
-import { sanitizeQuery } from '@trawlnet/core';
+import { sanitizeQuery } from '@qnot/core';
 
 const clean = sanitizeQuery(fields, saved, {
   removeIncompleteRules: true,   // rules whose only problem is a missing value

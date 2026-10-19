@@ -3,11 +3,11 @@ title: The store
 description: A normalized tree with per-node subscriptions, which is why edits stay fast.
 ---
 
-Every builder, in every framework, sits on a `QueryStore` from `@trawlnet/core`. It owns the query,
+Every builder, in every framework, sits on a `QueryStore` from `@qnot/core`. It owns the query,
 applies edits, validates, keeps history, and tells exactly the right parts of the UI to update.
 
 ```ts
-import { createQueryStore } from '@trawlnet/core';
+import { createQueryStore } from '@qnot/core';
 
 const store = createQueryStore({ fields, initial: savedQuery });
 ```
@@ -81,11 +81,11 @@ changes". Pass `history: false` to turn history off, or `{ limit, mergeWindowMs 
 `setQuery` and `setValue` load a whole query and reconcile it node by node: unchanged subtrees keep
 their ids (so React keeps their components), and passing back the store's own output is free.
 
-With a `format`, `getValue`/`setValue` speak that format instead of trawlnet's JSON. This is how the
+With a `format`, `getValue`/`setValue` speak that format instead of qnot's JSON. This is how the
 store becomes a drop-in for react-querybuilder or RAQB:
 
 ```ts
-import { rqb } from '@trawlnet/core/formats/rqb';
+import { rqb } from '@qnot/core/formats/rqb';
 
 const store = createQueryStore({ fields, format: rqb, initial: savedRqbQuery });
 store.getValue(); // react-querybuilder's RuleGroupType

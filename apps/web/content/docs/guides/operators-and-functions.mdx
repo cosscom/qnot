@@ -23,7 +23,7 @@ Each argument is `{ value }`, `{ ref: 'field' }` or another call, so calls nest.
 `relativeDate`. Register functions when you define the fields:
 
 ```ts
-import { builtinFunctions, defineFields, defineFunction, f } from '@trawlnet/core';
+import { builtinFunctions, defineFields, defineFunction, f } from '@qnot/core';
 
 const daysSince = defineFunction({
   label: 'Days since',
@@ -54,7 +54,7 @@ exists, its return kind fits the field, and its arguments are valid. Turn them o
 ## Custom operators
 
 ```ts
-import { defineFields, defineOperator, f } from '@trawlnet/core';
+import { defineFields, defineOperator, f } from '@qnot/core';
 
 const near = defineOperator({
   id: 'near',

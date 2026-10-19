@@ -27,7 +27,7 @@ function defToJSON(def: AnyFieldDef, names: Map<unknown, string>): FieldJSON {
     if (v === undefined) continue;
     if (typeof v === 'function') {
       const name = names.get(v);
-      if (!name) throw new Error(`trawlnet: can't serialize "${k}": pass the function in ctx.fns so it can be referenced by name`);
+      if (!name) throw new Error(`qnot: can't serialize "${k}": pass the function in ctx.fns so it can be referenced by name`);
       out[k] = { $fn: name };
     } else if (v instanceof RegExp) out[k] = { $regexp: v.source, flags: v.flags };
     else if (k === 'of') out[k] = Object.fromEntries(Object.entries(v as Fields).map(([n, d]) => [n, defToJSON(d, names)]));
@@ -41,7 +41,7 @@ function defFromJSON(json: FieldJSON, fns: SerializeContext['fns']): AnyFieldDef
   for (const [k, v] of Object.entries(json)) {
     if (v && typeof v === 'object' && '$fn' in v) {
       const fn = fns?.[(v as { $fn: string }).$fn];
-      if (!fn) throw new Error(`trawlnet: missing function "${(v as { $fn: string }).$fn}" in ctx.fns`);
+      if (!fn) throw new Error(`qnot: missing function "${(v as { $fn: string }).$fn}" in ctx.fns`);
       out[k] = fn;
     } else if (v && typeof v === 'object' && '$regexp' in v) out[k] = new RegExp((v as { $regexp: string }).$regexp, (v as { flags?: string }).flags);
     else if (k === 'of') out[k] = Object.fromEntries(Object.entries(v as Record<string, FieldJSON>).map(([n, d]) => [n, defFromJSON(d, fns)]));
@@ -63,12 +63,12 @@ export function fieldsToJSON(fields: Fields, ctx: SerializeContext = {}): Fields
 
 /** Rebuild fields from `fieldsToJSON` output. Pass the same custom operators/functions in `schema`. */
 export function fieldsFromJSON(json: FieldsJSON, ctx: SerializeContext & { schema?: SchemaOptions } = {}): Fields {
-  if (json.version !== 1) throw new Error(`trawlnet: unsupported schema version ${String(json.version)}`);
+  if (json.version !== 1) throw new Error(`qnot: unsupported schema version ${String(json.version)}`);
   const missing = [
     ...(json.operators ?? []).filter((o) => !ctx.schema?.operators?.some((d) => d.id === o)),
     ...(json.functions ?? []).filter((n) => !ctx.schema?.functions?.[n]),
   ];
-  if (missing.length) throw new Error(`trawlnet: schema needs ${missing.join(', ')}; pass them in ctx.schema`);
+  if (missing.length) throw new Error(`qnot: schema needs ${missing.join(', ')}; pass them in ctx.schema`);
   const defs = Object.fromEntries(Object.entries(json.fields).map(([n, d]) => [n, defFromJSON(d, ctx.fns)]));
   return defineFields(defs as FieldsInput, ctx.schema) as Fields;
 }

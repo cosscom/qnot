@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** The folder registry files live in, here (src/components/<DIR>) and in a user's project (components/<DIR>). */
-const DIR = 'trawlnet';
+const DIR = 'qnot';
 const OWN_PREFIX = `src/components/${DIR}/`;
 const OWN_IMPORT = `@/components/${DIR}/`;
 const VENDORED_SHADCN = `${OWN_IMPORT}kits/shadcn-ui/`;

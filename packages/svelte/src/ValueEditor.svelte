@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CLASS, formatInput, formatList, parseInput, parseList } from '@trawlnet/core';
+  import { CLASS, formatInput, formatList, parseInput, parseList } from '@qnot/core';
   import AsyncInput from './AsyncInput.svelte';
   import DraftInput from './DraftInput.svelte';
   import LazySelect from './LazySelect.svelte';
@@ -30,7 +30,7 @@
   {:else if editor.type === 'number'}
     <DraftInput type="number" value={v} min={def?.min} max={def?.max} step={def?.step} placeholder={def?.placeholder} {parse} format={formatInput} onChange={set} {invalid} {disabled} />
   {:else if editor.type === 'slider'}
-    <span class="tn-slider">
+    <span class="qn-slider">
       <input
         class={CLASS.value}
         type="range"
@@ -57,7 +57,7 @@
 {/snippet}
 
 {#if editor.arity === 'two'}
-  <span class="tn-value-pair">
+  <span class="qn-value-pair">
     {@render scalar(pair[0], (v) => onChange([v, pair[1]]))}
     <span>{labels.rangeSeparator}</span>
     {@render scalar(pair[1], (v) => onChange([pair[0], v]))}

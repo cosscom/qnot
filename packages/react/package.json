@@ -1,7 +1,7 @@
 {
-  "name": "@trawlnet/react",
+  "name": "@qnot/react",
   "version": "0.0.0",
-  "description": "React bindings for trawlnet: headless hooks plus a tiny unstyled <QueryBuilder>.",
+  "description": "React bindings for qnot: headless hooks plus a tiny unstyled <QueryBuilder>.",
   "keywords": [
     "react",
     "query builder",
@@ -46,7 +46,7 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@trawlnet/core": "workspace:*"
+    "@qnot/core": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18"

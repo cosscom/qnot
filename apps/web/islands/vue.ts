@@ -1,5 +1,5 @@
-import type { QueryStore } from '@trawlnet/core';
-import { QueryBuilder } from '@trawlnet/vue';
+import type { QueryStore } from '@qnot/core';
+import { QueryBuilder } from '@qnot/vue';
 import { createApp, h } from 'vue';
 
 export function mount(el: HTMLElement, store: QueryStore<any, any>): () => void {

@@ -26,7 +26,7 @@ import {
   type Quantifier,
   type QueryStore,
   type StoreSettings,
-} from '@trawlnet/core';
+} from '@qnot/core';
 import { createContext, createEffect, createMemo, createSignal, For, Match, on, onCleanup, Show, Switch, useContext, type Component, type JSX } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import {
@@ -159,7 +159,7 @@ function AsyncInput(props: { def: AnyFieldDef | undefined; value: unknown; onCha
       { defer: true },
     ),
   );
-  const listId = `tn-async-${Math.random().toString(36).slice(2)}`;
+  const listId = `qn-async-${Math.random().toString(36).slice(2)}`;
   createEffect(() => {
     const def = props.def;
     if (!def?.search) return;
@@ -254,7 +254,7 @@ function Scalar(props: ValueEditorProps) {
         />
       </Match>
       <Match when={props.editor.type === 'slider'}>
-        <span class="tn-slider">
+        <span class="qn-slider">
           <input
             class={CLASS.value}
             type="range"
@@ -296,7 +296,7 @@ export function DefaultValueEditor(props: ValueEditorProps) {
     <Switch fallback={<Scalar {...props} />}>
       <Match when={props.editor.arity === 'none'}>{null}</Match>
       <Match when={props.editor.arity === 'two'}>
-        <span class="tn-value-pair">
+        <span class="qn-value-pair">
           <Scalar {...props} value={pair()[0]} onChange={(v) => props.onChange([v, pair()[1]])} />
           <span>{props.labels.rangeSeparator}</span>
           <Scalar {...props} value={pair()[1]} onChange={(v) => props.onChange([pair()[0], v])} />
@@ -417,14 +417,14 @@ export function FunctionEditor(props: { call: FnCall; fields: Fields; kind?: str
   const fns = createMemo(() => functionOptions(props.fields, props.kind));
   const args = createMemo(() => Object.entries(functionOf(props.fields, props.call)?.args ?? {}));
   return (
-    <span class="tn-function">
-      <Select class="tn-function-name" value={props.call.fn} options={fns()} disabled={props.disabled} onChange={(fn) => props.onChange(defaultCall(props.fields, fn))} />
+    <span class="qn-function">
+      <Select class="qn-function-name" value={props.call.fn} options={fns()} disabled={props.disabled} onChange={(fn) => props.onChange(defaultCall(props.fields, fn))} />
       <Show when={args().length > 0}>
-        <span class="tn-function-args">
+        <span class="qn-function-args">
           (
           <For each={args()}>
             {([name, argDef], i) => (
-              <span class="tn-function-arg">
+              <span class="qn-function-arg">
                 {i() > 0 && ', '}
                 <OperandEditor
                   operand={props.call.args[name] ?? { value: null }}
@@ -455,10 +455,10 @@ function OperandEditor(props: { operand: Operand; def: AnyFieldDef; fields: Fiel
     ...(nested().length ? [{ value: 'function', label: `${props.label}: ƒ` }] : []),
   ]);
   return (
-    <span class="tn-operand" title={props.label}>
+    <span class="qn-operand" title={props.label}>
       <Show when={refs().length > 0 || nested().length > 0}>
         <Select
-          class="tn-source"
+          class="qn-source"
           value={source()}
           options={sources()}
           disabled={props.disabled}
@@ -527,7 +527,7 @@ export function DefaultRule(props: { id: NodeId }) {
       <Show when={lhsFunctions().length > 0}>
         <button
           type="button"
-          class={cx(CLASS.action, 'tn-lhs-toggle')}
+          class={cx(CLASS.action, 'qn-lhs-toggle')}
           disabled={!r.can().editField}
           title={fieldIsFn() ? ui.labels.useField : ui.labels.useFunction}
           aria-pressed={fieldIsFn()}
@@ -542,7 +542,7 @@ export function DefaultRule(props: { id: NodeId }) {
       <Select class={CLASS.operator} value={r.operator()} options={r.operators()} disabled={!r.can().editOperator} onChange={r.setOperator} />
       <Show when={r.refOptions().length > 0 || r.functionOptions().length > 0}>
         <Select
-          class="tn-source"
+          class="qn-source"
           value={r.source()}
           options={sources()}
           disabled={!r.can().editValue}
@@ -609,9 +609,9 @@ function MatchEditor(props: { match: Quantifier; label: string; onChange: (m: Qu
   const counted = () => (typeof props.match === 'object' && props.match.count !== 'between' ? (props.match as { count: 'gte'; value: number }) : null);
   const counts = createMemo(() => countOptions(props.labels));
   return (
-    <span class="tn-match">
+    <span class="qn-match">
       <select
-        class="tn-match-mode"
+        class="qn-match-mode"
         value={typeof props.match === 'string' ? props.match : 'count'}
         disabled={props.disabled}
         onChange={(e) => props.onChange(e.currentTarget.value === 'count' ? { count: 'gte', value: 1 } : (e.currentTarget.value as 'some' | 'all' | 'none'))}
@@ -624,9 +624,9 @@ function MatchEditor(props: { match: Quantifier; label: string; onChange: (m: Qu
       <Show when={counted()}>
         {(m) => (
           <>
-            <Select class="tn-match-op" value={m().count} options={counts()} disabled={props.disabled} onChange={(count) => props.onChange({ count: count as 'gte', value: m().value })} />
+            <Select class="qn-match-op" value={m().count} options={counts()} disabled={props.disabled} onChange={(count) => props.onChange({ count: count as 'gte', value: m().value })} />
             <input
-              class="tn-match-count"
+              class="qn-match-count"
               type="number"
               min={0}
               value={m().value}
@@ -694,7 +694,7 @@ export function DefaultGroup(props: { id: NodeId }) {
         </button>
         <Show when={g.arrayFields().length > 0}>
           <select
-            class="tn-add-array"
+            class="qn-add-array"
             value=""
             disabled={!g.can().addGroup}
             onChange={(e) => {
@@ -774,7 +774,7 @@ export function QueryBuilder<T = unknown>(props: QueryBuilderProps<T>): JSX.Elem
       ),
     );
   } else {
-    if (!props.fields) throw new Error('trawlnet: <QueryBuilder> needs a `store` or `fields`');
+    if (!props.fields) throw new Error('qnot: <QueryBuilder> needs a `store` or `fields`');
     store = useQueryStore<Fields, T>({
       fields: props.fields,
       initial: props.initial,

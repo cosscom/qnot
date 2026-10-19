@@ -1,7 +1,7 @@
 {
-  "name": "@trawlnet/svelte",
+  "name": "@qnot/svelte",
   "version": "0.0.0",
-  "description": "Svelte 5 bindings for trawlnet: rune-friendly reactive helpers plus a tiny unstyled <QueryBuilder>.",
+  "description": "Svelte 5 bindings for qnot: rune-friendly reactive helpers plus a tiny unstyled <QueryBuilder>.",
   "keywords": [
     "svelte",
     "svelte5",
@@ -51,7 +51,7 @@
     "typecheck": "svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "@trawlnet/core": "workspace:*"
+    "@qnot/core": "workspace:*"
   },
   "peerDependencies": {
     "svelte": "^5.7.0"

@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import { at, Bar, Box, Callout, Caption, Drawing, Flat, Lamp, Lift, middle, type Origin, Part, Print, Wire } from './iso';
 
 /*
- * The landing page's drawings: trawlnet's pipeline (schema → store → outputs) as catalog line art.
+ * The landing page's drawings: qnot's pipeline (schema → store → outputs) as catalog line art.
  * Each part drops in when its drawing scrolls into view; `.lift` groups rise on hover.
  */
 
@@ -366,7 +366,7 @@ export function ServerDrawing() {
 export function DropInDrawing() {
   const T: Origin = [380, 120];
   return (
-    <Drawing name="dropin" title="A react-querybuilder JSON block lowering into a socket on a trawlnet store set to format rqb." viewBox={CELL}>
+    <Drawing name="dropin" title="A react-querybuilder JSON block lowering into a socket on a qnot store set to format rqb." viewBox={CELL}>
       <Part i={0}>
         <Box className="tray" d={170} h={18} o={T} w={230} x={0} y={0} z={0} />
         <Flat className="ghost" d={90} o={T} w={110} x={60} y={40} z={18} />

@@ -1,8 +1,8 @@
 // SQL injection differential fuzz against real databases (run with bun):
 //
-//   docker run -d --name tn-pg -e POSTGRES_PASSWORD=pw -p 55432:5432 postgres:16
-//   docker run -d --name tn-mysql -e MYSQL_ROOT_PASSWORD=pw -e MYSQL_DATABASE=t -p 53306:3306 mysql:8.4
-//   docker run -d --name tn-mssql -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='Str0ng!Passw0rd' -p 51433:1433 mcr.microsoft.com/mssql/server:2022-latest
+//   docker run -d --name qn-pg -e POSTGRES_PASSWORD=pw -p 55432:5432 postgres:16
+//   docker run -d --name qn-mysql -e MYSQL_ROOT_PASSWORD=pw -e MYSQL_DATABASE=t -p 53306:3306 mysql:8.4
+//   docker run -d --name qn-mssql -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='Str0ng!Passw0rd' -p 51433:1433 mcr.microsoft.com/mssql/server:2022-latest
 //   bun bench/security/sql-dbs.ts            # every reachable database; ONLY=pg,mysql,mssql,sqlite N=2000
 //
 // Hostile strings are both stored and queried. For every generated query, in inline and parameterized
@@ -187,10 +187,10 @@ async function mysqlDb(noBackslash: boolean): Promise<Db> {
 async function mssqlDb(): Promise<Db> {
   const base = { server: '127.0.0.1', port: 51433, user: 'sa', password: 'Str0ng!Passw0rd', options: { encrypt: false, trustServerCertificate: true }, requestTimeout: 2000 };
   const admin = await mssql.connect({ ...base, database: 'master' });
-  await admin.request().query("IF DB_ID('tn') IS NOT NULL BEGIN ALTER DATABASE tn SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE tn; END");
+  await admin.request().query("IF DB_ID('qn') IS NOT NULL BEGIN ALTER DATABASE tn SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE tn; END");
   await admin.request().query('CREATE DATABASE tn COLLATE Latin1_General_100_BIN2_UTF8');
   await admin.close();
-  const pool = await new mssql.ConnectionPool({ ...base, database: 'tn' }).connect();
+  const pool = await new mssql.ConnectionPool({ ...base, database: 'qn' }).connect();
   await pool.request().query('CREATE TABLE canary (x int); INSERT INTO canary VALUES (1)');
   await pool.request().query('CREATE TABLE t (id int primary key, name nvarchar(4000), n int, tier nvarchar(4000), tags nvarchar(max), signedUp date)');
   for (const r of rows) {

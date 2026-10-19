@@ -73,7 +73,7 @@ export default function Page() {
       <RegistrySource
         intro={
           <p>
-            One command installs this kit's builder and the kit-agnostic core it shares with the others, into <code className="font-mono text-sm">components/trawlnet</code>. MIT, yours
+            One command installs this kit's builder and the kit-agnostic core it shares with the others, into <code className="font-mono text-sm">components/qnot</code>. MIT, yours
             to change. See{' '}
             <Link className="underline underline-offset-2 hover:text-foreground" href="/docs/guides/shadcn">
               Install with shadcn

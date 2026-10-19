@@ -10,7 +10,7 @@ import { useCopy } from '@/lib/use-copy';
 export function DocsCopyPage({ page, markdownUrl }: { page: string; markdownUrl: string }) {
   const { copied, copy } = useCopy();
   const absolute = `${SITE_URL}${markdownUrl}`;
-  const prompt = encodeURIComponent(`Read ${absolute} and help me with trawlnet.`);
+  const prompt = encodeURIComponent(`Read ${absolute} and help me with qnot.`);
   return (
     <Group>
       <Button onClick={() => copy(page)} size="xs" variant="outline">

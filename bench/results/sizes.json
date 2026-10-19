@@ -1,11 +1,11 @@
 {
-  "trawlnet": {
+  "qnot": {
     "js": 292298,
     "jsGz": 92049,
     "css": 1847,
     "cssGz": 783
   },
-  "trawlnet-dom": {
+  "qnot-dom": {
     "js": 65905,
     "jsGz": 23619,
     "css": 1847,

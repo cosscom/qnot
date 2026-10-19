@@ -151,7 +151,7 @@ function encodeGroup(g: Group, all: Expr[], ctx: CodecContext, codec: Format<Jso
 // --- decode ------------------------------------------------------------------------------------
 
 const fail = (what: unknown): never => {
-  throw new Error(`trawlnet/jsonlogic: cannot decode ${JSON.stringify(what)}`);
+  throw new Error(`qnot/jsonlogic: cannot decode ${JSON.stringify(what)}`);
 };
 
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createQueryStore, defineFields, f, type QueryOf } from '@trawlnet/core';
+import { createQueryStore, defineFields, f, type QueryOf } from '@qnot/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mountQueryBuilder } from './index';
 
@@ -43,38 +43,38 @@ const choose = (el: HTMLSelectElement, value: string) => {
 describe('mountQueryBuilder', () => {
   it('renders the tree and edits values', () => {
     const { store, host } = setup();
-    expect(host.querySelectorAll('.tn-rule')).toHaveLength(3);
-    type(host.querySelector('input.tn-value[type="text"]')!, 'Grace');
+    expect(host.querySelectorAll('.qn-rule')).toHaveLength(3);
+    type(host.querySelector('input.qn-value[type="text"]')!, 'Grace');
     expect(store.getQuery().children[0]).toEqual({ kind: 'rule', field: 'name', operator: 'eq', value: 'Grace' });
-    type(host.querySelector('input.tn-value[type="number"]')!, '41');
+    type(host.querySelector('input.qn-value[type="number"]')!, '41');
     expect(store.getQuery().children[1]).toMatchObject({ value: 41 });
   });
 
   it('patches only the edited row', () => {
     const { host } = setup();
-    const rows = [...host.querySelectorAll('.tn-rule')];
+    const rows = [...host.querySelectorAll('.qn-rule')];
     const siblingControls = [...rows[1]!.querySelectorAll('*'), ...rows[2]!.querySelectorAll('*')];
     const observed: MutationRecord[] = [];
     const mo = new MutationObserver((m) => observed.push(...m));
     mo.observe(host, { subtree: true, childList: true, attributes: true, characterData: true });
-    type(rows[0]!.querySelector('input.tn-value')!, 'Grace');
+    type(rows[0]!.querySelector('input.qn-value')!, 'Grace');
     const records = mo.takeRecords().concat(observed);
     mo.disconnect();
     expect(records.every((r) => !siblingControls.includes(r.target as Element) && !rows.slice(1).includes(r.target as Element))).toBe(true);
-    expect([...host.querySelectorAll('.tn-rule')]).toEqual(rows);
+    expect([...host.querySelectorAll('.qn-rule')]).toEqual(rows);
   });
 
   it('switches editors with the operator and keeps draft text', () => {
     const { store, host } = setup();
-    const ageRow = host.querySelectorAll('.tn-rule')[1]!;
-    choose(ageRow.querySelector('select.tn-operator')!, 'between');
-    expect(ageRow.querySelectorAll('.tn-value-pair input')).toHaveLength(2);
-    const lo = ageRow.querySelectorAll<HTMLInputElement>('.tn-value-pair input')[0]!;
+    const ageRow = host.querySelectorAll('.qn-rule')[1]!;
+    choose(ageRow.querySelector('select.qn-operator')!, 'between');
+    expect(ageRow.querySelectorAll('.qn-value-pair input')).toHaveLength(2);
+    const lo = ageRow.querySelectorAll<HTMLInputElement>('.qn-value-pair input')[0]!;
     expect(lo.value).toBe('30');
-    choose(ageRow.querySelector('select.tn-operator')!, 'isNull');
-    expect(ageRow.querySelector('.tn-value')).toBeNull();
-    choose(ageRow.querySelector('select.tn-operator')!, 'in');
-    const list = ageRow.querySelector<HTMLInputElement>('input.tn-value')!;
+    choose(ageRow.querySelector('select.qn-operator')!, 'isNull');
+    expect(ageRow.querySelector('.qn-value')).toBeNull();
+    choose(ageRow.querySelector('select.qn-operator')!, 'in');
+    const list = ageRow.querySelector<HTMLInputElement>('input.qn-value')!;
     type(list, '1, 2, ');
     expect(store.getRule(store.getGroup(store.rootId).children[1]!)).toMatchObject({ value: [1, 2] });
     expect(list.value).toBe('1, 2, ');
@@ -84,39 +84,39 @@ describe('mountQueryBuilder', () => {
     const { store, host } = setup();
     const addGroup = [...host.querySelectorAll('button')].find((b) => b.textContent === '+ Group')!;
     addGroup.click();
-    expect(host.querySelectorAll('.tn-group')).toHaveLength(2);
-    const nested = host.querySelectorAll('.tn-group')[1]!;
+    expect(host.querySelectorAll('.qn-group')).toHaveLength(2);
+    const nested = host.querySelectorAll('.qn-group')[1]!;
     // New groups start with one rule (RAQB default).
-    expect(nested.querySelectorAll('.tn-rule')).toHaveLength(1);
+    expect(nested.querySelectorAll('.qn-rule')).toHaveLength(1);
     [...nested.querySelectorAll('button')].find((b) => b.textContent === '+ Rule')!.click();
-    expect(nested.querySelectorAll('.tn-rule')).toHaveLength(2);
+    expect(nested.querySelectorAll('.qn-rule')).toHaveLength(2);
     expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }, { kind: 'rule', field: 'name' }] });
-    const first = host.querySelector('.tn-rule')!;
+    const first = host.querySelector('.qn-rule')!;
     first.querySelector<HTMLButtonElement>('button[aria-label="Duplicate"]')!.click();
     expect(store.getGroup(store.rootId).children).toHaveLength(5);
-    host.querySelector<HTMLButtonElement>('.tn-rule button[aria-label="Remove"]')!.click();
+    host.querySelector<HTMLButtonElement>('.qn-rule button[aria-label="Remove"]')!.click();
     expect(store.getGroup(store.rootId).children).toHaveLength(4);
     store.undo();
     expect(store.getGroup(store.rootId).children).toHaveLength(5);
-    expect(host.querySelectorAll(':scope > .tn > .tn-group > .tn-children > *')).toHaveLength(5);
+    expect(host.querySelectorAll(':scope > .qn > .qn-group > .qn-children > *')).toHaveLength(5);
   });
 
   it('toggles NOT and combinator', () => {
     const { store, host } = setup();
-    const notBox = host.querySelector<HTMLInputElement>('.tn-not input')!;
+    const notBox = host.querySelector<HTMLInputElement>('.qn-not input')!;
     notBox.checked = true;
     notBox.dispatchEvent(new Event('change'));
-    choose(host.querySelector('select.tn-combinator')!, 'or');
+    choose(host.querySelector('select.qn-combinator')!, 'or');
     expect(store.getQuery()).toMatchObject({ combinator: 'or', not: true });
   });
 
   it('follows external store changes and disposes cleanly', () => {
     const { store, host } = setup();
     store.setQuery({ kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'age', operator: 'eq', value: 5 }] });
-    expect(host.querySelectorAll('.tn-rule')).toHaveLength(1);
-    expect(host.querySelector<HTMLInputElement>('input.tn-value')!.value).toBe('5');
+    expect(host.querySelectorAll('.qn-rule')).toHaveLength(1);
+    expect(host.querySelector<HTMLInputElement>('input.qn-value')!.value).toBe('5');
     store.setQuery({ kind: 'group', combinator: 'and', children: [{ kind: 'group', combinator: 'or', children: [] }] });
-    expect(host.querySelectorAll('.tn-group')).toHaveLength(2);
+    expect(host.querySelectorAll('.qn-group')).toHaveLength(2);
     dispose();
     expect(host.innerHTML).toBe('');
     dispose = () => {};

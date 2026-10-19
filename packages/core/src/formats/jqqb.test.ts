@@ -16,7 +16,7 @@ describe('jqqb', () => {
     ]);
     expect(out.rules[2]).toEqual({ id: 'age', field: 'age', type: 'integer', input: 'number', operator: 'less', value: 50 });
     expect(out.rules[12]).toMatchObject({ type: 'string', input: 'select', value: ['active', 'pending'] });
-    expect(out.rules[16]).toMatchObject({ operator: 'greater', value: null, data: { trawlnetRef: 'minAge' } });
+    expect(out.rules[16]).toMatchObject({ operator: 'greater', value: null, data: { qnotRef: 'minAge' } });
     expect(out.rules[17]).toMatchObject({ type: 'boolean', input: 'radio', value: true });
     expect(out.rules[18]).toMatchObject({ type: 'date', input: 'text' });
     expect(out.rules[19]).toMatchObject({ condition: 'OR', not: true });

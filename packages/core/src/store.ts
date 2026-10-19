@@ -327,17 +327,17 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
 
   const getNode = (id: NodeId) => {
     const n = nodes.get(id);
-    if (!n) throw new Error(`trawlnet: no node "${id}"`);
+    if (!n) throw new Error(`qnot: no node "${id}"`);
     return n;
   };
   const getGroup = (id: NodeId) => {
     const n = getNode(id);
-    if (n.kind !== 'group') throw new Error(`trawlnet: node "${id}" is not a group`);
+    if (n.kind !== 'group') throw new Error(`qnot: node "${id}" is not a group`);
     return n;
   };
   const getRule = (id: NodeId) => {
     const n = getNode(id);
-    if (n.kind !== 'rule') throw new Error(`trawlnet: node "${id}" is not a rule`);
+    if (n.kind !== 'rule') throw new Error(`qnot: node "${id}" is not a rule`);
     return n;
   };
 
@@ -760,7 +760,7 @@ export function createQueryStore<F extends Fields, T>(options: StoreOptions<F, T
     },
     clone(id) {
       const n = getNode(id);
-      if (n.parent === null) throw new Error('trawlnet: cannot clone the root group');
+      if (n.parent === null) throw new Error('qnot: cannot clone the root group');
       if (!can('clone', id)) return null;
       const p = getGroup(n.parent);
       return store.insert(p.id, toJSON(id), p.children.indexOf(id) + 1);

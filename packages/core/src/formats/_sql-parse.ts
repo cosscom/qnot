@@ -37,7 +37,7 @@ function tokenize(src: string, dialect: string): Tok[] {
   const out: Tok[] = [];
   let i = 0;
   const fail = (msg: string): never => {
-    throw new Error(`trawlnet/sql: ${msg} at position ${i} in: ${excerpt(src)}`);
+    throw new Error(`qnot/sql: ${msg} at position ${i} in: ${excerpt(src)}`);
   };
   if (src.length > MAX_LENGTH) fail(`input longer than ${MAX_LENGTH} characters`);
   while (i < src.length) {
@@ -178,7 +178,7 @@ export function parseSqlWhere(src: string, fields: Fields, dialect: string): Gro
     return t.t === 'op' && t.v === op ? (p++, true) : false;
   };
   const fail = (msg: string): never => {
-    throw new Error(`trawlnet/sql: ${msg} in: ${excerpt(src)}`);
+    throw new Error(`qnot/sql: ${msg} in: ${excerpt(src)}`);
   };
   let depth = 0;
   const enter = () => {

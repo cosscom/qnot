@@ -126,7 +126,7 @@ function build(kind: string, allOps: readonly string[], opts: object, defaultVal
     extraOperators?: readonly string[];
   };
   const ops = [...(operators ?? allOps).filter((o) => !excludeOperators?.includes(o as OperatorId)), ...(extraOperators ?? [])];
-  if (!ops.length) throw new Error(`trawlnet: a ${kind} field needs at least one operator`);
+  if (!ops.length) throw new Error(`qnot: a ${kind} field needs at least one operator`);
   return {
     ...rest,
     kind,
@@ -281,7 +281,7 @@ export interface SchemaRegistry {
   readonly messages: SchemaOptions['messages'];
 }
 
-const REGISTRY = Symbol.for('trawlnet.registry');
+const REGISTRY = Symbol.for('qnot.registry');
 
 function flatten(input: FieldsInput, prefix = '', group?: string, out: Record<string, AnyFieldDef> = {}): any {
   for (const [key, def] of Object.entries(input)) {
@@ -374,7 +374,7 @@ export function warnMissingRegistry(fields: Fields, query: unknown): void {
   if (!used.size) return;
   warnedSchemas.add(fields);
   console.warn(
-    `trawlnet: the query uses ${[...used].join(', ')}, but these fields have no function/operator registry. ` +
+    `qnot: the query uses ${[...used].join(', ')}, but these fields have no function/operator registry. ` +
       'Was a defineFields() result spread (`{ ...fields }`)? Use extendFields(base, more) to keep the registry.',
   );
 }

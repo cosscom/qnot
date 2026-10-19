@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-/** trawlnet's mark: a net's three knots on a line, then the name. */
+/** qnot's mark: a net's three knots on a line, then the name. */
 export function Wordmark() {
   return (
     <>
@@ -9,7 +9,7 @@ export function Wordmark() {
         <path d="M5.2 12h13.6" stroke="currentColor" strokeLinecap="round" strokeOpacity=".45" strokeWidth="1.6" />
         <circle cx="12" cy="12" fill="currentColor" r="1.6" />
       </svg>
-      <span>trawlnet</span>
+      <span>qnot</span>
     </>
   );
 }

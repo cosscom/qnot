@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CLASS, defaultCall, editorFor, functionOptions, isFnCall, refOptions, type AnyFieldDef, type Fields, type FnCall, type Operand } from '@trawlnet/core';
+  import { CLASS, defaultCall, editorFor, functionOptions, isFnCall, refOptions, type AnyFieldDef, type Fields, type FnCall, type Operand } from '@qnot/core';
   import FunctionEditor from './FunctionEditor.svelte';
   import LazySelect from './LazySelect.svelte';
   import ValueEditor from './ValueEditor.svelte';
@@ -25,10 +25,10 @@
   const source = $derived(isFnCall(operand) ? 'function' : 'ref' in operand ? 'field' : 'value');
 </script>
 
-<span class="tn-operand" title={label}>
+<span class="qn-operand" title={label}>
   {#if refs.length > 0 || nested.length > 0}
     <LazySelect
-      class="tn-source"
+      class="qn-source"
       value={source}
       options={sources}
       {disabled}

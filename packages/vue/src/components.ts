@@ -25,7 +25,7 @@ import {
   type Quantifier,
   type QueryStore,
   type StoreSettings,
-} from '@trawlnet/core';
+} from '@qnot/core';
 import { computed, defineComponent, Fragment, h, inject, onScopeDispose, provide, ref, toRaw, watch, type Component, type InjectionKey, type PropType, type VNode } from 'vue';
 import {
   provideQueryStore,
@@ -70,7 +70,7 @@ interface UI {
   showLock: boolean;
 }
 
-const UI_KEY: InjectionKey<UI> = Symbol('trawlnet-ui');
+const UI_KEY: InjectionKey<UI> = Symbol('qnot-ui');
 const useUI = () => inject(UI_KEY)!;
 
 const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' ');
@@ -146,7 +146,7 @@ const AsyncInput = defineComponent({
         }
       },
     );
-    const listId = `tn-async-${Math.random().toString(36).slice(2)}`;
+    const listId = `qn-async-${Math.random().toString(36).slice(2)}`;
     let ctrl: AbortController | null = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
     watch(
@@ -204,7 +204,7 @@ function scalar(p: ValueEditorProps): VNode {
     case 'number':
       return h(DraftInput, { type: 'number', value: p.value, min: def?.min, max: def?.max, step: def?.step, placeholder: def?.placeholder, parse, format: formatInput, onChange: p.onChange, invalid: p.invalid, disabled: p.disabled });
     case 'slider':
-      return h('span', { class: 'tn-slider' }, [
+      return h('span', { class: 'qn-slider' }, [
         h('input', {
           class: CLASS.value,
           type: 'range',
@@ -230,7 +230,7 @@ function scalar(p: ValueEditorProps): VNode {
 }
 
 export const DefaultValueEditor = defineComponent({
-  name: 'TrawlnetValueEditor',
+  name: 'QnotValueEditor',
   props: {
     editor: { type: Object as PropType<EditorSpec>, required: true },
     def: { type: Object as PropType<AnyFieldDef>, default: undefined },
@@ -248,7 +248,7 @@ export const DefaultValueEditor = defineComponent({
           return null;
         case 'two': {
           const pair = Array.isArray(p.value) ? p.value : [null, null];
-          return h('span', { class: 'tn-value-pair' }, [
+          return h('span', { class: 'qn-value-pair' }, [
             scalar({ ...p, value: pair[0], onChange: (v) => p.onChange([v, pair[1]]) }),
             h('span', p.labels.rangeSeparator),
             scalar({ ...p, value: pair[1], onChange: (v) => p.onChange([pair[0], v]) }),
@@ -299,7 +299,7 @@ const counts = (labels: Labels) => {
 
 /** Editor for a function call: pick the function, then each argument (literal, field, or nested call). */
 export const FunctionEditor: Component = defineComponent({
-  name: 'TrawlnetFunctionEditor',
+  name: 'QnotFunctionEditor',
   props: {
     call: { type: Object as PropType<FnCall>, required: true },
     fields: { type: Object as PropType<Fields>, required: true },
@@ -314,13 +314,13 @@ export const FunctionEditor: Component = defineComponent({
       const { call, fields } = props;
       const def = functionOf(fields, call);
       const args = Object.entries(def?.args ?? {});
-      return h('span', { class: 'tn-function' }, [
-        select('tn-function-name', call.fn, fns.value, (fn) => props.onChange(defaultCall(fields, fn)), props.disabled),
+      return h('span', { class: 'qn-function' }, [
+        select('qn-function-name', call.fn, fns.value, (fn) => props.onChange(defaultCall(fields, fn)), props.disabled),
         args.length
-          ? h('span', { class: 'tn-function-args' }, [
+          ? h('span', { class: 'qn-function-args' }, [
               '(',
               ...args.map(([name, argDef], i) =>
-                h('span', { key: name, class: 'tn-function-arg' }, [
+                h('span', { key: name, class: 'qn-function-arg' }, [
                   i > 0 ? ', ' : null,
                   h(OperandEditor, {
                     operand: call.args[name] ?? { value: null },
@@ -365,7 +365,7 @@ const OperandEditor: Component = defineComponent({
       const source = isFnCall(operand) ? 'function' : 'ref' in operand ? 'field' : 'value';
       const sourceSelect =
         refs.value.length || nested.value.length
-          ? select('tn-source', source, sources.value, (v) =>
+          ? select('qn-source', source, sources.value, (v) =>
               props.onChange(v === 'field' ? { ref: refs.value[0]!.value } : v === 'function' ? defaultCall(fields, nested.value[0]!.value) : { value: def.defaultValue ?? null }),
             props.disabled)
           : null;
@@ -374,7 +374,7 @@ const OperandEditor: Component = defineComponent({
         : 'ref' in operand
           ? select(CLASS.value, operand.ref, refs.value, (ref) => props.onChange({ ref }), props.disabled)
           : scalar({ editor: editorFor(def, 'eq', fields), def, value: operand.value, invalid: false, disabled: props.disabled, labels: props.labels, onChange: (value) => props.onChange({ value }) });
-      return h('span', { class: 'tn-operand', title: label }, [sourceSelect, body]);
+      return h('span', { class: 'qn-operand', title: label }, [sourceSelect, body]);
     };
   },
 });
@@ -397,7 +397,7 @@ const btn = (label: string, onClick: () => void, opts: { title?: string; disable
   );
 
 export const DefaultRule = defineComponent({
-  name: 'TrawlnetRule',
+  name: 'QnotRule',
   props: idProp,
   setup(props) {
     const store = useStore();
@@ -432,7 +432,7 @@ export const DefaultRule = defineComponent({
           h('span', { class: CLASS.handle, 'aria-label': labels.drag, ...handleProps }, '⠿'),
           lhsFunctions.value.length
             ? btn('ƒ', () => r.setField(fieldIsFn ? r.fieldOptions.value[0]!.value : defaultCall(fields, lhsFunctions.value[0]!.value)), {
-                class: cx(CLASS.action, 'tn-lhs-toggle'),
+                class: cx(CLASS.action, 'qn-lhs-toggle'),
                 title: fieldIsFn ? labels.useField : labels.useFunction,
                 disabled: !can.editField,
                 pressed: fieldIsFn,
@@ -444,7 +444,7 @@ export const DefaultRule = defineComponent({
           select(CLASS.operator, rule.operator, r.operators.value, r.setOperator, !can.editOperator),
           refs.length || fns.length
             ? h(LazySelect, {
-                class: 'tn-source',
+                class: 'qn-source',
                 value: r.source.value,
                 options: sources.value,
                 disabled: !can.editValue,
@@ -469,7 +469,7 @@ export const DefaultRule = defineComponent({
 });
 
 const NodeView = defineComponent({
-  name: 'TrawlnetNode',
+  name: 'QnotNode',
   props: idProp,
   setup(props) {
     const { components } = useUI();
@@ -482,11 +482,11 @@ const NodeView = defineComponent({
 /** "some / all / none / at least N of Orders where …" for array groups. */
 function matchEditor(match: Quantifier, label: string, onChange: (m: Quantifier) => void, disabled: boolean, labels: Labels) {
   const mode = typeof match === 'string' ? match : 'count';
-  return h('span', { class: 'tn-match' }, [
+  return h('span', { class: 'qn-match' }, [
     h(
       'select',
       {
-        class: 'tn-match-mode',
+        class: 'qn-match-mode',
         value: mode,
         disabled,
         onChange: (e: Event) => {
@@ -498,8 +498,8 @@ function matchEditor(match: Quantifier, label: string, onChange: (m: Quantifier)
     ),
     ...(typeof match === 'object' && match.count !== 'between'
       ? [
-          select('tn-match-op', match.count, counts(labels), (count) => onChange({ count: count as 'gte', value: match.value }), disabled),
-          h('input', { class: 'tn-match-count', type: 'number', min: 0, value: match.value, disabled, onInput: (e: Event) => onChange({ count: match.count, value: Number(target(e).value) }) }),
+          select('qn-match-op', match.count, counts(labels), (count) => onChange({ count: count as 'gte', value: match.value }), disabled),
+          h('input', { class: 'qn-match-count', type: 'number', min: 0, value: match.value, disabled, onInput: (e: Event) => onChange({ count: match.count, value: Number(target(e).value) }) }),
         ]
       : []),
     h('span', [`${labels.matchOf} `, h('strong', label), ` ${labels.matchWhere}`]),
@@ -507,7 +507,7 @@ function matchEditor(match: Quantifier, label: string, onChange: (m: Quantifier)
 }
 
 export const DefaultGroup = defineComponent({
-  name: 'TrawlnetGroup',
+  name: 'QnotGroup',
   props: idProp,
   setup(props) {
     const store = useStore();
@@ -549,7 +549,7 @@ export const DefaultGroup = defineComponent({
               ? h(
                   'select',
                   {
-                    class: 'tn-add-array',
+                    class: 'qn-add-array',
                     value: '',
                     disabled: !can.addGroup,
                     onChange: (e: Event) => {
@@ -582,7 +582,7 @@ export const DefaultGroup = defineComponent({
  * it creates one. Emits `update:modelValue` and `change` with the query in `format`'s shape.
  */
 export const QueryBuilder = defineComponent({
-  name: 'TrawlnetQueryBuilder',
+  name: 'QnotQueryBuilder',
   props: {
     store: { type: Object as PropType<QueryStore<any, any>>, default: undefined },
     fields: { type: Object as PropType<Fields>, default: undefined },
@@ -615,7 +615,7 @@ export const QueryBuilder = defineComponent({
         { flush: 'sync', immediate: true },
       );
     } else {
-      if (!props.fields) throw new Error('trawlnet: <QueryBuilder> needs a `store` or `fields`');
+      if (!props.fields) throw new Error('qnot: <QueryBuilder> needs a `store` or `fields`');
       // Props may arrive as reactive proxies; the store needs the plain schema and values.
       store = useQueryStore<Fields, unknown>({
         fields: toRaw(props.fields),

@@ -22,7 +22,7 @@ import {
   type RuleNode,
   type StoreNode,
   type StoreOptions,
-} from '@trawlnet/core';
+} from '@qnot/core';
 import { createContext, createElement, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSync } from './sync';
 
@@ -40,7 +40,7 @@ export function QueryProvider({ store, children }: { store: QueryStore<any, any>
 
 function useCtx(): Ctx {
   const ctx = useContext(QueryContext);
-  if (!ctx) throw new Error('trawlnet: wrap your components in <QueryProvider store={...}> (or use <QueryBuilder>)');
+  if (!ctx) throw new Error('qnot: wrap your components in <QueryProvider store={...}> (or use <QueryBuilder>)');
   return ctx;
 }
 

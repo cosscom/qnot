@@ -3,7 +3,7 @@ title: Codecs
 description: What each built-in format codec does with every feature.
 ---
 
-Every codec lives at `@trawlnet/core/formats/<name>` and works with `encode(codec, query, fields)`,
+Every codec lives at `@qnot/core/formats/<name>` and works with `encode(codec, query, fields)`,
 `decode(codec, value, fields)` and (where noted) `encodeCases(codec, cases, fields)`.
 
 **Export codecs** (sql, mongo, jsonlogic, spel, elasticsearch) skip *incomplete* rules (a value
@@ -12,7 +12,7 @@ range, unknown field) and a *valid rule the target can't express* both throw by 
 export never silently matches more than the query (`text` renders what it can and never throws). Examples: a function with no
 format for the codec, array operators on ANSI SQL, array groups outside Postgres, counts in
 Elasticsearch. The error names the rule's path, field, operator and the reason, e.g.
-``trawlnet/sql: can't express the rule at [1] (field "tags", operator "hasAny"): the ansi dialect has no array operators (use postgres, mysql, sqlite or mssql)``.
+``qnot/sql: can't express the rule at [1] (field "tags", operator "hasAny"): the ansi dialect has no array operators (use postgres, mysql, sqlite or mssql)``.
 
 **UI-state codecs** (rqb, raqb, jqqb) are faithful: they keep incomplete rules so they can serve as
 a store `format`. When the target library has no equivalent of something, they throw the same kind
@@ -175,10 +175,10 @@ Elasticsearch field). Struct fields are dotted paths. SQL quotes each segment wh
 
 ### rqb, jqqb (two-way, faithful)
 - Operators these libraries lack (isEmpty in rqb, the multiEnum ones, custom operators) travel
-  under their trawlnet id. Register matching custom operators in those libraries to edit them there.
+  under their qnot id. Register matching custom operators in those libraries to edit them there.
 - Function calls and array groups throw, since neither library can represent them.
 - `locked` isn't mapped.
-- jqqb carries field refs in `data.trawlnetRef`.
+- jqqb carries field refs in `data.qnotRef`.
 
 ## Security
 

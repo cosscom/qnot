@@ -3,12 +3,12 @@ title: On the server
 description: Share one schema, validate what the browser sends, and run it as parameterized SQL or in memory.
 ---
 
-`@trawlnet/core` has no DOM and no framework, so the same schema module runs in the browser and in
+`@qnot/core` has no DOM and no framework, so the same schema module runs in the browser and in
 Node, Bun, Deno or an edge function. The browser builds a query; the server decides whether to
 trust it.
 
 ```ts title="fields.ts (shared)"
-import { builtinFunctions, defineFields, f } from '@trawlnet/core';
+import { builtinFunctions, defineFields, f } from '@qnot/core';
 
 export const fields = defineFields(
   {
@@ -22,8 +22,8 @@ export const fields = defineFields(
 ```
 
 ```ts title="server.ts"
-import { assertValidQuery, encode, type QueryOf } from '@trawlnet/core';
-import { sqlFormat } from '@trawlnet/core/formats/sql';
+import { assertValidQuery, encode, type QueryOf } from '@qnot/core';
+import { sqlFormat } from '@qnot/core/formats/sql';
 import { fields } from './fields';
 
 // emptyQuery: 'throw' refuses a query with no rules instead of matching every row.
@@ -85,7 +85,7 @@ Threat model, guarantees per dialect, and the audit results: [SECURITY.md](https
 The same query filters rows without a database:
 
 ```ts
-import { compile } from '@trawlnet/core';
+import { compile } from '@qnot/core';
 
 const matches = compile(fields, query);
 const result = rows.filter(matches);

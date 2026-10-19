@@ -23,7 +23,7 @@ const results = (): Results => JSON.parse(readFileSync(RESULTS, 'utf8')) as Resu
 const sizes = (): Sizes => JSON.parse(readFileSync(SIZES, 'utf8')) as Sizes;
 
 /** Libraries whose bundle includes React; their size is reported without it. */
-const REACT_BASED = new Set(['trawlnet', 'rqb', 'raqb']);
+const REACT_BASED = new Set(['qnot', 'rqb', 'raqb']);
 
 export interface BenchRow {
   id: string;

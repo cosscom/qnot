@@ -1,11 +1,11 @@
 # Notice: code adapted from cosscom/coss (AGPL-3.0)
 
-This app (`apps/web`, the trawlnet website and docs) adapts code and design from
+This app (`apps/web`, the qnot website and docs) adapts code and design from
 [cosscom/coss](https://github.com/cosscom/coss) and the coss ui component registry
 ([cosscom/ui](https://github.com/cosscom/ui)), both licensed **AGPL-3.0**. Those parts stay under
 AGPL-3.0; this directory is therefore distributed under AGPL-3.0 as a whole.
 
-**The `@trawlnet/*` packages in `packages/` are separate works, licensed MIT.** None of the code
+**The `@qnot/*` packages in `packages/` are separate works, licensed MIT.** None of the code
 listed here is used by, imported into, or shipped with any package under `packages/`.
 
 ## Adapted from cosscom/coss `apps/site`
@@ -43,7 +43,7 @@ listed here is used by, imported into, or shipped with any package under `packag
 ## The shadcn registry is MIT
 
 Everything served from `/r/*.json` (built from `registry/items.json` by `scripts/build-registry.mjs`)
-is our own code under `src/components/trawlnet/`, MIT licensed like the `@trawlnet/*` packages; each
+is our own code under `src/components/qnot/`, MIT licensed like the `@qnot/*` packages; each
 file says so in its header. None of the AGPL-3.0 files above is in the registry: the coss ui
 components it needs are pulled from coss's own registry (`https://coss.com/ui/r/<name>.json`), never
 copied into ours. `registry/resolve.mjs` rejects any registry file importing something outside npm,

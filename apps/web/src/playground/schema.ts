@@ -1,6 +1,6 @@
 // The main playground's schema: one of every RAQB-parity feature (structs, lists, multi-select,
 // tree options, async search, time/datetime, widgets, a custom operator and functions).
-import { builtinFunctions, defineFields, defineOperator, f, type QueryOf } from '@trawlnet/core';
+import { builtinFunctions, defineFields, defineOperator, f, type QueryOf } from '@qnot/core';
 
 /** Custom operator: "is within N km". Evaluates in JS and exports to SQL. */
 export const near = defineOperator({

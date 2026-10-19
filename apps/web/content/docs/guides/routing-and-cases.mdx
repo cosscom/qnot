@@ -8,7 +8,7 @@ first matching team, pick a price tier, assign a support queue. That's RAQB's "t
 `CASE WHEN`.
 
 ```ts
-import { compileCases, type CasesOf } from '@trawlnet/core';
+import { compileCases, type CasesOf } from '@qnot/core';
 
 const routes: CasesOf<typeof fields, { team: string }> = {
   cases: [
@@ -36,8 +36,8 @@ on the group.
 `encodeCases` exports the whole switch with codecs that support it:
 
 ```ts
-import { encodeCases } from '@trawlnet/core';
-import { sqlFormat } from '@trawlnet/core/formats/sql';
+import { encodeCases } from '@qnot/core';
+import { sqlFormat } from '@qnot/core/formats/sql';
 
 encodeCases(sqlFormat({ dialect: 'postgres' }), { cases: routes.cases.map((c) => ({ when: c.when, then: c.then.team })), otherwise: 'self-serve' }, fields);
 // CASE WHEN … THEN 'sales' WHEN … THEN 'emea-support' ELSE 'self-serve' END

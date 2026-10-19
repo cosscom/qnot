@@ -12,7 +12,7 @@ import { benchAt1000 } from '@/lib/bench';
 
 export const metadata: Metadata = { title: { absolute: SITE_TITLE }, description: SITE_DESCRIPTION };
 
-// trawlnet's landing page, drawn like coss.com/shipyard's: one ruled sheet between the shell's
+// qnot's landing page, drawn like coss.com/shipyard's: one ruled sheet between the shell's
 // rails, each section closing with a hairline. The drawings are components/drawings; each sits in
 // a Stage, which drops its parts in when it scrolls into view.
 export default function Page() {
@@ -37,7 +37,7 @@ function Hero() {
         </h1>
         <div className="flex flex-col gap-6 lg:col-span-4 lg:pb-2">
           <p className="max-w-md text-lg text-muted-foreground leading-snug">
-            trawlnet is typed from your schema to the SQL it writes, runs in React, Vue, Svelte, Solid or plain JS, and wears any UI kit. Editing one rule re-renders one
+            qnot is typed from your schema to the SQL it writes, runs in React, Vue, Svelte, Solid or plain JS, and wears any UI kit. Editing one rule re-renders one
             rule. About 15 KB.
           </p>
           <div className="flex flex-wrap gap-2.5">
@@ -151,7 +151,7 @@ function Features() {
   return (
     <section aria-labelledby="features-title" className="scroll-mt-14 border-b" id="features">
       <SectionHead id="features-title" title="Built for queries people actually build.">
-        Filters, segments, routing rules, alert thresholds, access policies. trawlnet is the part they all share: a typed tree, edited fast, exported anywhere.
+        Filters, segments, routing rules, alert thresholds, access policies. qnot is the part they all share: a typed tree, edited fast, exported anywhere.
       </SectionHead>
       <div className="grid grid-cols-1 md:grid-cols-2">
         {FEATURES.map((feature, index) => (
@@ -181,7 +181,7 @@ function Features() {
 
 /** The libraries in the landing table, in order; numbers come from bench/results at build time. */
 const BENCH_LIBS = [
-  { id: 'trawlnet', name: 'trawlnet', version: '0.1 · React UI', us: true },
+  { id: 'qnot', name: 'qnot', version: '0.1 · React UI', us: true },
   { id: 'rqb', name: 'react-querybuilder', version: '8.25' },
   { id: 'raqb', name: 'react-awesome-query-builder', version: '6.6' },
   { id: 'jqqb', name: 'jQuery QueryBuilder', version: '3.0', note: 'incl. jQuery' },
@@ -278,7 +278,7 @@ function Yard() {
       </SectionHead>
       <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         {YARD.map((item) => (
-          <li className="tn-yard border-b" key={item.name}>
+          <li className="qn-yard border-b" key={item.name}>
             <Link className="flex h-full flex-col gap-2.5 px-4 py-7 transition-colors hover:bg-muted/40 sm:px-8" href={item.href}>
               <div className="flex items-baseline justify-between gap-4">
                 <span className="font-medium text-lg">{item.name}</span>

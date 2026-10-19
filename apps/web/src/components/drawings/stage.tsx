@@ -26,7 +26,7 @@ export function Stage({ className, children }: { className?: string; children: R
     return () => observer.disconnect();
   }, []);
   return (
-    <div className={cn('tn-stage', className)} ref={ref}>
+    <div className={cn('qn-stage', className)} ref={ref}>
       {children}
     </div>
   );

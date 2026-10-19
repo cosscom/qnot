@@ -100,7 +100,7 @@ export function encodeCallOrThrow<T>(codec: string, fields: Fields, call: FnCall
   if (out === undefined) {
     const def = functionOf(fields, call);
     throw new Error(
-      `trawlnet/${codec}: ${def ? `function "${call.fn}" has no ${codec} format` : `unknown function "${call.fn}"`} (add formats.${codec} to its defineFunction)`,
+      `qnot/${codec}: ${def ? `function "${call.fn}" has no ${codec} format` : `unknown function "${call.fn}"`} (add formats.${codec} to its defineFunction)`,
     );
   }
   return out;
@@ -237,7 +237,7 @@ export function unsupportedError(codec: string, u: Unsupported, skippable = true
       ? `the rule at [${u.path.join(', ')}] (field "${typeof s.field === 'string' ? s.field : `${s.field.fn}()`}", operator "${s.operator}")`
       : `the array group at [${u.path.join(', ')}] (field "${s.of?.field ?? ''}")`;
   const hint = skippable ? ". Pass `unsupported: 'skip'` to drop it instead (this widens the query)" : '';
-  return new Error(`trawlnet/${codec}: can't express ${what}: ${u.reason}${hint}`);
+  return new Error(`qnot/${codec}: can't express ${what}: ${u.reason}${hint}`);
 }
 
 /** Resolve the root of an export: an unsupported marker throws, an empty query follows `emptyQuery`. */
@@ -249,7 +249,7 @@ export function finishRoot<N, T>(
 ): T {
   if (isUnsupported(root) && modes.unsupported === 'throw') throw unsupportedError(codec, root);
   if (root === undefined || isUnsupported(root)) {
-    if (modes.emptyQuery === 'throw') throw new Error(`trawlnet/${codec}: the query has no rules to export (pass \`emptyQuery: 'all' | 'none'\` to allow it)`);
+    if (modes.emptyQuery === 'throw') throw new Error(`qnot/${codec}: the query has no rules to export (pass \`emptyQuery: 'all' | 'none'\` to allow it)`);
     return modes.emptyQuery === 'none' ? outputs.none() : outputs.all();
   }
   return outputs.some(root);

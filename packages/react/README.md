@@ -1,15 +1,15 @@
-# @trawlnet/react
+# @qnot/react
 
-React bindings for trawlnet: headless hooks plus a small unstyled `<QueryBuilder>`.
+React bindings for qnot: headless hooks plus a small unstyled `<QueryBuilder>`.
 
 ```sh
-pnpm add @trawlnet/core @trawlnet/react
+pnpm add @qnot/core @qnot/react
 ```
 
 ```tsx
-import '@trawlnet/core/styles.css';
-import { defineFields, f } from '@trawlnet/core';
-import { QueryBuilder } from '@trawlnet/react';
+import '@qnot/core/styles.css';
+import { defineFields, f } from '@qnot/core';
+import { QueryBuilder } from '@qnot/react';
 
 const fields = defineFields({ name: f.text(), age: f.number() });
 
@@ -20,4 +20,4 @@ Build your own UI with `useQueryStore`, `QueryProvider`, `useRule`, `useGroup`, 
 
 Docs: https://github.com/sean-brydon/trawlnet/tree/main/apps/web/content/docs
 
-MIT licensed. Part of [trawlnet](https://github.com/sean-brydon/trawlnet).
+MIT licensed. Part of [qnot](https://github.com/sean-brydon/trawlnet).

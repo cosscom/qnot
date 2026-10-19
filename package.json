@@ -1,5 +1,5 @@
 {
-  "name": "trawlnet-monorepo",
+  "name": "qnot-monorepo",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.0.9",

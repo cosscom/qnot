@@ -1,4 +1,4 @@
-import { createQueryStore, defineFields, f, type QueryOf } from '@trawlnet/core';
+import { createQueryStore, defineFields, f, type QueryOf } from '@qnot/core';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 import { QueryBuilder } from '../src/index';
@@ -48,8 +48,8 @@ describe('Svelte <QueryBuilder>', () => {
   it('renders, edits and reports changes', () => {
     const changes: Q[] = [];
     const host = render(QueryBuilder, { fields, initial, onchange: (v: Q) => changes.push(v) });
-    expect(host.querySelectorAll('.tn-rule')).toHaveLength(3);
-    type(host.querySelector('input.tn-value[type="text"]')!, 'Grace');
+    expect(host.querySelectorAll('.qn-rule')).toHaveLength(3);
+    type(host.querySelector('input.qn-value[type="text"]')!, 'Grace');
     expect(changes.at(-1)!.children[0]).toEqual({ kind: 'rule', field: 'name', operator: 'eq', value: 'Grace' });
   });
 
@@ -68,7 +68,7 @@ describe('Svelte <QueryBuilder>', () => {
 
   it('supports bind:value and external changes', () => {
     const host = render(Harness, { fields, value: initial });
-    type(host.querySelector('input.tn-value[type="number"]')!, '41');
+    type(host.querySelector('input.qn-value[type="number"]')!, '41');
     expect(JSON.parse(host.querySelector('pre')!.textContent!).children[1]).toEqual({ kind: 'rule', field: 'age', operator: 'gt', value: 41 });
   });
 
@@ -77,15 +77,15 @@ describe('Svelte <QueryBuilder>', () => {
     const host = render(QueryBuilder, { store });
     [...host.querySelectorAll('button')].find((b) => b.textContent === '+ Group')!.click();
     flushSync();
-    expect(host.querySelectorAll('.tn-group')).toHaveLength(2);
-    const nested = host.querySelectorAll('.tn-group')[1]!;
+    expect(host.querySelectorAll('.qn-group')).toHaveLength(2);
+    const nested = host.querySelectorAll('.qn-group')[1]!;
     [...nested.querySelectorAll('button')].find((b) => b.textContent === '+ Rule')!.click();
     flushSync();
     // New groups start with one rule (RAQB default), so this is the second.
     expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }, { kind: 'rule', field: 'name' }] });
-    choose(host.querySelectorAll<HTMLSelectElement>('select.tn-operator')[1]!, 'between');
-    expect(host.querySelectorAll('.tn-value-pair input')).toHaveLength(2);
-    const notBox = host.querySelector<HTMLInputElement>('.tn-not input')!;
+    choose(host.querySelectorAll<HTMLSelectElement>('select.qn-operator')[1]!, 'between');
+    expect(host.querySelectorAll('.qn-value-pair input')).toHaveLength(2);
+    const notBox = host.querySelector<HTMLInputElement>('.qn-not input')!;
     notBox.checked = true;
     notBox.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
@@ -93,7 +93,7 @@ describe('Svelte <QueryBuilder>', () => {
     store.undo();
     store.undo();
     flushSync();
-    expect(host.querySelectorAll('.tn-value-pair')).toHaveLength(0);
+    expect(host.querySelectorAll('.qn-value-pair')).toHaveLength(0);
   });
 });
 
@@ -104,11 +104,11 @@ describe('Svelte controlled mode', () => {
     const props = $state({ fields, value: initial });
     mounted.push(mount(Harness, { target, props }));
     flushSync();
-    expect(target.querySelectorAll('.tn-rule')).toHaveLength(3);
+    expect(target.querySelectorAll('.qn-rule')).toHaveLength(3);
     props.value = { ...initial, children: initial.children.slice(1) };
     flushSync();
-    expect(target.querySelectorAll('.tn-rule')).toHaveLength(2);
-    type(target.querySelector('input.tn-value[type="number"]')!, '7');
+    expect(target.querySelectorAll('.qn-rule')).toHaveLength(2);
+    type(target.querySelector('input.qn-value[type="number"]')!, '7');
     expect(JSON.parse(target.querySelector('pre')!.textContent!).children[0]).toEqual({ kind: 'rule', field: 'age', operator: 'gt', value: 7 });
   });
 });

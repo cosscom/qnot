@@ -1,10 +1,10 @@
 /* The landing page's drawings (components/drawings): catalog line art (faces from --iso-*, 1px
-   strokes in the foreground colour) with trawlnet's one teal lamp, and their motion. Adapted from
+   strokes in the foreground colour) with qnot's one teal lamp, and their motion. Adapted from
    cosscom/coss apps/site/src/app/(shipyard)/shipyard/(home)/landing.css (AGPL-3.0); see NOTICE.md.
    Parts drop in once their Stage scrolls into view; groups marked .lift rise on hover; lamps
    breathe and wires march. Nothing moves under prefers-reduced-motion. */
 
-.tn-iso {
+.qn-iso {
   --tn-lamp: #0d9488;
   --tn-lamp-ink: #0f766e;
   --tn-red-ink: #b83a2e;
@@ -14,16 +14,16 @@
   overflow: visible;
   color: var(--foreground);
 }
-.dark .tn-iso {
+.dark .qn-iso {
   --tn-lamp: #2dd4bf;
   --tn-lamp-ink: #5eead4;
   --tn-red-ink: #f08a7f;
 }
 
-.tn-iso .face,
-.tn-iso .stroke,
-.tn-iso .screen,
-.tn-iso .ghost {
+.qn-iso .face,
+.qn-iso .stroke,
+.qn-iso .screen,
+.qn-iso .ghost {
   stroke: currentColor;
   stroke-width: 1;
   stroke-linejoin: round;
@@ -31,19 +31,19 @@
   vector-effect: non-scaling-stroke;
   fill: none;
 }
-.tn-iso .l { fill: var(--iso-left); }
-.tn-iso .r { fill: var(--iso-right); }
-.tn-iso .t { fill: var(--iso-top); }
-.tn-iso .tray .t { fill: color-mix(in srgb, var(--foreground) 2.5%, var(--background)); }
-.tn-iso .solid .t { fill: var(--foreground); }
-.tn-iso .solid .l { fill: color-mix(in srgb, var(--foreground) 82%, var(--background)); }
-.tn-iso .solid .r { fill: color-mix(in srgb, var(--foreground) 72%, var(--background)); }
-.tn-iso .lit .t { fill: color-mix(in srgb, var(--tn-lamp) 14%, var(--background)); }
-.tn-iso .lit .face { stroke: var(--tn-lamp-ink); }
-.tn-iso .screen { fill: var(--background); }
-.tn-iso .ghost,
-.tn-iso .drop { stroke: color-mix(in srgb, var(--foreground) 30%, transparent); }
-.tn-iso .drop {
+.qn-iso .l { fill: var(--iso-left); }
+.qn-iso .r { fill: var(--iso-right); }
+.qn-iso .t { fill: var(--iso-top); }
+.qn-iso .tray .t { fill: color-mix(in srgb, var(--foreground) 2.5%, var(--background)); }
+.qn-iso .solid .t { fill: var(--foreground); }
+.qn-iso .solid .l { fill: color-mix(in srgb, var(--foreground) 82%, var(--background)); }
+.qn-iso .solid .r { fill: color-mix(in srgb, var(--foreground) 72%, var(--background)); }
+.qn-iso .lit .t { fill: color-mix(in srgb, var(--tn-lamp) 14%, var(--background)); }
+.qn-iso .lit .face { stroke: var(--tn-lamp-ink); }
+.qn-iso .screen { fill: var(--background); }
+.qn-iso .ghost,
+.qn-iso .drop { stroke: color-mix(in srgb, var(--foreground) 30%, transparent); }
+.qn-iso .drop {
   stroke-width: 1;
   stroke-dasharray: 2 5;
   stroke-linecap: round;
@@ -52,34 +52,34 @@
 }
 
 /* Bars of "text" on a face. */
-.tn-iso .bar { fill: none; stroke-linecap: round; }
-.tn-iso .bar.ink { stroke: color-mix(in srgb, var(--foreground) 80%, var(--background)); }
-.tn-iso .bar.line { stroke: color-mix(in srgb, var(--foreground) 18%, var(--background)); }
-.tn-iso .bar.dim { stroke: color-mix(in srgb, var(--foreground) 28%, var(--background)); }
-.tn-iso .bar.soft { stroke: color-mix(in srgb, var(--foreground) 10%, var(--background)); }
-.tn-iso .bar.lamp { stroke: var(--tn-lamp); }
+.qn-iso .bar { fill: none; stroke-linecap: round; }
+.qn-iso .bar.ink { stroke: color-mix(in srgb, var(--foreground) 80%, var(--background)); }
+.qn-iso .bar.line { stroke: color-mix(in srgb, var(--foreground) 18%, var(--background)); }
+.qn-iso .bar.dim { stroke: color-mix(in srgb, var(--foreground) 28%, var(--background)); }
+.qn-iso .bar.soft { stroke: color-mix(in srgb, var(--foreground) 10%, var(--background)); }
+.qn-iso .bar.lamp { stroke: var(--tn-lamp); }
 
 /* Words. */
-.tn-iso .print {
+.qn-iso .print {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-variant-ligatures: none;
 }
-.tn-iso .print.ink { fill: var(--foreground); }
-.tn-iso .print.muted { fill: var(--muted-foreground); }
-.tn-iso .print.lamp { fill: var(--tn-lamp-ink); }
-.tn-iso .print.red { fill: var(--tn-red-ink); }
-.tn-iso .call { fill: var(--foreground); font-size: 17px; font-family: var(--font-sans), sans-serif; }
-.tn-iso .pin { fill: var(--foreground); }
+.qn-iso .print.ink { fill: var(--foreground); }
+.qn-iso .print.muted { fill: var(--muted-foreground); }
+.qn-iso .print.lamp { fill: var(--tn-lamp-ink); }
+.qn-iso .print.red { fill: var(--tn-red-ink); }
+.qn-iso .call { fill: var(--foreground); font-size: 17px; font-family: var(--font-sans), sans-serif; }
+.qn-iso .pin { fill: var(--foreground); }
 
 /* The lamp, and the wires. */
-.tn-iso .lamp-dot .dot { fill: var(--tn-lamp); }
-.tn-iso .lamp-dot .glow {
+.qn-iso .lamp-dot .dot { fill: var(--tn-lamp); }
+.qn-iso .lamp-dot .glow {
   fill: var(--tn-lamp);
   opacity: 0.18;
   transform-box: fill-box;
   transform-origin: center;
 }
-.tn-iso .wire {
+.qn-iso .wire {
   fill: none;
   stroke: currentColor;
   stroke-width: 1;
@@ -87,86 +87,86 @@
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
 }
-.tn-iso .wire.quiet { stroke: color-mix(in srgb, var(--foreground) 30%, transparent); }
-.tn-iso .wire.lamp { stroke: var(--tn-lamp); }
+.qn-iso .wire.quiet { stroke: color-mix(in srgb, var(--foreground) 30%, transparent); }
+.qn-iso .wire.lamp { stroke: var(--tn-lamp); }
 
 /* What's idle is drawn in a lighter line. */
-.tn-iso .dim { color: color-mix(in srgb, var(--foreground) 34%, var(--background)); }
-.tn-iso .dim .l,
-.tn-iso .dim .r,
-.tn-iso .dim .t { fill: color-mix(in srgb, var(--foreground) 2%, var(--background)); }
+.qn-iso .dim { color: color-mix(in srgb, var(--foreground) 34%, var(--background)); }
+.qn-iso .dim .l,
+.qn-iso .dim .r,
+.qn-iso .dim .t { fill: color-mix(in srgb, var(--foreground) 2%, var(--background)); }
 
 @media (width < 48rem) {
-  .tn-iso-hero .callout { display: none; }
+  .qn-iso-hero .callout { display: none; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   /* Mount: a drawing's parts wait above their places, then drop in one after another. */
-  .tn-stage .part {
+  .qn-stage .part {
     transition:
       translate 0.9s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 110ms + 80ms),
       opacity 0.45s ease calc(var(--i, 0) * 110ms + 80ms);
   }
-  .tn-stage[data-armed]:not([data-in]) .part {
+  .qn-stage[data-armed]:not([data-in]) .part {
     opacity: 0;
     translate: 0 -28px;
     transition: none;
   }
   /* The edited rule rises out of the tray last. */
-  .tn-stage .slab {
+  .qn-stage .slab {
     transition:
       translate 0.8s cubic-bezier(0.34, 1.4, 0.64, 1) 1.1s,
       opacity 0.3s ease 1.1s;
   }
-  .tn-stage[data-armed]:not([data-in]) .slab {
+  .qn-stage[data-armed]:not([data-in]) .slab {
     opacity: 0;
     translate: 0 30px;
     transition: none;
   }
-  .tn-stage[data-in] .pop {
-    animation: tn-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.4s both;
+  .qn-stage[data-in] .pop {
+    animation: qn-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.4s both;
     transform-box: fill-box;
     transform-origin: left bottom;
   }
 
-  .tn-iso .lamp-dot .glow { animation: tn-glow 2.6s ease-in-out infinite; }
-  .tn-iso .wire { animation: tn-march 1.4s linear infinite; }
-  .tn-iso .cursor { animation: tn-blink 1.1s steps(1) infinite; }
+  .qn-iso .lamp-dot .glow { animation: qn-glow 2.6s ease-in-out infinite; }
+  .qn-iso .wire { animation: qn-march 1.4s linear infinite; }
+  .qn-iso .cursor { animation: qn-blink 1.1s steps(1) infinite; }
 
-  .tn-iso .lift,
-  .tn-iso .press { transition: translate 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
+  .qn-iso .lift,
+  .qn-iso .press { transition: translate 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
   @media (hover: hover) {
-    .tn-stage:hover .lift { translate: 0 -12px; }
-    .tn-stage:hover .lift.l2 { translate: 0 -22px; }
-    .tn-stage:hover .press { translate: 0 3px; }
-    .tn-iso .tile:hover .lift { translate: 0 -10px; }
-    .tn-stage:hover .tn-iso .wire { animation-duration: 0.6s; }
-    .tn-stage:hover .tn-iso .lamp-dot .glow { animation-duration: 1.1s; }
+    .qn-stage:hover .lift { translate: 0 -12px; }
+    .qn-stage:hover .lift.l2 { translate: 0 -22px; }
+    .qn-stage:hover .press { translate: 0 3px; }
+    .qn-iso .tile:hover .lift { translate: 0 -10px; }
+    .qn-stage:hover .qn-iso .wire { animation-duration: 0.6s; }
+    .qn-stage:hover .qn-iso .lamp-dot .glow { animation-duration: 1.1s; }
   }
 }
 
-@keyframes tn-pop {
+@keyframes qn-pop {
   from { opacity: 0; scale: 0.6; }
 }
-@keyframes tn-glow {
+@keyframes qn-glow {
   0%, 100% { opacity: 0.12; scale: 0.85; }
   50% { opacity: 0.32; scale: 1.25; }
 }
-@keyframes tn-march {
+@keyframes qn-march {
   to { stroke-dashoffset: -14; }
 }
-@keyframes tn-blink {
+@keyframes qn-blink {
   50% { opacity: 0; }
 }
 
 /* The yard's ruled cells: one column, then two, then four. */
-.tn-yard:last-child { border-bottom: 0; }
+.qn-yard:last-child { border-bottom: 0; }
 @media (width >= 40rem) {
-  .tn-yard:nth-child(odd) { border-right: 1px solid var(--border); }
-  .tn-yard:nth-last-child(-n + 2) { border-bottom: 0; }
+  .qn-yard:nth-child(odd) { border-right: 1px solid var(--border); }
+  .qn-yard:nth-last-child(-n + 2) { border-bottom: 0; }
 }
 @media (width >= 80rem) {
-  .tn-yard { border-right: 1px solid var(--border); }
-  .tn-yard:nth-child(4n) { border-right: 0; }
-  .tn-yard:nth-last-child(-n + 4) { border-bottom: 0; }
+  .qn-yard { border-right: 1px solid var(--border); }
+  .qn-yard:nth-child(4n) { border-right: 0; }
+  .qn-yard:nth-last-child(-n + 4) { border-bottom: 0; }
 }

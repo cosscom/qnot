@@ -1,23 +1,23 @@
 'use client';
-// /kits: the same trawlnet query builder in five UI kits, all editing one store. Each kit is loaded
+// /kits: the same qnot query builder in five UI kits, all editing one store. Each kit is loaded
 // on demand, so MUI and Mantine only download when picked.
-import '@trawlnet/core/styles.css';
-import { createQueryStore, type Query } from '@trawlnet/core';
-import { QueryProvider, useQuery } from '@trawlnet/react';
+import '@qnot/core/styles.css';
+import { createQueryStore, type Query } from '@qnot/core';
+import { QueryProvider, useQuery } from '@qnot/react';
 import dynamic from 'next/dynamic';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
-import { describeQuery } from '@/components/trawlnet/describe';
+import { CossQueryBuilder } from '@/components/qnot/query-builder';
+import { describeQuery } from '@/components/qnot/describe';
 import { fields, initial } from '@/playground/schema';
-import type { QueryBuilderProps } from '@/components/trawlnet/kits/shared/builder';
+import type { QueryBuilderProps } from '@/components/qnot/kits/shared/builder';
 
 const loading = () => <div className="h-96 animate-pulse rounded-xl border bg-muted/40" />;
-const shadcn = dynamic(() => import('@/components/trawlnet/kits/shadcn').then((m) => m.QueryBuilder), { ssr: false, loading });
-const mui = dynamic(() => import('@/components/trawlnet/kits/mui').then((m) => m.QueryBuilder), { ssr: false, loading });
-const mantine = dynamic(() => import('@/components/trawlnet/kits/mantine').then((m) => m.QueryBuilder), { ssr: false, loading });
-const headless = dynamic(() => import('@/components/trawlnet/kits/headless').then((m) => m.QueryBuilder), { ssr: false, loading });
+const shadcn = dynamic(() => import('@/components/qnot/kits/shadcn').then((m) => m.QueryBuilder), { ssr: false, loading });
+const mui = dynamic(() => import('@/components/qnot/kits/mui').then((m) => m.QueryBuilder), { ssr: false, loading });
+const mantine = dynamic(() => import('@/components/qnot/kits/mantine').then((m) => m.QueryBuilder), { ssr: false, loading });
+const headless = dynamic(() => import('@/components/qnot/kits/headless').then((m) => m.QueryBuilder), { ssr: false, loading });
 
 export const KITS = [
   { id: 'coss', label: 'coss ui', builder: CossQueryBuilder as ComponentType<QueryBuilderProps> },

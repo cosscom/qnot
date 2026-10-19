@@ -1,4 +1,4 @@
-# trawlnet
+# qnot
 
 A fast, fully typed, framework-agnostic query builder: build filter queries in a UI, keep them typed
 end to end, evaluate them in JavaScript, and export them to SQL, MongoDB, JsonLogic, Elasticsearch,
@@ -16,23 +16,23 @@ SpEL, react-querybuilder or react-awesome-query-builder.
 
 | Package | |
 |---|---|
-| [`@trawlnet/core`](packages/core) | Schema, store, validation, evaluation, format codecs (`@trawlnet/core/formats/*`) |
-| [`@trawlnet/react`](packages/react) | React hooks + `<QueryBuilder>` |
-| [`@trawlnet/vue`](packages/vue) | Vue 3 composables + `QueryBuilder` |
-| [`@trawlnet/svelte`](packages/svelte) | Svelte 5 helpers + `QueryBuilder.svelte` |
-| [`@trawlnet/solid`](packages/solid) | Solid primitives + `<QueryBuilder>` |
-| [`@trawlnet/dom`](packages/dom) | Plain DOM builder, no framework |
+| [`@qnot/core`](packages/core) | Schema, store, validation, evaluation, format codecs (`@qnot/core/formats/*`) |
+| [`@qnot/react`](packages/react) | React hooks + `<QueryBuilder>` |
+| [`@qnot/vue`](packages/vue) | Vue 3 composables + `QueryBuilder` |
+| [`@qnot/svelte`](packages/svelte) | Svelte 5 helpers + `QueryBuilder.svelte` |
+| [`@qnot/solid`](packages/solid) | Solid primitives + `<QueryBuilder>` |
+| [`@qnot/dom`](packages/dom) | Plain DOM builder, no framework |
 
 ## Quick start
 
 ```sh
-pnpm add @trawlnet/core @trawlnet/react
+pnpm add @qnot/core @qnot/react
 ```
 
 ```tsx
-import '@trawlnet/core/styles.css';
-import { defineFields, f } from '@trawlnet/core';
-import { QueryBuilder } from '@trawlnet/react';
+import '@qnot/core/styles.css';
+import { defineFields, f } from '@qnot/core';
+import { QueryBuilder } from '@qnot/react';
 
 const fields = defineFields({
   name: f.text(),
@@ -78,7 +78,7 @@ pnpm --filter web dev
 
 **npm packages**: versioning uses [Changesets](https://github.com/changesets/changesets).
 
-1. Create the `@trawlnet` organization on npm and add an automation token as the `NPM_TOKEN` repository secret.
+1. Create the `@qnot` organization on npm and add an automation token as the `NPM_TOKEN` repository secret.
 2. Run the **Release** workflow (Actions → Release → Run workflow). It opens a "Version packages" PR from the pending changesets (the first release is `0.1.0`).
 3. Merge that PR and run **Release** again: it publishes every package with provenance.
 

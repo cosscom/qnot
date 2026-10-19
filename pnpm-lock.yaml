@@ -53,10 +53,10 @@ importers:
       '@mui/material':
         specifier: 9.5.0
         version: 9.5.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1))(@types/react@19.3.0)(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@trawlnet/core':
+      '@qnot/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@trawlnet/react':
+      '@qnot/react':
         specifier: workspace:*
         version: link:../../packages/react
       class-variance-authority:
@@ -111,6 +111,18 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
+      '@qnot/dom':
+        specifier: workspace:*
+        version: link:../../packages/dom
+      '@qnot/solid':
+        specifier: workspace:*
+        version: link:../../packages/solid
+      '@qnot/svelte':
+        specifier: workspace:*
+        version: link:../../packages/svelte
+      '@qnot/vue':
+        specifier: workspace:*
+        version: link:../../packages/vue
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
         version: 7.3.1(svelte@5.57.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -120,18 +132,6 @@ importers:
       '@testing-library/react':
         specifier: ^16.3.3
         version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@trawlnet/dom':
-        specifier: workspace:*
-        version: link:../../packages/dom
-      '@trawlnet/solid':
-        specifier: workspace:*
-        version: link:../../packages/solid
-      '@trawlnet/svelte':
-        specifier: workspace:*
-        version: link:../../packages/svelte
-      '@trawlnet/vue':
-        specifier: workspace:*
-        version: link:../../packages/vue
       '@types/mdx':
         specifier: ^2.0.13
         version: 2.0.14
@@ -186,6 +186,12 @@ importers:
       '@popperjs/core':
         specifier: ^2.11.8
         version: 2.11.8
+      '@qnot/core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@qnot/react':
+        specifier: workspace:*
+        version: link:../packages/react
       '@react-awesome-query-builder/core':
         specifier: 6.6.15
         version: 6.6.15
@@ -198,12 +204,6 @@ importers:
       '@syncfusion/ej2-querybuilder':
         specifier: ^35.1.37
         version: 35.1.37
-      '@trawlnet/core':
-        specifier: workspace:*
-        version: link:../packages/core
-      '@trawlnet/react':
-        specifier: workspace:*
-        version: link:../packages/react
       bootstrap:
         specifier: ^5.3.8
         version: 5.3.8(@popperjs/core@2.11.8)
@@ -280,7 +280,7 @@ importers:
 
   packages/dom:
     dependencies:
-      '@trawlnet/core':
+      '@qnot/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -290,7 +290,7 @@ importers:
 
   packages/react:
     dependencies:
-      '@trawlnet/core':
+      '@qnot/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -315,7 +315,7 @@ importers:
 
   packages/solid:
     dependencies:
-      '@trawlnet/core':
+      '@qnot/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -334,7 +334,7 @@ importers:
 
   packages/svelte:
     dependencies:
-      '@trawlnet/core':
+      '@qnot/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -359,7 +359,7 @@ importers:
 
   packages/vue:
     dependencies:
-      '@trawlnet/core':
+      '@qnot/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:

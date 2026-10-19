@@ -1,7 +1,7 @@
 {
-  "name": "@trawlnet/vue",
+  "name": "@qnot/vue",
   "version": "0.0.0",
-  "description": "Vue 3 bindings for trawlnet: composables plus a tiny unstyled <QueryBuilder>.",
+  "description": "Vue 3 bindings for qnot: composables plus a tiny unstyled <QueryBuilder>.",
   "keywords": [
     "vue",
     "query builder",
@@ -45,7 +45,7 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@trawlnet/core": "workspace:*"
+    "@qnot/core": "workspace:*"
   },
   "peerDependencies": {
     "vue": "^3.5.0"

@@ -23,7 +23,7 @@ const withRelative = and(rule('age', 'gt', 1), { kind: 'group', combinator: 'or'
 describe('unsupported rules', () => {
   it('throw by default, naming the path, field, operator and reason', () => {
     expect(() => encode(mongo, withRelative, pfields)).toThrow(
-      `trawlnet/mongo: can't express the rule at [1, 1] (field "joined", operator "gte"): function "relativeDate" has no mongo format. Pass \`unsupported: 'skip'\` to drop it instead (this widens the query)`,
+      `qnot/mongo: can't express the rule at [1, 1] (field "joined", operator "gte"): function "relativeDate" has no mongo format. Pass \`unsupported: 'skip'\` to drop it instead (this widens the query)`,
     );
     expect(() => encode(jsonlogic, withRelative, pfields)).toThrow(/at \[1, 1\].*"relativeDate" has no jsonlogic format/);
     expect(() => encode(spel, withRelative, pfields)).toThrow(/at \[1, 1\].*"relativeDate" has no spel format/);
@@ -66,7 +66,7 @@ describe('unsupported rules', () => {
 
   it('throw in the UI-state codecs with the rule path', () => {
     const q = and(rule('age', 'gt', 1), { kind: 'group', combinator: 'or', children: [{ kind: 'rule', field: { fn: 'lower', args: { text: { ref: 'name' } } }, operator: 'eq', value: 'a' } as QueryNode] });
-    expect(() => encode(rqb, q, pfields)).toThrow(`trawlnet/rqb: can't express the rule at [1, 0] (field "lower()", operator "eq"): react-querybuilder has no equivalent for function calls`);
+    expect(() => encode(rqb, q, pfields)).toThrow(`qnot/rqb: can't express the rule at [1, 0] (field "lower()", operator "eq"): react-querybuilder has no equivalent for function calls`);
     expect(() => encode(jqqb, and(orders('some')), pfields)).toThrow(/array group at \[0\].*jQuery QueryBuilder has no equivalent for array groups/);
   });
 

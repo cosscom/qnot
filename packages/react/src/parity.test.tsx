@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { builtinFunctions, createQueryStore, defineFields, f, type QueryOf } from '@trawlnet/core';
+import { builtinFunctions, createQueryStore, defineFields, f, type QueryOf } from '@qnot/core';
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { QueryBuilder } from './index';
@@ -35,14 +35,14 @@ function change(el: Element, init: { target: { value: string } }) {
 describe('parity UI', () => {
   it('groups struct fields, hides array fields from rule pickers, and indents tree options', () => {
     const { container } = render(<QueryBuilder fields={fields} initial={initial} />);
-    const fieldSelect = container.querySelector<HTMLSelectElement>('select.tn-field')!;
+    const fieldSelect = container.querySelector<HTMLSelectElement>('select.qn-field')!;
     // Lazy until the user reaches for it: only the chosen option is in the DOM.
     expect([...fieldSelect.options].map((o) => o.value)).toEqual(['name']);
     fireEvent.focus(fieldSelect);
     expect([...fieldSelect.querySelectorAll('optgroup')].map((g) => g.label)).toEqual(['Address']);
     expect([...fieldSelect.options].map((o) => o.value)).not.toContain('orders');
     change(fieldSelect, { target: { value: 'region' } });
-    const region = container.querySelector<HTMLSelectElement>('.tn-rule select.tn-value')!;
+    const region = container.querySelector<HTMLSelectElement>('.qn-rule select.qn-value')!;
     fireEvent.focus(region);
     expect([...region.options].map((o) => [o.textContent, o.disabled])).toEqual([
       ['—', false],
@@ -54,40 +54,40 @@ describe('parity UI', () => {
   it('renders array groups with a scoped field picker and an editable quantifier', () => {
     const store = createQueryStore({ fields, initial });
     const { container } = render(<QueryBuilder store={store} />);
-    const arrayGroup = container.querySelector('.tn-array-group')!;
+    const arrayGroup = container.querySelector('.qn-array-group')!;
     expect(arrayGroup.textContent).toContain('of Orders where');
-    const scoped = arrayGroup.querySelector<HTMLSelectElement>('select.tn-field')!;
+    const scoped = arrayGroup.querySelector<HTMLSelectElement>('select.qn-field')!;
     fireEvent.focus(scoped);
     expect([...scoped.options].map((o) => o.value)).toEqual(['product', 'qty']);
-    change(arrayGroup.querySelector('select.tn-match-mode')!, { target: { value: 'count' } });
-    change(arrayGroup.querySelector('input.tn-match-count')!, { target: { value: '3' } });
+    change(arrayGroup.querySelector('select.qn-match-mode')!, { target: { value: 'count' } });
+    change(arrayGroup.querySelector('input.qn-match-count')!, { target: { value: '3' } });
     expect(store.getQuery().children[1]).toMatchObject({ of: { field: 'orders', match: { count: 'gte', value: 3 } } });
-    change(container.querySelector('select.tn-add-array')!, { target: { value: 'orders' } });
+    change(container.querySelector('select.qn-add-array')!, { target: { value: 'orders' } });
     expect(store.getQuery().children[2]).toMatchObject({ of: { field: 'orders', match: 'some' } });
   });
 
   it('switches the right side between value, field and function', () => {
     const store = createQueryStore({ fields, initial });
     const { container } = render(<QueryBuilder store={store} />);
-    const rule = container.querySelector('.tn-rule')!;
-    change(rule.querySelector('select.tn-source')!, { target: { value: 'function' } });
+    const rule = container.querySelector('.qn-rule')!;
+    change(rule.querySelector('select.qn-source')!, { target: { value: 'function' } });
     expect(store.getQuery().children[0]).toMatchObject({ field: 'name', call: { fn: 'lower' } });
-    change(rule.querySelector('select.tn-function-name')!, { target: { value: 'upper' } });
-    change(rule.querySelector('.tn-function-arg input')!, { target: { value: 'ada' } });
+    change(rule.querySelector('select.qn-function-name')!, { target: { value: 'upper' } });
+    change(rule.querySelector('.qn-function-arg input')!, { target: { value: 'ada' } });
     expect(store.getQuery().children[0]).toMatchObject({ call: { fn: 'upper', args: { text: { value: 'ada' } } } });
-    fireEvent.click(rule.querySelector('button.tn-lhs-toggle')!);
+    fireEvent.click(rule.querySelector('button.qn-lhs-toggle')!);
     expect(store.getQuery().children[0]).toMatchObject({ field: { fn: 'lower' } });
   });
 
   it('disables controls for locked nodes and read-only stores, live', () => {
     const store = createQueryStore({ fields, initial });
     const { container } = render(<QueryBuilder store={store} showLock />);
-    const lock = container.querySelector<HTMLButtonElement>('.tn-rule button[title="Lock"]')!;
+    const lock = container.querySelector<HTMLButtonElement>('.qn-rule button[title="Lock"]')!;
     fireEvent.click(lock);
-    expect(container.querySelector<HTMLSelectElement>('.tn-rule select.tn-field')!.disabled).toBe(true);
-    expect(container.querySelector('.tn-rule')!.classList.contains('tn-locked')).toBe(true);
+    expect(container.querySelector<HTMLSelectElement>('.qn-rule select.qn-field')!.disabled).toBe(true);
+    expect(container.querySelector('.qn-rule')!.classList.contains('qn-locked')).toBe(true);
     act(() => store.setSettings({ readOnly: true }));
-    expect([...container.querySelectorAll<HTMLButtonElement>('.tn-group-header button')].every((b) => b.disabled)).toBe(true);
+    expect([...container.querySelectorAll<HTMLButtonElement>('.qn-group-header button')].every((b) => b.disabled)).toBe(true);
   });
 
   it('disables + Rule at maxRules', () => {
@@ -97,7 +97,7 @@ describe('parity UI', () => {
     expect(add.disabled).toBe(false);
     fireEvent.click(add);
     expect(add.disabled).toBe(true);
-    expect(container.querySelectorAll('.tn-rule')).toHaveLength(3);
+    expect(container.querySelectorAll('.qn-rule')).toHaveLength(3);
   });
 });
 
@@ -109,7 +109,7 @@ describe('async search input', () => {
     const store = createQueryStore({ fields: cities, initial: { kind: 'group', combinator: 'and', children: [{ kind: 'rule', field: 'city', operator: 'eq', value: 'berlin' }] } });
     const id = store.getGroup(store.rootId).children[0]!;
     const { container } = render(<QueryBuilder store={store} />);
-    const input = () => container.querySelector<HTMLInputElement>('.tn-rule input[list]')!;
+    const input = () => container.querySelector<HTMLInputElement>('.qn-rule input[list]')!;
     expect(input().value).toBe('berlin');
     act(() => store.setRuleValue(id, 'paris'));
     expect(input().value).toBe('paris');
@@ -124,7 +124,7 @@ describe('async search input', () => {
     const store = createQueryStore({ fields, initial });
     const { container } = render(<QueryBuilder store={store} />);
     const sourceOptions = () => {
-      const select = container.querySelector<HTMLSelectElement>('.tn-rule select.tn-source')!;
+      const select = container.querySelector<HTMLSelectElement>('.qn-rule select.qn-source')!;
       fireEvent.focus(select);
       return [...select.options].map((o) => o.value);
     };
@@ -132,6 +132,6 @@ describe('async search input', () => {
     act(() => store.setSettings({ allowFunctions: false }));
     expect(sourceOptions()).toEqual(['value', 'field']);
     act(() => store.setSettings({ allowRefs: false }));
-    expect(container.querySelector('.tn-rule select.tn-source')).toBeNull();
+    expect(container.querySelector('.qn-rule select.qn-source')).toBeNull();
   });
 });

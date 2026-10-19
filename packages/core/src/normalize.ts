@@ -47,7 +47,7 @@ const pickableField = (fields: Fields) => Object.keys(fields).find((k) => !field
 /** A complete rule for `field` using the schema's defaults, with any overrides coerced to fit. */
 export function makeRule(fields: Fields, partial: Partial<Rule> = {}): Rule {
   const field = partial.field ?? pickableField(fields);
-  if (field === undefined) throw new Error('trawlnet: cannot create a rule without any fields');
+  if (field === undefined) throw new Error('qnot: cannot create a rule without any fields');
   const def = leftDef(fields, field);
   const operator = partial.operator && (!def || def.operators.includes(partial.operator)) ? partial.operator : (def?.defaultOperator ?? 'eq');
   const lock = partial.locked ? { locked: true } : {};

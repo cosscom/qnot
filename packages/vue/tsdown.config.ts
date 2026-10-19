@@ -6,5 +6,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   fixedExtension: false,
-  external: ['vue', '@trawlnet/core'],
+  external: ['vue', '@qnot/core'],
 });

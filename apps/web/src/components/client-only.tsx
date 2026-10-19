@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * Renders `children` only after hydration. The live demos create their stores in the browser and
- * @trawlnet/react's hooks don't provide server snapshots yet, so they skip SSR; the placeholder keeps
+ * @qnot/react's hooks don't provide server snapshots yet, so they skip SSR; the placeholder keeps
  * the layout from jumping.
  */
 export function ClientOnly({ children, minHeight = 320, className }: { children: ReactNode; minHeight?: number; className?: string }) {

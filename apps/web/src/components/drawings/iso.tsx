@@ -112,7 +112,7 @@ export function Caption({ p, size = 10, anchor = 'middle', tone = 'muted', child
   );
 }
 
-/** trawlnet's teal lamp: lit, with a glow that breathes. */
+/** qnot's teal lamp: lit, with a glow that breathes. */
 export function Lamp({ p, r = 3.5 }: { p: Pt; r?: number }) {
   return (
     <g className="lamp-dot">
@@ -150,7 +150,7 @@ export function Callout({ p, title, sub, anchor = 'start', rule }: { p: Pt; titl
 
 export function Drawing({ name, viewBox, title, className, children }: { name: string; viewBox: string; title: string; className?: string; children: ReactNode }) {
   return (
-    <svg className={`tn-iso tn-iso-${name}${className ? ` ${className}` : ''}`} role="img" viewBox={viewBox} xmlns="http://www.w3.org/2000/svg">
+    <svg className={`qn-iso qn-iso-${name}${className ? ` ${className}` : ''}`} role="img" viewBox={viewBox} xmlns="http://www.w3.org/2000/svg">
       <title>{title}</title>
       {children}
     </svg>

@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { resolveRegistry } from '../registry/resolve.mjs';
-import { registryBase, siteUrl } from '../registry/urls.mjs';
+import { DEFAULT_PACKAGE_PREFIX, brand, packageOf, packagePrefix, registryBase, siteUrl } from '../registry/urls.mjs';
 
 const root = process.cwd();
 const base = registryBase();
@@ -19,7 +19,7 @@ function stage(path, content) {
 
 const registry = {
   $schema: 'https://ui.shadcn.com/schema/registry.json',
-  name: 'trawlnet',
+  name: 'qnot',
   homepage: siteUrl(),
   items: items.map((item) => ({
     name: item.name,
@@ -27,12 +27,13 @@ const registry = {
     title: item.title,
     description: item.description,
     ...(item.docs && { docs: item.docs }),
-    author: 'trawlnet (MIT)',
-    dependencies: item.dependencies,
+    author: 'qnot (MIT)',
+    // Package names follow NEXT_PUBLIC_PACKAGE_PREFIX (`@qnot/react` → `@coss/qnot` under `@coss/qnot/`).
+    dependencies: [...new Set(item.dependencies.map((d) => (d.startsWith(DEFAULT_PACKAGE_PREFIX) ? packageOf(packagePrefix() + d.slice(DEFAULT_PACKAGE_PREFIX.length)) : d)))],
     registryDependencies: item.registryDependencies,
     // Each file as published (imports rewritten), staged under .registry/files for `shadcn build`.
     files: item.files.map((f) => ({
-      path: stage(f.path, f.content),
+      path: stage(f.path, brand(f.content)),
       type: f.path.endsWith('.ts') ? 'registry:lib' : 'registry:component',
       target: f.target,
     })),

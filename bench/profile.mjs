@@ -5,7 +5,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
-const [name = 'trawlnet', n = '1000', what = 'mount'] = process.argv.slice(2);
+const [name = 'qnot', n = '1000', what = 'mount'] = process.argv.slice(2);
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 const server = createServer(async (req, res) => {
   try {

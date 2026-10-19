@@ -5,7 +5,7 @@ import type { Rule } from './types';
 /** The element schema of an array field, sharing the parent's custom operators and functions. */
 export function elementFields(fields: Fields, arrayField: string): Fields {
   const of = fieldDef(fields, arrayField)?.of;
-  if (!of) throw new Error(`trawlnet: "${arrayField}" is not an array field`);
+  if (!of) throw new Error(`qnot: "${arrayField}" is not an array field`);
   return withRegistry(of, fields);
 }
 

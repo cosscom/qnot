@@ -1,5 +1,5 @@
-/* Optional default look for trawlnet's built-in components. Every binding renders the same classes. */
-.tn {
+/* Optional default look for qnot's built-in components. Every binding renders the same classes. */
+.qn {
   --tn-border: #d4d4d8;
   --tn-bg: #fafafa;
   --tn-accent: #2563eb;
@@ -11,7 +11,7 @@
   color: var(--tn-fg);
 }
 @media (prefers-color-scheme: dark) {
-  .tn:not([data-theme='light']) {
+  .qn:not([data-theme='light']) {
     --tn-border: #3f3f46;
     --tn-bg: #18181b;
     --tn-accent: #60a5fa;
@@ -19,67 +19,67 @@
     --tn-fg: #f4f4f5;
   }
 }
-.tn-group {
+.qn-group {
   border: 1px solid var(--tn-border);
   border-radius: var(--tn-radius);
   background: var(--tn-bg);
   padding: 8px;
 }
 /* Off-screen groups skip layout entirely; this is what keeps 1000+ rule trees responsive. */
-.tn-children > .tn-group {
+.qn-children > .qn-group {
   content-visibility: auto;
   contain-intrinsic-size: auto 120px;
 }
-.tn-group-header,
-.tn-rule {
+.qn-group-header,
+.qn-rule {
   display: flex;
   flex-wrap: wrap;
   gap: var(--tn-gap);
   align-items: center;
 }
-.tn-children {
+.qn-children {
   display: flex;
   flex-direction: column;
   gap: var(--tn-gap);
   margin: var(--tn-gap) 0 0 16px;
 }
-.tn-children:empty {
+.qn-children:empty {
   min-height: 24px;
   border: 1px dashed var(--tn-border);
   border-radius: var(--tn-radius);
 }
-.tn-handle {
+.qn-handle {
   cursor: grab;
   user-select: none;
   opacity: 0.5;
 }
-.tn-value-pair {
+.qn-value-pair {
   display: inline-flex;
   gap: 4px;
   align-items: center;
 }
-.tn-invalid input,
-.tn-invalid select {
+.qn-invalid input,
+.qn-invalid select {
   border-color: var(--tn-danger);
 }
-.tn-issues {
+.qn-issues {
   color: var(--tn-danger);
   font-size: 12px;
   flex-basis: 100%;
 }
-.tn-dragging {
+.qn-dragging {
   opacity: 0.4;
 }
-.tn-drop-before {
+.qn-drop-before {
   box-shadow: 0 -2px 0 var(--tn-accent);
 }
-.tn-drop-after {
+.qn-drop-after {
   box-shadow: 0 2px 0 var(--tn-accent);
 }
-.tn-drop-inside {
+.qn-drop-inside {
   outline: 2px dashed var(--tn-accent);
 }
-.tn :is(input:not([type='checkbox']), select, button) {
+.qn :is(input:not([type='checkbox']), select, button) {
   font: inherit;
   color: inherit;
   background: var(--tn-bg);
@@ -88,40 +88,40 @@
   padding: 2px 6px;
   min-height: 26px;
 }
-.tn button {
+.qn button {
   cursor: pointer;
 }
-.tn button:hover {
+.qn button:hover {
   border-color: var(--tn-accent);
 }
-.tn select[multiple] {
+.qn select[multiple] {
   min-height: 0;
   padding: 2px;
 }
-.tn-not {
+.qn-not {
   display: inline-flex;
   gap: 4px;
   align-items: center;
 }
-.tn-locked {
+.qn-locked {
   opacity: 0.7;
 }
-.tn-array-group {
+.qn-array-group {
   border-style: dashed;
 }
-.tn-match,
-.tn-function,
-.tn-operand,
-.tn-slider {
+.qn-match,
+.qn-function,
+.qn-operand,
+.qn-slider {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
   align-items: center;
 }
-.tn-match-count {
+.qn-match-count {
   width: 4em;
 }
-.tn :disabled {
+.qn :disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }

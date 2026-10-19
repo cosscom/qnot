@@ -3,7 +3,7 @@ import type { Fields } from '../fields';
 import type { Group, Query, QueryNode, Rule } from '../types';
 import { coerceScalar, group, infoOf, isFnCall, isUnsupported, liftChildren, negated, operatorInfo, toList, Unsupported, unsupportedError } from './_util';
 
-/** react-querybuilder's `RuleType` (the subset trawlnet reads and writes). */
+/** react-querybuilder's `RuleType` (the subset qnot reads and writes). */
 export interface RQBRule {
   id?: string;
   field: string;
@@ -52,7 +52,7 @@ const FROM_RQB: Record<string, string> = { ...Object.fromEntries(Object.entries(
 
 const unsupported = (subject: Rule | Group, what: string) => new Unsupported(subject, `react-querybuilder has no equivalent for ${what}`);
 
-// Operators react-querybuilder lacks (isEmpty, hasAny…, custom ones) travel under their trawlnet id,
+// Operators react-querybuilder lacks (isEmpty, hasAny…, custom ones) travel under their qnot id,
 // which react-querybuilder accepts as a custom operator.
 function encodeRule(rule: Rule, fields: Fields): RQBRule | Unsupported {
   if (isFnCall(rule.field) || rule.call !== undefined) return unsupported(rule, 'function calls');
@@ -73,7 +73,7 @@ function encodeGroup(g: Group, children: (RQBRule | RQBRuleGroup)[]): RQBRuleGro
 // --- decode ------------------------------------------------------------------------------------
 
 const fail = (msg: string, what: unknown): never => {
-  throw new Error(`trawlnet/rqb: ${msg}: ${JSON.stringify(what)}`);
+  throw new Error(`qnot/rqb: ${msg}: ${JSON.stringify(what)}`);
 };
 
 function decodeRule(r: RQBRule, fields: Fields): QueryNode {

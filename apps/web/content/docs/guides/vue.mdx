@@ -4,7 +4,7 @@ description: Composables over the store, and a QueryBuilder component that suppo
 ---
 
 ```bash
-pnpm add @trawlnet/core @trawlnet/vue
+pnpm add @qnot/core @qnot/vue
 ```
 
 ## The default builder
@@ -14,8 +14,8 @@ It emits `update:modelValue` and `change`.
 
 ```vue
 <script setup lang="ts">
-import '@trawlnet/core/styles.css';
-import { QueryBuilder } from '@trawlnet/vue';
+import '@qnot/core/styles.css';
+import { QueryBuilder } from '@qnot/vue';
 import { ref } from 'vue';
 import { fields } from './fields';
 
@@ -36,7 +36,7 @@ Like the React builder, it accepts `components` and `labels` to swap pieces and 
 shares it with descendants, which read it with `useStore()`.
 
 ```ts
-import { provideQueryStore, useHistory, useQueryStore, useRule } from '@trawlnet/vue';
+import { provideQueryStore, useHistory, useQueryStore, useRule } from '@qnot/vue';
 
 const store = useQueryStore({ fields, initial: saved, onChange: save });
 provideQueryStore(store);

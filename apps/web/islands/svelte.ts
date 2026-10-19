@@ -1,5 +1,5 @@
-import type { QueryStore } from '@trawlnet/core';
-import { QueryBuilder } from '@trawlnet/svelte';
+import type { QueryStore } from '@qnot/core';
+import { QueryBuilder } from '@qnot/svelte';
 import { mount as mountSvelte, unmount } from 'svelte';
 
 export function mount(el: HTMLElement, store: QueryStore<any, any>): () => void {

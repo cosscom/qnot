@@ -6,5 +6,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   fixedExtension: false,
-  external: ['@trawlnet/core'],
+  external: ['@qnot/core'],
 });

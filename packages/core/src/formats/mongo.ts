@@ -261,7 +261,7 @@ const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v) && !(v instanceof Date) && !(v instanceof RegExp);
 
 const fail = (what: unknown): never => {
-  throw new Error(`trawlnet/mongo: cannot decode ${JSON.stringify(what)}`);
+  throw new Error(`qnot/mongo: cannot decode ${JSON.stringify(what)}`);
 };
 
 /** Turn an escaped regex back into its literal text, or null if it uses real regex syntax. */
@@ -556,7 +556,7 @@ export function mongoFormat(options: MongoOptions = {}): Format<MongoFilter, Mon
     encodeCases(whens, otherwise) {
       const branches = whens.map(({ when, then }) => {
         const c = caseCondition('mongo', when);
-        if (c && c.x === undefined) throw new Error('trawlnet/mongo: a case uses an operator with no aggregation-expression form');
+        if (c && c.x === undefined) throw new Error('qnot/mongo: a case uses an operator with no aggregation-expression form');
         return { case: c?.x ?? true, then: lit(then) };
       });
       return { $switch: otherwise === undefined ? { branches } : { branches, default: lit(otherwise) } };

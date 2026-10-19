@@ -145,28 +145,28 @@ export const functionOptions = (fields: Fields, kind?: string): Option<string>[]
 /** Every selectable option value of a field, flattened from trees. */
 export const optionValues = (def: AnyFieldDef | undefined): unknown[] => flattenOptions(def?.options, def?.leafOnly).map((o) => o.value);
 
-/** Stable class names shared by every binding's default UI (styled by `@trawlnet/core/styles.css`). */
+/** Stable class names shared by every binding's default UI (styled by `@qnot/core/styles.css`). */
 export const CLASS = {
-  root: 'tn',
-  group: 'tn-group',
-  groupHeader: 'tn-group-header',
-  children: 'tn-children',
-  rule: 'tn-rule',
-  handle: 'tn-handle',
-  field: 'tn-field',
-  operator: 'tn-operator',
-  value: 'tn-value',
-  combinator: 'tn-combinator',
-  not: 'tn-not',
-  action: 'tn-action',
-  issues: 'tn-issues',
-  dropBefore: 'tn-drop-before',
-  dropAfter: 'tn-drop-after',
-  dropInside: 'tn-drop-inside',
-  dragging: 'tn-dragging',
-  invalid: 'tn-invalid',
-  locked: 'tn-locked',
-  arrayGroup: 'tn-array-group',
+  root: 'qn',
+  group: 'qn-group',
+  groupHeader: 'qn-group-header',
+  children: 'qn-children',
+  rule: 'qn-rule',
+  handle: 'qn-handle',
+  field: 'qn-field',
+  operator: 'qn-operator',
+  value: 'qn-value',
+  combinator: 'qn-combinator',
+  not: 'qn-not',
+  action: 'qn-action',
+  issues: 'qn-issues',
+  dropBefore: 'qn-drop-before',
+  dropAfter: 'qn-drop-after',
+  dropInside: 'qn-drop-inside',
+  dragging: 'qn-dragging',
+  invalid: 'qn-invalid',
+  locked: 'qn-locked',
+  arrayGroup: 'qn-array-group',
 } as const;
 
 /** UI strings shared by every binding's default components. Override per builder for i18n. */

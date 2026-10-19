@@ -5,7 +5,7 @@
 @import "fumadocs-ui/css/shadcn.css";
 @import "fumadocs-ui/css/preset.css";
 @import "fumadocs-twoslash/twoslash.css";
-@import "@trawlnet/core/styles.css";
+@import "@qnot/core/styles.css";
 @import "../styles/drawings.css";
 
 @source "../**/*.{ts,tsx}";

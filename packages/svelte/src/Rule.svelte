@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CLASS, defaultCall, functionOptions, isFnCall, type FnCall, type NodeId } from '@trawlnet/core';
+  import { CLASS, defaultCall, functionOptions, isFnCall, type FnCall, type NodeId } from '@qnot/core';
   import FieldSelect from './FieldSelect.svelte';
   import FunctionEditor from './FunctionEditor.svelte';
   import LazySelect from './LazySelect.svelte';
@@ -53,7 +53,7 @@
   {#if lhsFunctions.length > 0}
     <button
       type="button"
-      class={cx(CLASS.action, 'tn-lhs-toggle')}
+      class={cx(CLASS.action, 'qn-lhs-toggle')}
       disabled={!can.editField}
       title={fieldIsFn ? ui.labels.useField : ui.labels.useFunction}
       aria-pressed={fieldIsFn}
@@ -68,7 +68,7 @@
   <LazySelect class={CLASS.operator} value={rule.operator} options={r.operators} disabled={!can.editOperator} onChange={r.setOperator} />
   {#if refs.length > 0 || fns.length > 0}
     <LazySelect
-      class="tn-source"
+      class="qn-source"
       value={r.source}
       options={sources}
       disabled={!can.editValue}

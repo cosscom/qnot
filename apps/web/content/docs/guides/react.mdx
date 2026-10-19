@@ -4,7 +4,7 @@ description: The default builder, the store hooks, and swapping in your own comp
 ---
 
 ```bash
-pnpm add @trawlnet/core @trawlnet/react
+pnpm add @qnot/core @qnot/react
 ```
 
 ## The default builder
@@ -13,8 +13,8 @@ pnpm add @trawlnet/core @trawlnet/react
 `value`/`onChange`, `format`, `settings`, `sanitize`) and creates one.
 
 ```tsx
-import '@trawlnet/core/styles.css';
-import { QueryBuilder } from '@trawlnet/react';
+import '@qnot/core/styles.css';
+import { QueryBuilder } from '@qnot/react';
 
 <QueryBuilder fields={fields} initial={saved} onChange={save} showLock />;
 ```
@@ -25,7 +25,7 @@ import { QueryBuilder } from '@trawlnet/react';
 | `labels` | Override any UI string (see [i18n](/docs/guides/i18n)). |
 | `showNot` | Show the NOT toggle on groups (default `true`). |
 | `showLock` | Show lock toggles on rules and groups (default `false`). |
-| `className` | Added to the root `.tn` element. |
+| `className` | Added to the root `.qn` element. |
 
 ## Owning the store
 
@@ -34,7 +34,7 @@ except `value` (synced into the store), `onChange` (always the latest) and `sett
 the object changes). Share it with `<QueryProvider>`:
 
 ```tsx
-import { QueryBuilder, QueryProvider, useHistory, useIsValid, useQueryStore } from '@trawlnet/react';
+import { QueryBuilder, QueryProvider, useHistory, useIsValid, useQueryStore } from '@qnot/react';
 
 function Editor() {
   const store = useQueryStore({ fields, initial: saved, settings: { maxRules: 50 } });
@@ -83,7 +83,7 @@ for groups). Disable controls with it; the store refuses the same edits anyway.
 A custom builder is a group component that renders its children by id, and a rule component:
 
 ```tsx
-import { QueryProvider, useGroup, useNode, useRule } from '@trawlnet/react';
+import { QueryProvider, useGroup, useNode, useRule } from '@qnot/react';
 import { memo } from 'react';
 
 const Group = memo(function Group({ id }: { id: string }) {
@@ -120,7 +120,7 @@ Three hooks wire HTML5 drag and drop to the store's `move`. They work in the def
 your own:
 
 ```tsx
-import { useDragHandle, useDropTarget, useGroupDropZone } from '@trawlnet/react';
+import { useDragHandle, useDropTarget, useGroupDropZone } from '@qnot/react';
 
 function Row({ id }: { id: string }) {
   const { isDragging, handleProps } = useDragHandle(id);

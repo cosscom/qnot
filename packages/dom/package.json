@@ -1,7 +1,7 @@
 {
-  "name": "@trawlnet/dom",
+  "name": "@qnot/dom",
   "version": "0.0.0",
-  "description": "Vanilla DOM renderer for trawlnet: no framework, per-node patching.",
+  "description": "Vanilla DOM renderer for qnot: no framework, per-node patching.",
   "keywords": [
     "query builder",
     "vanilla",
@@ -45,7 +45,7 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@trawlnet/core": "workspace:*"
+    "@qnot/core": "workspace:*"
   },
   "devDependencies": {
     "jsdom": "^27.0.0"

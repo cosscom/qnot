@@ -8,8 +8,8 @@ read and write react-querybuilder's `RuleGroupType`, so queries already in your 
 and keep being saved in the same shape.
 
 ```tsx
-import { QueryBuilder } from '@trawlnet/react';
-import { rqb } from '@trawlnet/core/formats/rqb';
+import { QueryBuilder } from '@qnot/react';
+import { rqb } from '@qnot/core/formats/rqb';
 
 // before: <ReactQueryBuilder fields={rqbFields} query={query} onQueryChange={setQuery} />
 <QueryBuilder fields={fields} format={rqb} value={query} onChange={setQuery} />;
@@ -19,7 +19,7 @@ import { rqb } from '@trawlnet/core/formats/rqb';
 
 react-querybuilder's `fields` array becomes a `defineFields` object. Typical mappings:
 
-| react-querybuilder | trawlnet |
+| react-querybuilder | qnot |
 | --- | --- |
 | `{ name, label }` | `name: f.text({ label })` |
 | `inputType: 'number'` | `f.number()` |
@@ -27,13 +27,13 @@ react-querybuilder's `fields` array becomes a `defineFields` object. Typical map
 | `valueEditorType: 'select', values` | `f.enum(values.map((v) => ({ value: v.name, label: v.label })))` |
 | `valueEditorType: 'multiselect'` on a list field | `f.multiEnum(…)` |
 | `valueEditorType: 'checkbox'` | `f.boolean()` |
-| `operators` | `operators` (trawlnet names; see below) |
+| `operators` | `operators` (qnot names; see below) |
 | `validator` | `validate` (return a message) |
 | `defaultValue`, `defaultOperator` | same |
 
 ## Operators
 
-| react-querybuilder | trawlnet |
+| react-querybuilder | qnot |
 | --- | --- |
 | `=`, `!=`, `<`, `<=`, `>`, `>=` | `eq`, `neq`, `lt`, `lte`, `gt`, `gte` |
 | `contains`, `doesNotContain` | `contains`, `notContains` |
@@ -52,7 +52,7 @@ react-querybuilder's `fields` array becomes a `defineFields` object. Typical map
 - `formatQuery(query, 'sql')` becomes `encode(sqlFormat(), query, fields)` on the native query, or
   `encode(sqlFormat(), decode(rqb, rqbQuery, fields), fields)` on the RQB shape.
 - Features react-querybuilder can't store (array groups, function calls) throw when encoded to
-  `rqb`. Switch the stored format to trawlnet's own JSON (the default) before using them.
+  `rqb`. Switch the stored format to qnot's own JSON (the default) before using them.
 
 ## Speed
 

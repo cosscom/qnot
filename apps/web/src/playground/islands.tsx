@@ -1,7 +1,7 @@
 'use client';
 // Non-React renderers, prebuilt by `pnpm islands` into public/islands (see islands/vite.config.ts)
 // and imported at runtime. Each gets the page's live store, so edits in one show up in every other.
-import type { QueryStore } from '@trawlnet/core';
+import type { QueryStore } from '@qnot/core';
 import { useEffect, useRef, useState } from 'react';
 import { assetPath } from '@/lib/site';
 

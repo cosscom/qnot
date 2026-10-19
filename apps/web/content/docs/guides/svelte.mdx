@@ -4,15 +4,15 @@ description: Rune-friendly reactive helpers and Svelte 5 components.
 ---
 
 ```bash
-pnpm add @trawlnet/core @trawlnet/svelte
+pnpm add @qnot/core @qnot/svelte
 ```
 
 ## The default builder
 
 ```svelte
 <script lang="ts">
-  import '@trawlnet/core/styles.css';
-  import { QueryBuilder } from '@trawlnet/svelte';
+  import '@qnot/core/styles.css';
+  import { QueryBuilder } from '@qnot/svelte';
   import { fields } from './fields';
 
   let query = $state(saved);
@@ -32,7 +32,7 @@ in components and in plain `.svelte.ts` modules, and each one subscribes only to
 
 ```svelte
 <script lang="ts">
-  import { createRule, getQueryStore } from '@trawlnet/svelte';
+  import { createRule, getQueryStore } from '@qnot/svelte';
 
   let { id } = $props();
   const store = getQueryStore();

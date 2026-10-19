@@ -1,4 +1,4 @@
-import { DEFAULT_LABELS, defaultCall, type AnyFieldDef, type EditorSpec, type NodeId } from '@trawlnet/core';
+import { DEFAULT_LABELS, defaultCall, type AnyFieldDef, type EditorSpec, type NodeId } from '@qnot/core';
 import { getContext, setContext, type Component } from 'svelte';
 
 export { DEFAULT_LABELS, defaultCall };
@@ -27,7 +27,7 @@ export interface UI {
   showLock: boolean;
 }
 
-const KEY = Symbol('trawlnet-ui');
+const KEY = Symbol('qnot-ui');
 export const setUI = (ui: UI) => setContext(KEY, ui);
 export const getUI = () => getContext<UI>(KEY);
 

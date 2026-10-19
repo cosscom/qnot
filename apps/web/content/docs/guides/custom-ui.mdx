@@ -13,8 +13,8 @@ You need three components: a group, a rule, and a value editor. The hooks hand e
 it needs.
 
 ```tsx
-import { fieldOptions } from '@trawlnet/core';
-import { QueryProvider, useGroup, useNode, useRule } from '@trawlnet/react';
+import { fieldOptions } from '@qnot/core';
+import { QueryProvider, useGroup, useNode, useRule } from '@qnot/react';
 import { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,7 +92,7 @@ const Rule = memo(function Rule({ id }: { id: string }) {
 `editor.arity` says how many: `'one'`, `'two'` (render two editors for `between`), `'many'`, or
 `'none'`. `editor.async` means options come from `def.search(query, signal)`: use a combobox that
 calls it as the user types. `parseInput`, `formatInput`, `parseList` and `formatList` from
-`@trawlnet/core` convert between input strings and typed values.
+`@qnot/core` convert between input strings and typed values.
 
 ## Field refs and functions
 

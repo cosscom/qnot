@@ -1,11 +1,11 @@
 'use client';
-import '@trawlnet/core/styles.css';
-import { compile, createQueryStore, getPath, isValidQuery, type Query, type QueryNode, type QueryStore } from '@trawlnet/core';
-import { QueryBuilder, QueryProvider, useHistory, useIsValid, useQuery } from '@trawlnet/react';
+import '@qnot/core/styles.css';
+import { compile, createQueryStore, getPath, isValidQuery, type Query, type QueryNode, type QueryStore } from '@qnot/core';
+import { QueryBuilder, QueryProvider, useHistory, useIsValid, useQuery } from '@qnot/react';
 import { Columns2Icon, Redo2Icon, Undo2Icon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollBox } from '@/components/trawlnet/scroll-box';
-import { Tip } from '@/components/trawlnet/tip';
+import { ScrollBox } from '@/components/qnot/scroll-box';
+import { Tip } from '@/components/qnot/tip';
 import { AlertDialog, AlertDialogClose, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogPopup, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,13 +13,13 @@ import { Card, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
+import { CossQueryBuilder } from '@/components/qnot/query-builder';
 import { sampleRows, type Customer } from './data';
 import { CodePanel } from './CodePanel';
 import { FormatsPanel } from './FormatsPanel';
 import { FORMATS } from './formats';
 import { Island, type IslandKind } from './islands';
-import { describeQuery } from '@/components/trawlnet/describe';
+import { describeQuery } from '@/components/qnot/describe';
 import { cn } from '@/lib/utils';
 import { REGIONS, fields, initial, type Fields } from './schema';
 
@@ -137,11 +137,11 @@ function DataPanel() {
 
 const RENDERERS = [
   { id: 'coss', label: 'coss ui', hint: 'React + coss ui components on the headless hooks' },
-  { id: 'react', label: 'React', hint: '@trawlnet/react default <QueryBuilder>' },
-  { id: 'vanilla', label: 'Vanilla', hint: '@trawlnet/dom: no framework at all' },
-  { id: 'vue', label: 'Vue', hint: '@trawlnet/vue default component' },
-  { id: 'svelte', label: 'Svelte', hint: '@trawlnet/svelte default component' },
-  { id: 'solid', label: 'Solid', hint: '@trawlnet/solid default component' },
+  { id: 'react', label: 'React', hint: '@qnot/react default <QueryBuilder>' },
+  { id: 'vanilla', label: 'Vanilla', hint: '@qnot/dom: no framework at all' },
+  { id: 'vue', label: 'Vue', hint: '@qnot/vue default component' },
+  { id: 'svelte', label: 'Svelte', hint: '@qnot/svelte default component' },
+  { id: 'solid', label: 'Solid', hint: '@qnot/solid default component' },
   { id: 'all', label: 'All side by side', hint: 'Every renderer on the same store: edit one, watch the rest' },
 ] as const;
 type RendererId = (typeof RENDERERS)[number]['id'];

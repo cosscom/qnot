@@ -7,7 +7,7 @@ const SECTIONS = new Map([
   ['playground', 'playground'],
 ]);
 
-/** Next to the wordmark: the section the page belongs to (`trawlnet docs`), like coss.com/ui. */
+/** Next to the wordmark: the section the page belongs to (`qnot docs`), like coss.com/ui. */
 export function SectionLabel() {
   const section = usePathname().split('/')[1];
   const label = section ? SECTIONS.get(section) : undefined;

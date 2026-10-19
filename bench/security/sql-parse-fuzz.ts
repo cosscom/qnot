@@ -1,5 +1,5 @@
 // Fuzz the SQL WHERE-clause parser (the sql codec's decode): every input must either parse or throw a
-// clean trawlnet Error, quickly, and never overflow the stack. Also checks encode → decode → encode
+// clean qnot Error, quickly, and never overflow the stack. Also checks encode → decode → encode
 // round trips. Run with `bun bench/security/sql-parse-fuzz.ts`.
 import { builtinFunctions, decode, defineFields, encode, f, validateQuery, type Query } from '../../packages/core/src/index';
 import { sqlFormat, type SqlDialect } from '../../packages/core/src/formats/sql';
@@ -24,7 +24,7 @@ function attempt(src: string, dialect: SqlDialect, label: string) {
     // Whatever parses must be a well-formed query the validator can walk.
     validateQuery(fields, q);
   } catch (e) {
-    if (!(e instanceof Error) || e instanceof RangeError || !e.message.startsWith('trawlnet/')) problems.push(`${label}: ${(e as Error)?.constructor?.name} ${String((e as Error)?.message).slice(0, 120)}`);
+    if (!(e instanceof Error) || e instanceof RangeError || !e.message.startsWith('qnot/')) problems.push(`${label}: ${(e as Error)?.constructor?.name} ${String((e as Error)?.message).slice(0, 120)}`);
     else if (e.message.length > 400) problems.push(`${label}: error message too long (${e.message.length})`);
   }
   const ms = performance.now() - t0;

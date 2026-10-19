@@ -26,7 +26,7 @@ import {
   type StoreNode,
   type StoreOptions,
   type StoreSettings,
-} from '@trawlnet/core';
+} from '@qnot/core';
 import { createContext, createMemo, createRenderEffect, createSignal, on, onCleanup, useContext, type Accessor } from 'solid-js';
 
 export interface QueryContextValue {
@@ -40,7 +40,7 @@ export const makeContextValue = (store: QueryStore<any, any>): QueryContextValue
 
 function useCtx(): QueryContextValue {
   const ctx = useContext(QueryContext);
-  if (!ctx) throw new Error('trawlnet: wrap your components in <QueryProvider store={...}> (or use <QueryBuilder>)');
+  if (!ctx) throw new Error('qnot: wrap your components in <QueryProvider store={...}> (or use <QueryBuilder>)');
   return ctx;
 }
 
@@ -241,7 +241,7 @@ export function useDragHandle(id: NodeId) {
       if (e.dataTransfer) {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', id);
-        const row = (e.currentTarget as HTMLElement).closest('[data-tn-id]');
+        const row = (e.currentTarget as HTMLElement).closest('[data-qn-id]');
         if (row) e.dataTransfer.setDragImage(row, 12, 12);
       }
       dnd.start(id);
@@ -265,7 +265,7 @@ export function useDropTarget(id: NodeId) {
     return null;
   });
   const dropProps = {
-    'data-tn-id': id,
+    'data-qn-id': id,
     onDragOver(e: DragEvent) {
       const n = store.get(id);
       if (!dnd.getState().dragging || !n || n.parent === null) return;

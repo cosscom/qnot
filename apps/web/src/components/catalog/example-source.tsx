@@ -7,7 +7,7 @@ export function ExampleSource({ name }: { name: string }) {
     <RegistrySource
       intro={
         <p>
-          One command installs this example with every file and coss ui component it needs, into <code className="font-mono text-sm">components/trawlnet</code>. The code is
+          One command installs this example with every file and coss ui component it needs, into <code className="font-mono text-sm">components/qnot</code>. The code is
           yours to change; it's MIT. See{' '}
           <Link className="underline underline-offset-2 hover:text-foreground" href="/docs/guides/shadcn">
             Install with shadcn

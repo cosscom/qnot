@@ -241,6 +241,6 @@ export function isValidQuery<F extends Fields>(fields: F, query: QueryOf<F>): qu
 export function assertValidQuery<F extends Fields>(fields: F, query: QueryOf<F>): asserts query is QueryOf<F> & StrictQueryOf<F> {
   const errors = validateQuery(fields, query as Query).filter((i) => i.severity === 'error');
   if (errors.length) {
-    throw new Error(`trawlnet: invalid query:\n${errors.map((e) => `  at [${e.path.join(', ')}] ${e.message}`).join('\n')}`);
+    throw new Error(`qnot: invalid query:\n${errors.map((e) => `  at [${e.path.join(', ')}] ${e.message}`).join('\n')}`);
   }
 }

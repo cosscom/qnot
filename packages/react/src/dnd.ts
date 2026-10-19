@@ -1,4 +1,4 @@
-import { dropIndexFromPointer, type NodeId } from '@trawlnet/core';
+import { dropIndexFromPointer, type NodeId } from '@qnot/core';
 import { useMemo, type DragEvent } from 'react';
 import { useSync } from './sync';
 import { useDndController, useStore } from './hooks';
@@ -16,7 +16,7 @@ export function useDragHandle(id: NodeId) {
         e.stopPropagation();
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', id);
-        const row = e.currentTarget.closest('[data-tn-id]');
+        const row = e.currentTarget.closest('[data-qn-id]');
         if (row) e.dataTransfer.setDragImage(row, 12, 12);
         dnd.start(id);
       },
@@ -42,7 +42,7 @@ export function useDropTarget(id: NodeId) {
   });
   const dropProps = useMemo(
     () => ({
-      'data-tn-id': id,
+      'data-qn-id': id,
       onDragOver(e: DragEvent<HTMLElement>) {
         const n = store.get(id);
         if (!dnd.getState().dragging || !n || n.parent === null) return;

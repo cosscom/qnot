@@ -11,7 +11,7 @@ export interface JQQBRule {
   input: string;
   operator: string;
   value: unknown;
-  /** jQuery QueryBuilder's free-form rule data; trawlnet stores field refs here as `{ trawlnetRef }`. */
+  /** jQuery QueryBuilder's free-form rule data; qnot stores field refs here as `{ qnotRef }`. */
   data?: Record<string, unknown>;
 }
 
@@ -66,12 +66,12 @@ function typeAndInput(def: AnyFieldDef | undefined): { type: string; input: stri
   }
 }
 
-// Operators jQuery QueryBuilder lacks (hasAny…, custom ones) travel under their trawlnet id; register
+// Operators jQuery QueryBuilder lacks (hasAny…, custom ones) travel under their qnot id; register
 // matching custom operators in jQuery QueryBuilder to edit them there.
 function encodeRule(rule: Rule, fields: Fields): JQQBRule | Unsupported {
   if (isFnCall(rule.field) || rule.call !== undefined) return unsupported(rule, 'function calls');
   const base = { id: rule.field, field: rule.field, ...typeAndInput(fields[rule.field]), operator: TO_JQQB[rule.operator] ?? rule.operator };
-  if (rule.ref !== undefined) return { ...base, value: null, data: { trawlnetRef: rule.ref } };
+  if (rule.ref !== undefined) return { ...base, value: null, data: { qnotRef: rule.ref } };
   return { ...base, value: infoOf(fields, rule.operator).arity === 'none' ? null : (rule.value ?? null) };
 }
 
@@ -86,7 +86,7 @@ function encodeGroup(g: Group, children: (JQQBRule | JQQBGroup)[]): JQQBGroup | 
 // --- decode ------------------------------------------------------------------------------------
 
 const fail = (msg: string, what: unknown): never => {
-  throw new Error(`trawlnet/jqqb: ${msg}: ${JSON.stringify(what)}`);
+  throw new Error(`qnot/jqqb: ${msg}: ${JSON.stringify(what)}`);
 };
 
 function decodeRule(r: JQQBRule, fields: Fields): QueryNode {
@@ -95,7 +95,7 @@ function decodeRule(r: JQQBRule, fields: Fields): QueryNode {
   const operator = negate ? (r.operator === 'not_begins_with' ? 'startsWith' : 'endsWith') : (FROM_JQQB[r.operator] ?? r.operator);
   if (!operatorInfo(fields, operator)) return fail('unsupported operator', r.operator);
   const info = infoOf(fields, operator);
-  const ref = r.data?.trawlnetRef;
+  const ref = r.data?.qnotRef;
   if (typeof ref === 'string') return { kind: 'rule', field, operator, ref };
   const def = fields[field];
   const c = (x: unknown) => coerceScalar(def, x);
@@ -127,7 +127,7 @@ function decodeGroup(g: JQQBGroup, fields: Fields): Group {
 
 /**
  * jQuery QueryBuilder's rules JSON (`getRules()` / `setRules()`). Two-way and faithful. It has no
- * field-to-field comparison, so refs travel in the rule's `data.trawlnetRef`; `not_begins_with` and
+ * field-to-field comparison, so refs travel in the rule's `data.qnotRef`; `not_begins_with` and
  * `not_ends_with` decode to a NOT group. Function calls and array groups can't be represented.
  */
 export const jqqb: Format<JQQBGroup, JQQBRule | JQQBGroup> = {

@@ -2,15 +2,15 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
 const LABEL = {
-  trawlnet: '@trawlnet/react (default UI)',
-  'trawlnet-dom': '@trawlnet/dom (no framework)',
+  qnot: '@qnot/react (default UI)',
+  'qnot-dom': '@qnot/dom (no framework)',
   rqb: 'react-querybuilder 8.25',
   raqb: 'react-awesome-query-builder 6.6',
   jqqb: 'jQuery QueryBuilder 3.0',
   syncfusion: 'Syncfusion ej2 QueryBuilder 35',
   devextreme: 'DevExtreme FilterBuilder 26',
 };
-const REACT = new Set(['trawlnet', 'rqb', 'raqb']);
+const REACT = new Set(['qnot', 'rqb', 'raqb']);
 const sizes = JSON.parse(readFileSync('dist/sizes.json', 'utf8'));
 const kb = (b) => (b / 1024).toFixed(1);
 const f = (v, unit = '') => (v == null ? '—' : `${v}${unit}`);

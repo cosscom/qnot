@@ -6,8 +6,8 @@ Headless Chromium (Playwright), production builds, the same tree of 10 fields in
 
 | Library | JS gz (total) | JS gz excl. React | CSS gz |
 | --- | ---: | ---: | ---: |
-| @trawlnet/react (default UI) | 89.9 KB | 22.4 KB | 0.8 KB |
-| @trawlnet/dom (no framework) | 23.1 KB | 23.1 KB | 0.8 KB |
+| @qnot/react (default UI) | 89.9 KB | 22.4 KB | 0.8 KB |
+| @qnot/dom (no framework) | 23.1 KB | 23.1 KB | 0.8 KB |
 | react-querybuilder 8.25 | 124.9 KB | 57.5 KB | 2.2 KB |
 | react-awesome-query-builder 6.6 | 260.6 KB | 193.1 KB | 2.5 KB |
 | jQuery QueryBuilder 3.0 | 68.3 KB | 68.3 KB | 44.2 KB |
@@ -18,8 +18,8 @@ Headless Chromium (Playwright), production builds, the same tree of 10 fields in
 
 | Library | 10 rules | 100 rules | 500 rules | 1000 rules |
 | --- | ---: | ---: | ---: | ---: |
-| @trawlnet/react (default UI) | 20.4 ms | 44.8 ms | 84.4 ms | 120.9 ms |
-| @trawlnet/dom (no framework) | 9.2 ms | 14.9 ms | 42.7 ms | 107.6 ms |
+| @qnot/react (default UI) | 20.4 ms | 44.8 ms | 84.4 ms | 120.9 ms |
+| @qnot/dom (no framework) | 9.2 ms | 14.9 ms | 42.7 ms | 107.6 ms |
 | react-querybuilder 8.25 | 32.6 ms | 75.7 ms | 256.3 ms | 484.3 ms |
 | react-awesome-query-builder 6.6 | 34.7 ms | 94.2 ms | 317.9 ms | 588.7 ms |
 | jQuery QueryBuilder 3.0 | 25.9 ms | 86 ms | 373.2 ms | 857.3 ms |
@@ -30,8 +30,8 @@ Headless Chromium (Playwright), production builds, the same tree of 10 fields in
 
 | Library | 10 rules | 100 rules | 500 rules | 1000 rules |
 | --- | ---: | ---: | ---: | ---: |
-| @trawlnet/react (default UI) | 2.1 ms | 24.9 ms | 59.4 ms | 92.2 ms |
-| @trawlnet/dom (no framework) | 1.9 ms | 6.8 ms | 29.3 ms | 82.6 ms |
+| @qnot/react (default UI) | 2.1 ms | 24.9 ms | 59.4 ms | 92.2 ms |
+| @qnot/dom (no framework) | 1.9 ms | 6.8 ms | 29.3 ms | 82.6 ms |
 | react-querybuilder 8.25 | 6.8 ms | 44.4 ms | 202.8 ms | 435.8 ms |
 | react-awesome-query-builder 6.6 | 10.1 ms | 57.4 ms | 273.8 ms | 546.3 ms |
 | jQuery QueryBuilder 3.0 | 9.2 ms | 64.7 ms | 351 ms | 836.7 ms |
@@ -42,8 +42,8 @@ Headless Chromium (Playwright), production builds, the same tree of 10 fields in
 
 | Library | 10 rules | 100 rules | 500 rules | 1000 rules |
 | --- | ---: | ---: | ---: | ---: |
-| @trawlnet/react (default UI) | 0.2 ms | 0.3 ms | 0.3 ms | 0.4 ms |
-| @trawlnet/dom (no framework) | 0.1 ms | 0.1 ms | 0.3 ms | 0.4 ms |
+| @qnot/react (default UI) | 0.2 ms | 0.3 ms | 0.3 ms | 0.4 ms |
+| @qnot/dom (no framework) | 0.1 ms | 0.1 ms | 0.3 ms | 0.4 ms |
 | react-querybuilder 8.25 | 0.7 ms | 4.8 ms | 26 ms | 57.3 ms |
 | react-awesome-query-builder 6.6 | 0.7 ms | 1.1 ms | 3.5 ms | 8.4 ms |
 | jQuery QueryBuilder 3.0 | 0.1 ms | 0.3 ms | 1.8 ms | 7.5 ms |
@@ -54,8 +54,8 @@ Headless Chromium (Playwright), production builds, the same tree of 10 fields in
 
 | Library | 10 rules | 100 rules | 500 rules | 1000 rules |
 | --- | ---: | ---: | ---: | ---: |
-| @trawlnet/react (default UI) | 1.7 ms | 2.3 ms | 6.2 ms | 5.8 ms |
-| @trawlnet/dom (no framework) | 1.9 ms | 3.5 ms | 6.1 ms | 7.1 ms |
+| @qnot/react (default UI) | 1.7 ms | 2.3 ms | 6.2 ms | 5.8 ms |
+| @qnot/dom (no framework) | 1.9 ms | 3.5 ms | 6.1 ms | 7.1 ms |
 | react-querybuilder 8.25 | 3.6 ms | 14.1 ms | 40.3 ms | 64.7 ms |
 | react-awesome-query-builder 6.6 | 3.7 ms | 6.3 ms | 15.1 ms | 21.5 ms |
 | jQuery QueryBuilder 3.0 | 0.9 ms | 0 ms | 0 ms | 0 ms |
@@ -66,8 +66,8 @@ Headless Chromium (Playwright), production builds, the same tree of 10 fields in
 
 | Library | 10 rules | 100 rules | 500 rules | 1000 rules |
 | --- | ---: | ---: | ---: | ---: |
-| @trawlnet/react (default UI) | 0.7 ms | 0.6 ms | 0.8 ms | 1.5 ms |
-| @trawlnet/dom (no framework) | 0.5 ms | 0.4 ms | 0.8 ms | 1.2 ms |
+| @qnot/react (default UI) | 0.7 ms | 0.6 ms | 0.8 ms | 1.5 ms |
+| @qnot/dom (no framework) | 0.5 ms | 0.4 ms | 0.8 ms | 1.2 ms |
 | react-querybuilder 8.25 | 2.2 ms | 5.7 ms | 27.3 ms | 52.3 ms |
 | react-awesome-query-builder 6.6 | 2.3 ms | 11.7 ms | 48.2 ms | 94.6 ms |
 | jQuery QueryBuilder 3.0 | 0.4 ms | 0.6 ms | 1.3 ms | 3.2 ms |
@@ -78,8 +78,8 @@ Headless Chromium (Playwright), production builds, the same tree of 10 fields in
 
 | Library | 10 rules | 100 rules | 500 rules | 1000 rules |
 | --- | ---: | ---: | ---: | ---: |
-| @trawlnet/react (default UI) | 690 KB | 2012 KB | 7355 KB | 13944 KB |
-| @trawlnet/dom (no framework) | 274 KB | 726 KB | 2581 KB | 4870 KB |
+| @qnot/react (default UI) | 690 KB | 2012 KB | 7355 KB | 13944 KB |
+| @qnot/dom (no framework) | 274 KB | 726 KB | 2581 KB | 4870 KB |
 | react-querybuilder 8.25 | 1217 KB | 4481 KB | 17934 KB | 34721 KB |
 | react-awesome-query-builder 6.6 | 2107 KB | 5798 KB | 20562 KB | 38591 KB |
 | jQuery QueryBuilder 3.0 | 498 KB | 868 KB | 1557 KB | 2261 KB |
@@ -90,8 +90,8 @@ Headless Chromium (Playwright), production builds, the same tree of 10 fields in
 
 | Library | 10 rules | 100 rules | 500 rules | 1000 rules |
 | --- | ---: | ---: | ---: | ---: |
-| @trawlnet/react (default UI) | 141 | 1311 | 6511 | 13011 |
-| @trawlnet/dom (no framework) | 185 | 1643 | 8123 | 16223 |
+| @qnot/react (default UI) | 141 | 1311 | 6511 | 13011 |
+| @qnot/dom (no framework) | 185 | 1643 | 8123 | 16223 |
 | react-querybuilder 8.25 | 362 | 3539 | 17659 | 35309 |
 | react-awesome-query-builder 6.6 | 421 | 4106 | 20466 | 40916 |
 | jQuery QueryBuilder 3.0 | 377 | 3626 | 18066 | 36116 |
@@ -102,8 +102,8 @@ Headless Chromium (Playwright), production builds, the same tree of 10 fields in
 
 | Library | 10 rules | 100 rules | 500 rules | 1000 rules |
 | --- | ---: | ---: | ---: | ---: |
-| @trawlnet/react (default UI) | 0.031 ms | 0.009 ms | 0.065 ms | 0.09 ms |
-| @trawlnet/dom (no framework) | 0.006 ms | 0.008 ms | 0.075 ms | 0.1 ms |
+| @qnot/react (default UI) | 0.031 ms | 0.009 ms | 0.065 ms | 0.09 ms |
+| @qnot/dom (no framework) | 0.006 ms | 0.008 ms | 0.075 ms | 0.1 ms |
 | react-querybuilder 8.25 | 0.028 ms | 0.086 ms | 0.375 ms | 0.78 ms |
 | react-awesome-query-builder 6.6 | 0.142 ms | 0.837 ms | 3.835 ms | 7.515 ms |
 | jQuery QueryBuilder 3.0 | 0.108 ms | 0.723 ms | 3.54 ms | 6.895 ms |

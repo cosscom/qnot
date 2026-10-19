@@ -23,7 +23,7 @@ import {
   type RuleNode,
   type StoreNode,
   type StoreOptions,
-} from '@trawlnet/core';
+} from '@qnot/core';
 import { computed, inject, onScopeDispose, provide, shallowRef, toValue, watch, type InjectionKey, type MaybeRefOrGetter, type ShallowRef } from 'vue';
 
 interface Ctx {
@@ -31,7 +31,7 @@ interface Ctx {
   dnd: DndController;
 }
 
-const KEY: InjectionKey<Ctx> = Symbol('trawlnet');
+const KEY: InjectionKey<Ctx> = Symbol('qnot');
 
 /** Make `store` available to descendants' composables. Call in a parent component's setup. */
 export function provideQueryStore(store: QueryStore<any, any>): void {
@@ -40,7 +40,7 @@ export function provideQueryStore(store: QueryStore<any, any>): void {
 
 function useCtx(): Ctx {
   const ctx = inject(KEY, null);
-  if (!ctx) throw new Error('trawlnet: call provideQueryStore(store) in an ancestor (or use <QueryBuilder>)');
+  if (!ctx) throw new Error('qnot: call provideQueryStore(store) in an ancestor (or use <QueryBuilder>)');
   return ctx;
 }
 
@@ -242,7 +242,7 @@ export function useDragHandle(id: NodeId) {
       if (e.dataTransfer) {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', id);
-        const row = (e.currentTarget as HTMLElement).closest('[data-tn-id]');
+        const row = (e.currentTarget as HTMLElement).closest('[data-qn-id]');
         if (row) e.dataTransfer.setDragImage(row, 12, 12);
       }
       dnd.start(id);
@@ -266,7 +266,7 @@ export function useDropTarget(id: NodeId) {
     return null;
   });
   const dropProps = {
-    'data-tn-id': id,
+    'data-qn-id': id,
     onDragover(e: DragEvent) {
       const n = store.get(id);
       if (!dnd.getState().dragging || !n || n.parent === null) return;

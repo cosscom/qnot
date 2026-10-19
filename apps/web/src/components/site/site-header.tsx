@@ -24,7 +24,7 @@ export function SiteHeader({ tree, docsSidebar = false }: { tree: PageTree.Root;
             docsSidebar && 'lg:w-[calc(var(--sidebar-width)-(--spacing(8)))]',
           )}
         >
-          <Link aria-label="trawlnet home" className="flex items-center gap-2" href="/">
+          <Link aria-label="qnot home" className="flex items-center gap-2" href="/">
             <Wordmark />
           </Link>
           <SectionLabel />

@@ -3,7 +3,7 @@
 // with a fraction of the nodes. The options are owned by this helper rather than by vnodes so the
 // expansion lands in the DOM inside the event, before the browser opens the native list or handles
 // arrow keys (a Vue re-render would only be scheduled).
-import type { FieldOption } from '@trawlnet/core';
+import type { FieldOption } from '@qnot/core';
 import { defineComponent, h, onMounted, ref, watch, type PropType } from 'vue';
 
 export interface OptionLike {
@@ -46,7 +46,7 @@ function fill(sel: HTMLSelectElement, options: readonly OptionLike[], empty: str
 
 /** A `<select>` whose options are rendered lazily; other attributes (class, disabled, aria-*) fall through. */
 export const LazySelect = defineComponent({
-  name: 'TrawlnetLazySelect',
+  name: 'QnotLazySelect',
   props: {
     options: { type: Array as PropType<readonly OptionLike[]>, required: true },
     value: { type: String, default: '' },

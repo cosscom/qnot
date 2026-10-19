@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createQueryStore, defineFields, f, type QueryOf } from '@trawlnet/core';
+import { createQueryStore, defineFields, f, type QueryOf } from '@qnot/core';
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { Profiler, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -34,8 +34,8 @@ describe('<QueryBuilder>', () => {
   it('renders and edits an uncontrolled query', () => {
     const onChange = vi.fn();
     const { container } = render(<QueryBuilder fields={fields} initial={initial} onChange={onChange} />);
-    expect(container.querySelectorAll('.tn-rule')).toHaveLength(3);
-    change(container.querySelector('input.tn-value[type="text"]')!, { target: { value: 'Grace' } });
+    expect(container.querySelectorAll('.qn-rule')).toHaveLength(3);
+    change(container.querySelector('input.qn-value[type="text"]')!, { target: { value: 'Grace' } });
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange.mock.calls[0]![0].children[0]).toEqual({ kind: 'rule', field: 'name', operator: 'eq', value: 'Grace' });
   });
@@ -51,7 +51,7 @@ describe('<QueryBuilder>', () => {
     const { container } = render(<QueryBuilder store={store} components={{ Rule: CountingRule }} />);
     const [a, b, c] = store.getGroup(store.rootId).children;
     renders.clear();
-    change(container.querySelector('input.tn-value[type="text"]')!, { target: { value: 'Grace' } });
+    change(container.querySelector('input.qn-value[type="text"]')!, { target: { value: 'Grace' } });
     expect(renders.get(a!)).toBe(1);
     expect(renders.get(b!)).toBeUndefined();
     expect(renders.get(c!)).toBeUndefined();
@@ -65,9 +65,9 @@ describe('<QueryBuilder>', () => {
       return <QueryBuilder fields={fields} value={q} onChange={setQ} />;
     }
     const { container } = render(<App />);
-    change(container.querySelector('input.tn-value[type="number"]')!, { target: { value: '41' } });
+    change(container.querySelector('input.qn-value[type="number"]')!, { target: { value: '41' } });
     expect(latest.children[1]).toEqual({ kind: 'rule', field: 'age', operator: 'gt', value: 41 });
-    expect(container.querySelector<HTMLInputElement>('input.tn-value[type="number"]')!.value).toBe('41');
+    expect(container.querySelector<HTMLInputElement>('input.qn-value[type="number"]')!.value).toBe('41');
   });
 
   it('applies external controlled changes', () => {
@@ -82,7 +82,7 @@ describe('<QueryBuilder>', () => {
     }
     const { container, getByText } = render(<App />);
     fireEvent.click(getByText('drop first'));
-    expect(container.querySelectorAll('.tn-rule')).toHaveLength(2);
+    expect(container.querySelectorAll('.qn-rule')).toHaveLength(2);
   });
 
   it('adds rules and groups, changes operators, undoes', () => {
@@ -98,10 +98,10 @@ describe('<QueryBuilder>', () => {
     );
     render(<QueryBuilder store={store} />, { container: container.appendChild(document.createElement('div')) });
     fireEvent.click(getAllByText('+ Group')[0]!);
-    expect(container.querySelectorAll('.tn-group')).toHaveLength(2);
-    const op = container.querySelectorAll<HTMLSelectElement>('select.tn-operator')[1]!;
+    expect(container.querySelectorAll('.qn-group')).toHaveLength(2);
+    const op = container.querySelectorAll<HTMLSelectElement>('select.qn-operator')[1]!;
     change(op, { target: { value: 'between' } });
-    expect(container.querySelectorAll('.tn-value-pair')).toHaveLength(1);
+    expect(container.querySelectorAll('.qn-value-pair')).toHaveLength(1);
     expect(getByText('undo')).not.toHaveProperty('disabled', true);
     act(() => void store.undo());
     act(() => void store.undo());

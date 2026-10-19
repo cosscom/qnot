@@ -3,9 +3,9 @@ title: Install with shadcn
 description: Add the coss ui query builder or any example to your project as source, with one command.
 ---
 
-The site is a [shadcn registry](https://ui.shadcn.com/docs/registry). `shadcn add` copies trawlnet's
+The site is a [shadcn registry](https://ui.shadcn.com/docs/registry). `shadcn add` copies qnot's
 coss ui query builder, or a whole example, into your project as source you own, installs the npm
-packages it needs (`@trawlnet/core`, `@trawlnet/react`, `lucide-react`), and pulls the
+packages it needs (`@qnot/core`, `@qnot/react`, `lucide-react`), and pulls the
 [coss ui](https://coss.com/ui) components it uses from coss's own registry.
 
 ## Before you start
@@ -17,7 +17,7 @@ first:
 pnpm dlx shadcn@latest init @coss/style
 ```
 
-Files land under `components/trawlnet/` (your `components` alias), and their imports are rewritten
+Files land under `components/qnot/` (your `components` alias), and their imports are rewritten
 to your aliases. Everything installed from this registry is MIT licensed.
 
 ## The query builder
@@ -26,9 +26,9 @@ to your aliases. Everything installed from this registry is MIT licensed.
 
 ```tsx
 'use client';
-import { createQueryStore, defineFields, f } from '@trawlnet/core';
+import { createQueryStore, defineFields, f } from '@qnot/core';
 import { useState } from 'react';
-import { CossQueryBuilder } from '@/components/trawlnet/query-builder';
+import { CossQueryBuilder } from '@/components/qnot/query-builder';
 
 const fields = defineFields({ name: f.text(), age: f.number({ min: 0 }), plan: f.enum(['free', 'pro']) });
 
@@ -42,7 +42,7 @@ export function Filters() {
 
 The builder also comes in shadcn/ui, MUI, Mantine and plain-HTML variants, the ones on the
 [UI kits](/kits) page. Each one installs `query-builder-core`, the kit-agnostic builder they share
-(`components/trawlnet/kits/shared`), plus the kit's own controls:
+(`components/qnot/kits/shared`), plus the kit's own controls:
 
 | Item | Install into | Brings |
 |---|---|---|
@@ -55,9 +55,9 @@ The builder also comes in shadcn/ui, MUI, Mantine and plain-HTML variants, the o
 
 ```tsx
 'use client';
-import { createQueryStore } from '@trawlnet/core';
+import { createQueryStore } from '@qnot/core';
 import { useState } from 'react';
-import { QueryBuilder } from '@/components/trawlnet/kits/mui';
+import { QueryBuilder } from '@/components/qnot/kits/mui';
 import { fields } from './fields';
 
 export function Filters() {
@@ -86,7 +86,7 @@ install it. Each example exports a `Demo` component:
 <RegistryInstall name="product-filters" />
 
 ```tsx
-import { Demo as ProductFilters } from '@/components/trawlnet/examples/product-filters';
+import { Demo as ProductFilters } from '@/components/qnot/examples/product-filters';
 
 export default function Page() {
   return <ProductFilters />;

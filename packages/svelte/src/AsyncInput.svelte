@@ -1,6 +1,6 @@
 <script lang="ts">
   // Text input backed by the field's async `search`, suggesting options as the user types.
-  import { CLASS, formatInput, formatList, parseList, type AnyFieldDef } from '@trawlnet/core';
+  import { CLASS, formatInput, formatList, parseList, type AnyFieldDef } from '@qnot/core';
 
   interface Props {
     def: AnyFieldDef | undefined;
@@ -28,7 +28,7 @@
     }
   });
   let found = $state.raw<readonly { value: unknown; label: string }[]>([]);
-  const listId = `tn-async-${Math.random().toString(36).slice(2)}`;
+  const listId = `qn-async-${Math.random().toString(36).slice(2)}`;
 
   $effect(() => {
     if (!def?.search) return;

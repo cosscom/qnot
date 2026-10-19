@@ -24,7 +24,7 @@ import {
   type Quantifier,
   type QueryOf,
   type QueryStore,
-} from '@trawlnet/core';
+} from '@qnot/core';
 import { createContext, memo, useContext, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import { useSync } from './sync';
 import { useDragHandle, useDropTarget, useGroupDropZone } from './dnd';
@@ -125,7 +125,7 @@ function AsyncInput({ def, value, onChange, invalid, disabled, multiple }: { def
     setPrev(value);
     if (format(value) !== format(emitted)) setQuery(format(value));
   }
-  const listId = useMemo(() => `tn-async-${Math.random().toString(36).slice(2)}`, []);
+  const listId = useMemo(() => `qn-async-${Math.random().toString(36).slice(2)}`, []);
   useEffect(() => {
     if (!def?.search) return;
     const ctrl = new AbortController();
@@ -180,7 +180,7 @@ function ScalarEditor({ editor, def, value, onChange, invalid, disabled, labels 
       return <DraftInput type="number" value={value} min={def?.min} max={def?.max} step={def?.step} placeholder={def?.placeholder} parse={(raw) => parseInput(def, raw)} format={formatInput} onChange={onChange} invalid={invalid} disabled={disabled} />;
     case 'slider':
       return (
-        <span className="tn-slider">
+        <span className="qn-slider">
           <input
             className={CLASS.value}
             type="range"
@@ -214,7 +214,7 @@ export function DefaultValueEditor(props: ValueEditorProps) {
     case 'two': {
       const pair = Array.isArray(value) ? value : [null, null];
       return (
-        <span className="tn-value-pair">
+        <span className="qn-value-pair">
           <ScalarEditor {...props} value={pair[0]} onChange={(v) => onChange([v, pair[1]])} />
           <span>{labels.rangeSeparator}</span>
           <ScalarEditor {...props} value={pair[1]} onChange={(v) => onChange([pair[0], v])} />
@@ -253,7 +253,7 @@ function SourceSelect({ source, hasRefs, hasFunctions, disabled, labels, onChang
   const { expanded, triggers } = useLazyOptions();
   const show = (s: string) => expanded || s === source;
   return (
-    <select className="tn-source" value={source} disabled={disabled} aria-label={labels.compareWith} {...triggers} onChange={(e) => onChange(e.target.value)}>
+    <select className="qn-source" value={source} disabled={disabled} aria-label={labels.compareWith} {...triggers} onChange={(e) => onChange(e.target.value)}>
       {show('value') && <option value="value">{labels.compareValue}</option>}
       {hasRefs && show('field') && <option value="field">{labels.compareField}</option>}
       {hasFunctions && show('function') && <option value="function">{labels.compareFunction}</option>}
@@ -310,13 +310,13 @@ export function FunctionEditor({ call, fields, kind, onChange, disabled, labels 
   const fns = useMemo(() => functionOptions(fields, kind), [fields, kind]);
   const def = functionOf(fields, call);
   return (
-    <span className="tn-function">
-      <Select className="tn-function-name" value={call.fn} options={fns} disabled={disabled} onChange={(fn) => onChange(defaultCall(fields, fn))} />
+    <span className="qn-function">
+      <Select className="qn-function-name" value={call.fn} options={fns} disabled={disabled} onChange={(fn) => onChange(defaultCall(fields, fn))} />
       {def && Object.keys(def.args).length > 0 && (
-        <span className="tn-function-args">
+        <span className="qn-function-args">
           (
           {Object.entries(def.args).map(([name, argDef], i) => (
-            <span key={name} className="tn-function-arg">
+            <span key={name} className="qn-function-arg">
               {i > 0 && ', '}
               <OperandEditor
                 operand={call.args[name] ?? { value: null }}
@@ -341,10 +341,10 @@ function OperandEditor({ operand, def, fields, label, onChange, disabled, labels
   const nested = functionOptions(fields, def.kind);
   const source = isFnCall(operand) ? 'function' : 'ref' in operand ? 'field' : 'value';
   return (
-    <span className="tn-operand" title={label}>
+    <span className="qn-operand" title={label}>
       {(refs.length > 0 || nested.length > 0) && (
         <select
-          className="tn-source"
+          className="qn-source"
           value={source}
           disabled={disabled}
           onChange={(e) =>
@@ -391,7 +391,7 @@ export const DefaultRule = memo(function DefaultRule({ id }: { id: NodeId }) {
       {lhsFunctions.length > 0 && (
         <button
           type="button"
-          className={cx(CLASS.action, 'tn-lhs-toggle')}
+          className={cx(CLASS.action, 'qn-lhs-toggle')}
           disabled={!can.editField}
           title={fieldIsFn ? labels.useField : labels.useFunction}
           aria-pressed={fieldIsFn}
@@ -452,9 +452,9 @@ function NodeView({ id }: { id: NodeId }) {
 function MatchEditor({ match, label, onChange, disabled, labels }: { match: Quantifier; label: string; onChange: (m: Quantifier) => void; disabled?: boolean; labels: Labels }) {
   const mode = typeof match === 'string' ? match : 'count';
   return (
-    <span className="tn-match">
+    <span className="qn-match">
       <select
-        className="tn-match-mode"
+        className="qn-match-mode"
         value={mode}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value === 'count' ? { count: 'gte', value: 1 } : (e.target.value as 'some' | 'all' | 'none'))}
@@ -466,8 +466,8 @@ function MatchEditor({ match, label, onChange, disabled, labels }: { match: Quan
       </select>
       {typeof match === 'object' && match.count !== 'between' && (
         <>
-          <Select className="tn-match-op" value={match.count} options={countOptions(labels)} disabled={disabled} onChange={(count) => onChange({ count: count as 'gte', value: match.value })} />
-          <input className="tn-match-count" type="number" min={0} value={match.value} disabled={disabled} onChange={(e) => onChange({ count: match.count, value: Number(e.target.value) })} />
+          <Select className="qn-match-op" value={match.count} options={countOptions(labels)} disabled={disabled} onChange={(count) => onChange({ count: count as 'gte', value: match.value })} />
+          <input className="qn-match-count" type="number" min={0} value={match.value} disabled={disabled} onChange={(e) => onChange({ count: match.count, value: Number(e.target.value) })} />
         </>
       )}
       <span>
@@ -516,7 +516,7 @@ export const DefaultGroup = memo(function DefaultGroup({ id }: { id: NodeId }) {
           {labels.addGroup}
         </button>
         {g.arrayFields.length > 0 && (
-          <select className="tn-add-array" value="" disabled={!can.addGroup} onChange={(e) => e.target.value && g.addArrayGroup(e.target.value)}>
+          <select className="qn-add-array" value="" disabled={!can.addGroup} onChange={(e) => e.target.value && g.addArrayGroup(e.target.value)}>
             <option value="">{labels.addArrayGroup}</option>
             {g.arrayFields.map((o) => (
               <option key={o.value} value={o.value}>

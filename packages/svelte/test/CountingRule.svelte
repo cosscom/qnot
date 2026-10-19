@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { NodeId } from '@trawlnet/core';
+  import type { NodeId } from '@qnot/core';
   import { createRule, getQueryStore } from '../src/index';
   import { counts } from './counts';
 

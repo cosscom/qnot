@@ -3,7 +3,7 @@ title: Introduction
 description: A query builder that stays fast at a thousand rules, typed from your schema to the SQL it writes.
 ---
 
-trawlnet is the part every filter bar, segment builder, routing form and alert rule shares: a tree of
+qnot is the part every filter bar, segment builder, routing form and alert rule shares: a tree of
 conditions that people edit, that you validate, and that ends up as SQL, a MongoDB filter, JsonLogic
 or a function you run in JavaScript.
 
@@ -11,10 +11,10 @@ It comes as a framework-agnostic core and thin bindings:
 
 | Package | What it is |
 | --- | --- |
-| `@trawlnet/core` | Schema builders, the query store, validation, evaluation, and format codecs. No DOM, no framework. Runs in the browser and on the server. |
-| `@trawlnet/react` | Hooks over the store, plus a small unstyled `<QueryBuilder>`. |
-| `@trawlnet/vue`, `@trawlnet/svelte`, `@trawlnet/solid` | The same hooks and builder for each framework. |
-| `@trawlnet/dom` | A vanilla DOM builder: `mountQueryBuilder(el, store)`. |
+| `@qnot/core` | Schema builders, the query store, validation, evaluation, and format codecs. No DOM, no framework. Runs in the browser and on the server. |
+| `@qnot/react` | Hooks over the store, plus a small unstyled `<QueryBuilder>`. |
+| `@qnot/vue`, `@qnot/svelte`, `@qnot/solid` | The same hooks and builder for each framework. |
+| `@qnot/dom` | A vanilla DOM builder: `mountQueryBuilder(el, store)`. |
 
 ## Why another query builder
 
@@ -22,7 +22,7 @@ It comes as a framework-agnostic core and thin bindings:
   operator. Hover `rule.value` below:
 
 ```ts twoslash
-import { defineFields, f, isLiteralRule, type RuleOf } from '@trawlnet/core';
+import { defineFields, f, isLiteralRule, type RuleOf } from '@qnot/core';
 
 const fields = defineFields({
   age: f.number({ min: 0 }),

@@ -6,7 +6,7 @@ description: Compile a query into a predicate and filter rows in the browser or 
 `compile` turns a query into a plain function once; call it on as many rows as you like.
 
 ```ts
-import { compile } from '@trawlnet/core';
+import { compile } from '@qnot/core';
 
 const matches = compile(fields, query);
 const result = users.filter(matches);
@@ -48,7 +48,7 @@ const matches = compile<typeof fields, User>(fields, query, {
 `compileCases` compiles an ordered list of conditions with results; the first match wins.
 
 ```ts
-import { compileCases } from '@trawlnet/core';
+import { compileCases } from '@qnot/core';
 
 const route = compileCases(fields, {
   cases: [

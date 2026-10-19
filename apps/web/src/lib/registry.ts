@@ -1,6 +1,6 @@
 import 'server-only';
 import { resolveRegistry, type ResolvedItem } from '../../registry/resolve.mjs';
-import { REGISTRY_BASE } from './site';
+import { REGISTRY_BASE, withBrand } from './site';
 
 // The shadcn registry as the site sees it (pages read it at build time; nothing reads files at runtime).
 let cache: ResolvedItem[] | undefined;
@@ -21,7 +21,7 @@ export function installedFiles(name: string): { install: string; content: string
     seen.add(n);
     const item = registryItem(n);
     if (!item) throw new Error(`registry: no item "${n}"`);
-    for (const f of item.files) out.push({ install: f.install, content: f.content });
+    for (const f of item.files) out.push({ install: f.install, content: withBrand(f.content) });
     item.own.forEach(visit);
   };
   visit(name);

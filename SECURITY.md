@@ -9,7 +9,7 @@ working days.
 
 ## Threat model
 
-trawlnet turns a **query** into SQL (and other formats) using a **schema**.
+qnot turns a **query** into SQL (and other formats) using a **schema**.
 
 | Input | Trust | Why |
 |---|---|---|
@@ -66,7 +66,7 @@ query JSON can silently widen what it matches.
   checking them yourself.
 - **Schema names** (`column`, field keys) are written into SQL as identifiers. Keep them static, or
   turn on `quoteIdentifiers`.
-- **Collations decide equality.** trawlnet's escaping is exact, but your database's collation can
+- **Collations decide equality.** qnot's escaping is exact, but your database's collation can
   still treat strings as equal that `compile()` doesn't: MySQL PAD SPACE and SQL Server ignore
   trailing spaces, width- or accent-insensitive collations fold characters, SQLite `LIKE` ignores ASCII
   case unless `PRAGMA case_sensitive_like = ON`. These differ in which rows match, never in the
@@ -134,15 +134,15 @@ strings (it binds UTF-16), so those payloads are skipped on SQLite.
 
 `bench/security/sql-parse-fuzz.ts` fed 20,112 inputs to the parser (random token soup with payloads,
 100,000-deep parentheses, `NOT` chains and nested calls, 20,000-term OR chains, 50,000-item IN lists,
-strings up to 1.2 MB): every input parsed or failed with a trawlnet error, the slowest in under 50 ms.
+strings up to 1.2 MB): every input parsed or failed with a qnot error, the slowest in under 50 ms.
 20,000 encode → decode → encode round trips across five dialects were identical.
 
 ### Running it
 
 ```sh
-docker run -d --name tn-pg -e POSTGRES_PASSWORD=pw -p 55432:5432 postgres:16
-docker run -d --name tn-mysql -e MYSQL_ROOT_PASSWORD=pw -e MYSQL_DATABASE=t -p 53306:3306 mysql:8.4
-docker run -d --name tn-mssql -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='Str0ng!Passw0rd' -p 51433:1433 mcr.microsoft.com/mssql/server:2022-latest
+docker run -d --name qn-pg -e POSTGRES_PASSWORD=pw -p 55432:5432 postgres:16
+docker run -d --name qn-mysql -e MYSQL_ROOT_PASSWORD=pw -e MYSQL_DATABASE=t -p 53306:3306 mysql:8.4
+docker run -d --name qn-mssql -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='Str0ng!Passw0rd' -p 51433:1433 mcr.microsoft.com/mssql/server:2022-latest
 bun bench/security/sql-dbs.ts        # N=…, ONLY=sqlite,pg,pg-scs-off,mysql,mysql-nobackslash,mssql
 bun bench/security/sql-parse-fuzz.ts
 bun bench/core/sql-fuzz.ts           # SQLite only, no Docker

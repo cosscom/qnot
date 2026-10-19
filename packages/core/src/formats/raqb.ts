@@ -108,7 +108,7 @@ function toRaqbOperator(op: string, def: AnyFieldDef | undefined): string {
   const select = valueType(def) === 'select';
   if (op === 'eq') return select ? 'select_equals' : 'equal';
   if (op === 'neq') return select ? 'select_not_equals' : 'not_equal';
-  // hasAll and custom operators have no RAQB built-in; they travel under their trawlnet id.
+  // hasAll and custom operators have no RAQB built-in; they travel under their qnot id.
   return TO_RAQB[op] ?? op;
 }
 
@@ -148,7 +148,7 @@ function fromRaqbValue(def: AnyFieldDef | undefined, v: unknown): unknown {
 
 // --- functions ----------------------------------------------------------------------------------
 
-/** trawlnet builtinFunctions ↔ RAQB BasicFuncs: name and argument names. */
+/** qnot builtinFunctions ↔ RAQB BasicFuncs: name and argument names. */
 const FUNC_TO: Record<string, { func: string; args: Record<string, string> }> = {
   lower: { func: 'LOWER', args: { text: 'str' } },
   upper: { func: 'UPPER', args: { text: 'str' } },
@@ -274,7 +274,7 @@ function encodeGroup(g: Group, children: RAQBNode[], ctx: RaqbContext): RAQBGrou
 // --- decode ------------------------------------------------------------------------------------
 
 const fail = (msg: string, what: unknown): never => {
-  throw new Error(`trawlnet/raqb: ${msg}: ${JSON.stringify(what)}`);
+  throw new Error(`qnot/raqb: ${msg}: ${JSON.stringify(what)}`);
 };
 
 function decodeRule(r: RAQBRule, fields: Fields, prefix: string): Rule {

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createQueryStore, defineFields, f, type QueryOf } from '@trawlnet/core';
+import { createQueryStore, defineFields, f, type QueryOf } from '@qnot/core';
 import { mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 import { defineComponent, h, nextTick, ref } from 'vue';
@@ -34,8 +34,8 @@ const mountIt = (...args: Parameters<typeof mount>) => {
 describe('Vue <QueryBuilder>', () => {
   it('renders, edits, and emits change', async () => {
     const w = mountIt(QueryBuilder, { props: { fields, initial }, attachTo: document.body });
-    expect(w.findAll('.tn-rule')).toHaveLength(3);
-    await change(w.find('input.tn-value[type="text"]'), 'Grace');
+    expect(w.findAll('.qn-rule')).toHaveLength(3);
+    await change(w.find('input.qn-value[type="text"]'), 'Grace');
     const changes = w.emitted('change')!;
     expect((changes.at(-1)![0] as Q).children[0]).toEqual({ kind: 'rule', field: 'name', operator: 'eq', value: 'Grace' });
   });
@@ -67,24 +67,24 @@ describe('Vue <QueryBuilder>', () => {
     const model = ref<Q>(initial);
     const App = defineComponent(() => () => h(QueryBuilder, { fields, modelValue: model.value, 'onUpdate:modelValue': (v: unknown) => (model.value = v as Q) }));
     const w = mountIt(App);
-    await change(w.find('input.tn-value[type="number"]'), '41');
+    await change(w.find('input.qn-value[type="number"]'), '41');
     expect(model.value.children[1]).toEqual({ kind: 'rule', field: 'age', operator: 'gt', value: 41 });
     model.value = { ...model.value, children: model.value.children.slice(1) };
     await nextTick();
-    expect(w.findAll('.tn-rule')).toHaveLength(2);
+    expect(w.findAll('.qn-rule')).toHaveLength(2);
   });
 
   it('adds groups/rules, switches operators, toggles NOT', async () => {
     const store = createQueryStore({ fields, initial });
     const w = mountIt(QueryBuilder, { props: { store } });
     await w.findAll('button').find((b) => b.text() === '+ Group')!.trigger('click');
-    expect(w.findAll('.tn-group')).toHaveLength(2);
-    await w.findAll('.tn-group')[1]!.findAll('button').find((b) => b.text() === '+ Rule')!.trigger('click');
+    expect(w.findAll('.qn-group')).toHaveLength(2);
+    await w.findAll('.qn-group')[1]!.findAll('button').find((b) => b.text() === '+ Rule')!.trigger('click');
     // New groups start with one rule (RAQB default), so this is the second.
     expect(store.getQuery().children[3]).toMatchObject({ kind: 'group', children: [{ kind: 'rule', field: 'name' }, { kind: 'rule', field: 'name' }] });
-    await change(w.findAll('select.tn-operator')[1]!, 'between');
-    expect(w.findAll('.tn-value-pair input')).toHaveLength(2);
-    await change(w.find('.tn-not input'), true);
+    await change(w.findAll('select.qn-operator')[1]!, 'between');
+    expect(w.findAll('.qn-value-pair input')).toHaveLength(2);
+    await change(w.find('.qn-not input'), true);
     expect(store.getQuery().not).toBe(true);
     store.undo();
     await nextTick();

@@ -1,5 +1,5 @@
 import { codeToHtml } from 'shiki';
-import { ScrollBox } from '@/components/trawlnet/scroll-box';
+import { ScrollBox } from '@/components/qnot/scroll-box';
 import { cn } from '@/lib/utils';
 
 /** Server-highlighted code in the coss code block look, scrolling inside a content-sized ScrollBox. */

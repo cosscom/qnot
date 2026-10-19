@@ -1,13 +1,13 @@
 // Every kit keeps the O(1) edit: changing one rule re-renders that rule's controls only.
-import { createQueryStore, defineFields, f } from '@trawlnet/core';
+import { createQueryStore, defineFields, f } from '@qnot/core';
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { headlessKit } from '@/components/trawlnet/kits/headless';
-import { muiKit } from '@/components/trawlnet/kits/mui';
-import { shadcnKit } from '@/components/trawlnet/kits/shadcn';
-import { createQueryBuilder } from '@/components/trawlnet/kits/shared/builder';
-import type { Kit } from '@/components/trawlnet/kits/shared/kit';
+import { headlessKit } from '@/components/qnot/kits/headless';
+import { muiKit } from '@/components/qnot/kits/mui';
+import { shadcnKit } from '@/components/qnot/kits/shadcn';
+import { createQueryBuilder } from '@/components/qnot/kits/shared/builder';
+import type { Kit } from '@/components/qnot/kits/shared/kit';
 
 const fields = defineFields({ name: f.text(), city: f.text(), email: f.text() });
 const initial = {

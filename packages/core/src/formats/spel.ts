@@ -184,7 +184,7 @@ type Ast =
 function parse(src: string): Ast {
   let i = 0;
   const fail = (msg: string): never => {
-    throw new Error(`trawlnet/spel: ${msg} at position ${i} in: ${src}`);
+    throw new Error(`qnot/spel: ${msg} at position ${i} in: ${src}`);
   };
   const ws = () => {
     while (i < src.length && /\s/.test(src[i]!)) i++;
@@ -363,7 +363,7 @@ function spelFunctions(fields: Fields) {
 function toQuery(ast: Ast, fields: Fields): QueryNode {
   const fns = spelFunctions(fields);
   const fail = (what: Ast): never => {
-    throw new Error(`trawlnet/spel: cannot decode ${print(what) || what.k}`);
+    throw new Error(`qnot/spel: cannot decode ${print(what) || what.k}`);
   };
   const fieldFor = (scope: Fields, path: string) => Object.keys(scope).find((k) => columnOf(scope, k) === path) ?? path;
 

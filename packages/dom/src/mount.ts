@@ -35,7 +35,7 @@ import {
   type Quantifier,
   type QueryStore,
   type RuleNode,
-} from '@trawlnet/core';
+} from '@qnot/core';
 import { bindDragHandle, bindDropTarget, bindGroupDropZone, type DropPosition } from './dnd';
 
 export { DEFAULT_LABELS, defaultCall };
@@ -210,7 +210,7 @@ interface Control {
 
 /** Text input backed by the field's async `search`, suggesting options in a datalist. */
 function asyncControl(def: AnyFieldDef | undefined, multiple: boolean, emit: (v: unknown) => void): Control {
-  const listId = `tn-async-${Math.random().toString(36).slice(2)}`;
+  const listId = `qn-async-${Math.random().toString(36).slice(2)}`;
   const input = h('input', { className: CLASS.value });
   input.setAttribute('list', listId);
   const list = h('datalist', { id: listId });
@@ -245,7 +245,7 @@ function asyncControl(def: AnyFieldDef | undefined, multiple: boolean, emit: (v:
   };
   search();
   return {
-    el: h('span', { className: 'tn-async' }, input, list),
+    el: h('span', { className: 'qn-async' }, input, list),
     set(v, invalid, disabled) {
       // Follow external changes (undo, controlled updates), but keep text the user is typing when
       // the value is just what this input emitted.
@@ -322,7 +322,7 @@ function scalarControl(spec: EditorSpec, def: AnyFieldDef | undefined, labels: L
       const out = h('output');
       range.oninput = () => emit(Number(range.value));
       return {
-        el: h('span', { className: 'tn-slider' }, range, out),
+        el: h('span', { className: 'qn-slider' }, range, out),
         set(v, invalid, disabled) {
           range.value = String(typeof v === 'number' ? v : (def?.min ?? 0));
           out.textContent = formatInput(v);
@@ -380,7 +380,7 @@ export const DefaultValueEditor: ValueEditorFactory = (initial) => {
     const pair = () => (Array.isArray(props.value) ? props.value : [null, null]);
     const a = scalarControl(editor, def, labels, (v) => emit([v, pair()[1]]));
     const b = scalarControl(editor, def, labels, (v) => emit([pair()[0], v]));
-    const el = h('span', { className: 'tn-value-pair' }, a.el, h('span', { textContent: labels.rangeSeparator }), b.el);
+    const el = h('span', { className: 'qn-value-pair' }, a.el, h('span', { textContent: labels.rangeSeparator }), b.el);
     const update = (p: ValueEditorProps) => {
       props = p;
       const [x, y] = pair();
@@ -423,10 +423,10 @@ interface CallEditor {
 export function functionEditor(fields: Fields, kind: string | undefined, initial: FnCall, onChange: (c: FnCall) => void, labels: Labels): CallEditor {
   let call = initial;
   const fns = functionOptions(fields, kind);
-  const name = h('select', { className: 'tn-function-name', onchange: () => onChange(defaultCall(fields, name.value)) });
+  const name = h('select', { className: 'qn-function-name', onchange: () => onChange(defaultCall(fields, name.value)) });
   const nameLazy = lazySelect(name);
-  const argsEl = h('span', { className: 'tn-function-args' });
-  const el = h('span', { className: 'tn-function' }, name, argsEl);
+  const argsEl = h('span', { className: 'qn-function-args' });
+  const el = h('span', { className: 'qn-function' }, name, argsEl);
   let builtFor: string | null = null;
   let operands: { name: string; editor: OperandEditor }[] = [];
 
@@ -444,7 +444,7 @@ export function functionEditor(fields: Fields, kind: string | undefined, initial
     entries.forEach(([argName, argDef], i) => {
       const editor = operandEditor(fields, argDef, fieldLabel(argName, argDef), call.args[argName] ?? { value: null }, (operand) => onChange({ ...call, args: { ...call.args, [argName]: operand } }), labels);
       operands.push({ name: argName, editor });
-      kids.push(h('span', { className: 'tn-function-arg' }, ...(i > 0 ? [', '] : []), editor.el));
+      kids.push(h('span', { className: 'qn-function-arg' }, ...(i > 0 ? [', '] : []), editor.el));
     });
     kids.push(')');
     argsEl.replaceChildren(...kids);
@@ -472,13 +472,13 @@ interface OperandEditor {
 function operandEditor(fields: Fields, def: AnyFieldDef, label: string, initial: Operand, onChange: (o: Operand) => void, labels: Labels): OperandEditor {
   const refs = refOptions(fields, '', def.kind);
   const nested = functionOptions(fields, def.kind);
-  const el = h('span', { className: 'tn-operand', title: label });
+  const el = h('span', { className: 'qn-operand', title: label });
   const host = h('span');
   host.style.display = 'contents';
   let source: string | null = null;
   let current = initial;
   const sourceSel = h('select', {
-    className: 'tn-source',
+    className: 'qn-source',
     onchange: () =>
       onChange(sourceSel.value === 'field' ? { ref: refs[0]!.value } : sourceSel.value === 'function' ? defaultCall(fields, nested[0]!.value) : { value: def.defaultValue ?? null }),
   });
@@ -535,13 +535,13 @@ export function DefaultRule(ctx: MountContext, id: NodeId): NodeView {
   const lhsToggle = button('ƒ', () => {
     const r = store.getRule(id);
     store.setField(id, (isFnCall(r.field) ? fieldChoices[0]!.value : defaultCall(fields, lhsFunctions[0]!.value)) as never);
-  }, undefined, `${CLASS.action} tn-lhs-toggle`);
+  }, undefined, `${CLASS.action} qn-lhs-toggle`);
   const lhsHost = h('span');
   lhsHost.style.display = 'contents';
   const fieldSel = h('select', { className: CLASS.field, onchange: () => store.setField(id, fieldSel.value as never) });
   const opSel = h('select', { className: CLASS.operator, onchange: () => store.setOperator(id, opSel.value) });
   const sourceSel = h('select', {
-    className: 'tn-source',
+    className: 'qn-source',
     onchange: () =>
       sourceSel.value === 'field' ? store.setRef(id, refs[0]!.value) : sourceSel.value === 'function' ? store.setCall(id, defaultCall(fields, functions[0]!.value)) : store.setRef(id, null),
   });
@@ -738,7 +738,7 @@ function toggleDrop(el: HTMLElement, p: DropPosition) {
 function matchEditor(labels: Labels, onChange: (m: Quantifier) => void) {
   let match: Quantifier = 'some';
   const mode = h('select', {
-    className: 'tn-match-mode',
+    className: 'qn-match-mode',
     onchange: () => onChange(mode.value === 'count' ? { count: 'gte', value: 1 } : (mode.value as 'some' | 'all' | 'none')),
   });
   fillOptions(mode, [
@@ -747,12 +747,12 @@ function matchEditor(labels: Labels, onChange: (m: Quantifier) => void) {
     { value: 'none', label: labels.none },
     { value: 'count', label: labels.count },
   ]);
-  const op = h('select', { className: 'tn-match-op', onchange: () => typeof match === 'object' && onChange({ count: op.value as 'gte', value: match.value as number }) });
+  const op = h('select', { className: 'qn-match-op', onchange: () => typeof match === 'object' && onChange({ count: op.value as 'gte', value: match.value as number }) });
   const opLazy = lazySelect(op);
   const counts = countOptions(labels);
-  const count = h('input', { className: 'tn-match-count', type: 'number', min: '0', oninput: () => typeof match === 'object' && onChange({ count: match.count as 'gte', value: Number(count.value) }) });
+  const count = h('input', { className: 'qn-match-count', type: 'number', min: '0', oninput: () => typeof match === 'object' && onChange({ count: match.count as 'gte', value: Number(count.value) }) });
   const strong = h('strong');
-  const el = h('span', { className: 'tn-match' }, mode, op, count, h('span', {}, `${labels.matchOf} `, strong, ` ${labels.matchWhere}`));
+  const el = h('span', { className: 'qn-match' }, mode, op, count, h('span', {}, `${labels.matchOf} `, strong, ` ${labels.matchWhere}`));
   return {
     el,
     update(next: Quantifier, label: string, disabled: boolean) {
@@ -796,7 +796,7 @@ export function DefaultGroup(ctx: MountContext, id: NodeId): NodeView {
   fillOptions(comb, [{ value: 'and', label: labels.and }, { value: 'or', label: labels.or }]);
   const addRule = button(labels.addRule, () => store.addRule(id));
   const addGroup = button(labels.addGroup, () => store.addGroup(id));
-  const addArray = h('select', { className: 'tn-add-array', onchange: () => addArray.value && store.addArrayGroup(id, addArray.value) });
+  const addArray = h('select', { className: 'qn-add-array', onchange: () => addArray.value && store.addArrayGroup(id, addArray.value) });
   const lockBtn = button('🔓', () => store.setLocked(id, !store.getGroup(id).locked));
   const cloneBtn = button('⧉', () => store.clone(id), labels.clone);
   const removeBtn = button('×', () => void store.requestRemove(id), labels.remove);
