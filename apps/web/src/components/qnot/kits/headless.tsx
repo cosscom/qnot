@@ -260,8 +260,10 @@ const kit: Kit = {
         negated && 'border-dashed border-amber-500/70',
         locked && 'opacity-80',
         dragging && 'opacity-40',
-        drop === 'before' && 'shadow-[0_-2px_0_var(--color-primary)]',
-        drop === 'after' && 'shadow-[0_2px_0_var(--color-primary)]',
+        drop === 'before' &&
+          'relative before:pointer-events-none before:absolute before:inset-x-0 before:-top-[5px] before:h-0.5 before:rounded-full before:bg-primary after:pointer-events-none after:absolute after:-start-1 after:-top-[8px] after:size-2 after:rounded-full after:border-2 after:border-primary after:bg-background',
+        drop === 'after' &&
+          'relative before:pointer-events-none before:absolute before:inset-x-0 before:-bottom-[5px] before:h-0.5 before:rounded-full before:bg-primary after:pointer-events-none after:absolute after:-start-1 after:-bottom-[8px] after:size-2 after:rounded-full after:border-2 after:border-primary after:bg-background',
         className,
       )}
     >

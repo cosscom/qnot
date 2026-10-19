@@ -59,8 +59,13 @@ interface Ctx extends Required<Omit<CossQueryBuilderOptions, 'sentenceIcon' | 'l
 const OptionsContext = createContext<Ctx>(null!);
 const useOptions = () => useContext(OptionsContext);
 
+// The drop indicator: a line centred in the 8px gap between siblings, with a dot at its start.
 const dropLine = (position: 'before' | 'after' | 'inside' | null) =>
-  position === 'before' ? 'shadow-[0_-2px_0_var(--color-primary)]' : position === 'after' ? 'shadow-[0_2px_0_var(--color-primary)]' : '';
+  position === 'before'
+    ? 'relative before:pointer-events-none before:absolute before:inset-x-0 before:-top-[5px] before:h-0.5 before:rounded-full before:bg-primary after:pointer-events-none after:absolute after:-start-1 after:-top-[8px] after:size-2 after:rounded-full after:border-2 after:border-primary after:bg-background'
+    : position === 'after'
+      ? 'relative before:pointer-events-none before:absolute before:inset-x-0 before:-bottom-[5px] before:h-0.5 before:rounded-full before:bg-primary after:pointer-events-none after:absolute after:-start-1 after:-bottom-[8px] after:size-2 after:rounded-full after:border-2 after:border-primary after:bg-background'
+      : '';
 
 function LockToggle({ locked, disabled, onChange, what }: { locked: boolean; disabled: boolean; onChange: (l: boolean) => void; what: string }) {
   const { labels } = useOptions();
@@ -365,7 +370,8 @@ const Group = memo(function Group({ id, depth }: { id: NodeId; depth: number }) 
         isDragging && 'opacity-40',
         dropLine(position),
       )}
-      style={isRoot ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 160px' }}
+      // content-visibility clips paint to the box, which would hide the drop line in the gap.
+      style={isRoot || position ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 160px' }}
       {...(isRoot ? {} : dropProps)}
       data-group={id}
     >

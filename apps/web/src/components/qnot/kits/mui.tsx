@@ -330,8 +330,14 @@ const kit: Kit = {
         borderColor: negated ? 'warning.main' : kind === 'array' ? 'primary.light' : undefined,
         borderStyle: negated ? 'dashed' : 'solid',
         opacity: dragging ? 0.4 : locked ? 0.8 : 1,
-        boxShadow: drop === 'before' ? (t) => `0 -2px 0 ${t.palette.primary.main}` : drop === 'after' ? (t) => `0 2px 0 ${t.palette.primary.main}` : 'none',
         color: 'text.primary',
+        // The drop indicator: a line centred in the 8px gap between siblings, with a dot at its start.
+        ...((drop === 'before' || drop === 'after') && {
+          position: 'relative',
+          '&::before, &::after': { content: '""', position: 'absolute', pointerEvents: 'none' },
+          '&::before': { left: 0, right: 0, height: 2, borderRadius: 1, bgcolor: 'primary.main', [drop === 'before' ? 'top' : 'bottom']: -5 },
+          '&::after': { left: -4, width: 8, height: 8, borderRadius: '50%', border: 2, borderColor: 'primary.main', bgcolor: 'background.paper', [drop === 'before' ? 'top' : 'bottom']: -8 },
+        }),
       }}
     >
       {children}

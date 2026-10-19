@@ -367,8 +367,13 @@ function DragHandle({ handleProps }: { handleProps: object }) {
   );
 }
 
+// The drop indicator: a line centred in the 8px gap between siblings, with a dot at its start.
 const dropShadow = (position: 'before' | 'after' | 'inside' | null) =>
-  position === 'before' ? 'shadow-[0_-2px_0_currentColor]' : position === 'after' ? 'shadow-[0_2px_0_currentColor]' : '';
+  position === 'before'
+    ? 'relative before:pointer-events-none before:absolute before:inset-x-0 before:-top-[5px] before:h-0.5 before:rounded-full before:bg-current after:pointer-events-none after:absolute after:-start-1 after:-top-[8px] after:size-2 after:rounded-full after:border-2 after:border-current after:bg-background'
+    : position === 'after'
+      ? 'relative before:pointer-events-none before:absolute before:inset-x-0 before:-bottom-[5px] before:h-0.5 before:rounded-full before:bg-current after:pointer-events-none after:absolute after:-start-1 after:-bottom-[8px] after:size-2 after:rounded-full after:border-2 after:border-current after:bg-background'
+      : '';
 
 const Rule = memo(function Rule({ id }: { id: NodeId }) {
   const { kit, compact, labels, showLock } = useOptions();
@@ -614,7 +619,8 @@ const Group = memo(function Group({ id, depth }: { id: NodeId; depth: number }) 
       locked={locked}
       dragging={isDragging}
       drop={position}
-      style={isRoot ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 160px' }}
+      // content-visibility clips paint to the box, which would hide the drop line in the gap.
+      style={isRoot || position ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 160px' }}
       {...(isRoot ? {} : dropProps)}
       data-group={id}
     >
