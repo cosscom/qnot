@@ -17,11 +17,14 @@
   }
   let { type, value, parse, format, onChange, invalid, disabled, min, max, step, placeholder }: Props = $props();
 
-  // svelte-ignore state_referenced_locally
-  let draft = $state(format(value));
-  $effect.pre(() => {
-    const v = value;
-    if (format(parse(draft)) !== format(v)) draft = format(v);
+  // What the user last typed. The shown text follows `value`, except while the typed text still
+  // means the same value (so "1." isn't rewritten to "1" mid-edit).
+  let typed: string | undefined;
+  const draft = $derived.by(() => {
+    const shown = format(value);
+    if (typed !== undefined && format(parse(typed)) === shown) return typed;
+    typed = undefined;
+    return shown;
   });
 </script>
 
@@ -36,7 +39,7 @@
   value={draft}
   aria-invalid={invalid || undefined}
   oninput={(e) => {
-    draft = e.currentTarget.value;
-    onChange(parse(draft));
+    typed = e.currentTarget.value;
+    onChange(parse(typed));
   }}
 />

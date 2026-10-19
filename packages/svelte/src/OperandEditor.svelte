@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { CLASS, defaultCall, editorFor, functionOptions, isFnCall, refOptions, type AnyFieldDef, type Fields, type FnCall, type Operand } from '@qnot/core';
+  import { CLASS, defaultCall, isFnCall, type AnyFieldDef, type Fields, type FnCall, type Operand } from '@qnot/core';
   import FunctionEditor from './FunctionEditor.svelte';
   import LazySelect from './LazySelect.svelte';
   import ValueEditor from './ValueEditor.svelte';
+  import { editorOf, functionChoices, refChoices } from './reactive';
   import type { Labels } from './ui';
 
   interface Props {
@@ -15,8 +16,8 @@
     labels: Labels;
   }
   let { operand, def, fields, label, onChange, disabled, labels }: Props = $props();
-  const refs = $derived(refOptions(fields, '', def.kind));
-  const nested = $derived(functionOptions(fields, def.kind));
+  const refs = $derived(refChoices(fields, '', def.kind));
+  const nested = $derived(functionChoices(fields, def.kind));
   const sources = $derived([
     { value: 'value', label },
     ...(refs.length > 0 ? [{ value: 'field', label: `${label}: field` }] : []),
@@ -41,7 +42,7 @@
     <LazySelect class={CLASS.value} value={(operand as { ref: string }).ref} options={refs} {disabled} onChange={(ref) => onChange({ ref })} />
   {:else}
     <ValueEditor
-      editor={editorFor(def, 'eq', fields)}
+      editor={editorOf(def, 'eq', fields)}
       {def}
       value={(operand as { value: unknown }).value}
       invalid={false}

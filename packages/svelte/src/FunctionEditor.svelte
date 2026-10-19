@@ -1,8 +1,9 @@
 <script lang="ts">
   // Editor for a function call: pick the function, then each argument (literal, field, or nested call).
-  import { defaultCall, fieldLabel, functionOf, functionOptions, type Fields, type FnCall } from '@qnot/core';
+  import { defaultCall, fieldLabel, functionOf, type Fields, type FnCall } from '@qnot/core';
   import LazySelect from './LazySelect.svelte';
   import OperandEditor from './OperandEditor.svelte';
+  import { functionChoices } from './reactive';
   import type { Labels } from './ui';
 
   interface Props {
@@ -14,7 +15,7 @@
     labels: Labels;
   }
   let { call, fields, kind, onChange, disabled, labels }: Props = $props();
-  const fns = $derived(functionOptions(fields, kind));
+  const fns = $derived(functionChoices(fields, kind));
   const args = $derived(Object.entries(functionOf(fields, call)?.args ?? {}));
 </script>
 

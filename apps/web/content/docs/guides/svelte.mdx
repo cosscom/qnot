@@ -29,8 +29,9 @@ plus `onchange`, `components`, `labels`, `class`, `showNot` and `showLock`.
 ## Reactive helpers
 
 `setQueryStore(store)` puts a store in context; `getQueryStore()` reads it. The `create*` helpers
-return objects whose getters are backed by `createSubscriber` from `svelte/reactivity`, so they work
-in components and in plain `.svelte.ts` modules, and each one subscribes only to what it reads:
+return objects whose getters read shared per-store signals (one per node, fed by the store's
+per-node subscriptions), so they work in components and in plain `.svelte.ts` modules, and each one
+depends only on what it reads:
 
 ```svelte
 <script lang="ts">
