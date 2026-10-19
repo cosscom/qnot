@@ -247,6 +247,19 @@ function EnumSelect({ editor, def, value, onChange, aria, labels }: { editor: Ed
   );
 }
 
+/** "Compare with: value / field / function", lazy like the other selects. */
+function SourceSelect({ source, hasRefs, hasFunctions, disabled, labels, onChange }: { source: 'value' | 'field' | 'function'; hasRefs: boolean; hasFunctions: boolean; disabled: boolean; labels: Labels; onChange: (s: string) => void }) {
+  const { expanded, triggers } = useLazyOptions();
+  const show = (s: string) => expanded || s === source;
+  return (
+    <select className="tn-source" value={source} disabled={disabled} aria-label={labels.compareWith} {...triggers} onChange={(e) => onChange(e.target.value)}>
+      {show('value') && <option value="value">{labels.compareValue}</option>}
+      {hasRefs && show('field') && <option value="field">{labels.compareField}</option>}
+      {hasFunctions && show('function') && <option value="function">{labels.compareFunction}</option>}
+    </select>
+  );
+}
+
 function Select({ value, options, onChange, className, disabled, placeholder }: { value: string; options: readonly Option[]; onChange: (v: string) => void; className?: string; disabled?: boolean; placeholder?: string }) {
   const { expanded, triggers } = useLazyOptions();
   const shown = expanded ? options : options.filter((o) => o.value === value);
@@ -393,19 +406,14 @@ export const DefaultRule = memo(function DefaultRule({ id }: { id: NodeId }) {
       )}
       <Select className={CLASS.operator} value={rule.operator} options={r.operators} disabled={!can.editOperator} onChange={r.setOperator} />
       {(r.refOptions.length > 0 || r.functionOptions.length > 0) && (
-        <select
-          className="tn-source"
-          value={source}
+        <SourceSelect
+          source={source}
+          hasRefs={r.refOptions.length > 0}
+          hasFunctions={r.functionOptions.length > 0}
           disabled={!can.editValue}
-          aria-label={labels.compareWith}
-          onChange={(e) =>
-            e.target.value === 'field' ? r.setRef(r.refOptions[0]!.value) : e.target.value === 'function' ? r.setCall(defaultCall(fields, r.functionOptions[0]!.value)) : r.setRef(null)
-          }
-        >
-          <option value="value">{labels.compareValue}</option>
-          {r.refOptions.length > 0 && <option value="field">{labels.compareField}</option>}
-          {r.functionOptions.length > 0 && <option value="function">{labels.compareFunction}</option>}
-        </select>
+          labels={labels}
+          onChange={(next) => (next === 'field' ? r.setRef(r.refOptions[0]!.value) : next === 'function' ? r.setCall(defaultCall(fields, r.functionOptions[0]!.value)) : r.setRef(null))}
+        />
       )}
       {rule.ref !== undefined ? (
         <Select className={CLASS.value} value={rule.ref} options={r.refOptions} disabled={!can.editValue} onChange={r.setRef} />

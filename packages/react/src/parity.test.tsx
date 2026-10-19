@@ -123,7 +123,11 @@ describe('async search input', () => {
   it('updates offered value sources live when allowRefs / allowFunctions change', () => {
     const store = createQueryStore({ fields, initial });
     const { container } = render(<QueryBuilder store={store} />);
-    const sourceOptions = () => [...container.querySelector<HTMLSelectElement>('.tn-rule select.tn-source')!.options].map((o) => o.value);
+    const sourceOptions = () => {
+      const select = container.querySelector<HTMLSelectElement>('.tn-rule select.tn-source')!;
+      fireEvent.focus(select);
+      return [...select.options].map((o) => o.value);
+    };
     expect(sourceOptions()).toEqual(['value', 'field', 'function']);
     act(() => store.setSettings({ allowFunctions: false }));
     expect(sourceOptions()).toEqual(['value', 'field']);

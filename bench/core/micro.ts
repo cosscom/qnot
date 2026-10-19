@@ -47,13 +47,18 @@ for (const n of [1000, 10_000]) {
     store.getQuery();
   });
   time('setRuleValue (keystroke)', 2000, () => store.setRuleValue(ids[0]!, `y${Math.random()}`));
-  time('encode sql (cold: new query object)', n >= 10_000 ? 5 : 20, () => encode(sql, structuredClone(q), fields));
+  // Fresh copies made up front so cloning isn't timed: "cold" means nothing is memoized yet.
+  const copies = Array.from({ length: 24 }, () => structuredClone(q));
+  let c = 0;
+  const fresh = () => copies[c++ % copies.length]!;
+  const cold = (codec: Parameters<typeof encode>[0]) => () => encode(codec, fresh(), fields);
+  time('encode sql (cold)', n >= 10_000 ? 5 : 20, cold(sql));
   time('encode sql (after one edit, memoized)', 200, () => {
     store.setRuleValue(ids[0]!, `z${Math.random()}`);
     encode(sql, store.getQuery() as Query, fields);
   });
-  time('encode mongo (cold)', n >= 10_000 ? 5 : 20, () => encode(mongo, structuredClone(q), fields));
-  time('encode jsonlogic (cold)', n >= 10_000 ? 5 : 20, () => encode(jsonlogic, structuredClone(q), fields));
+  time('encode mongo (cold)', n >= 10_000 ? 5 : 20, cold(mongo));
+  time('encode jsonlogic (cold)', n >= 10_000 ? 5 : 20, cold(jsonlogic));
   time('validateQuery', n >= 10_000 ? 5 : 20, () => validateQuery(fields, q));
   time('store.isValid (after one edit)', 50, () => {
     store.setRuleValue(ids[0]!, `w${Math.random()}`);
