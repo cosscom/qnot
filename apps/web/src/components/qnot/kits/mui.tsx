@@ -1,4 +1,4 @@
-// Part of qnot (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+// Part of qnot (https://github.com/cosscom/qnot). MIT licensed; installable with shadcn.
 // qnot's query builder in Material UI: TextField, Select, Autocomplete, ToggleButtonGroup and
 // Paper, themed to follow the page's light/dark mode, on @qnot/react's headless hooks. MIT licensed.
 'use client';

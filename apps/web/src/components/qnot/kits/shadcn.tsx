@@ -1,4 +1,4 @@
-// Part of qnot (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+// Part of qnot (https://github.com/cosscom/qnot). MIT licensed; installable with shadcn.
 // qnot's query builder in shadcn/ui: Radix-based Select, Command-in-Popover comboboxes,
 // ToggleGroup segments and Tooltips, on @qnot/react's headless hooks. MIT licensed.
 'use client';

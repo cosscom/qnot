@@ -1,4 +1,4 @@
-// Part of qnot (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+// Part of qnot (https://github.com/cosscom/qnot). MIT licensed; installable with shadcn.
 // qnot's query builder in Mantine: Select/MultiSelect with groups and server search,
 // NumberInput, SegmentedControl, Menu and Paper, following the page's light/dark mode, on
 // @qnot/react's headless hooks. Only Mantine's component styles are imported (layered, no

@@ -1,4 +1,4 @@
-// Part of qnot (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+// Part of qnot (https://github.com/cosscom/qnot). MIT licensed; installable with shadcn.
 // Text-backed numeric input state: keeps what the user is typing ("1.", "-") while committing parsed
 // numbers, and follows external value changes (undo, controlled updates). MIT licensed.
 import { useState } from 'react';

@@ -20,7 +20,7 @@ export const registryBase = (env = process.env) => `${siteUrl(env)}${basePath(en
 // NEXT_PUBLIC_REPO_URL re-point everything the site emits (docs, code panels, install commands,
 // registry files, llms.txt) without touching the source.
 
-export const DEFAULT_REPO_URL = 'https://github.com/sean-brydon/trawlnet';
+export const DEFAULT_REPO_URL = 'https://github.com/cosscom/qnot';
 export const DEFAULT_PACKAGE_PREFIX = '@qnot/';
 
 /** The repository's URL (no trailing slash). */

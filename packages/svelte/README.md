@@ -21,6 +21,6 @@ pnpm add @qnot/core @qnot/svelte
 
 Helpers: `setQueryStore`, `getQueryStore`, `createRule`, `createGroup`, `createQuery`, `createHistory`, …
 
-Docs: https://github.com/sean-brydon/trawlnet/tree/main/apps/web/content/docs
+Docs: https://github.com/cosscom/qnot/tree/main/apps/web/content/docs
 
-MIT licensed. Part of [qnot](https://github.com/sean-brydon/trawlnet).
+MIT licensed. Part of [qnot](https://github.com/cosscom/qnot).

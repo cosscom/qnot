@@ -1,4 +1,4 @@
-// Part of qnot (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+// Part of qnot (https://github.com/cosscom/qnot). MIT licensed; installable with shadcn.
 import { encode, type Fields, type Query, type QueryNode } from '@qnot/core';
 import { textFormat } from '@qnot/core/formats/text';
 

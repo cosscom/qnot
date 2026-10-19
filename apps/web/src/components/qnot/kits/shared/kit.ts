@@ -1,4 +1,4 @@
-// Part of qnot (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+// Part of qnot (https://github.com/cosscom/qnot). MIT licensed; installable with shadcn.
 // The contract between qnot's kit-agnostic query builder (./builder.tsx) and a UI kit. A kit
 // supplies its own native controls; the builder supplies every behaviour (scoping, value sources,
 // functions, array groups, locks, permissions, drag and drop). MIT licensed.

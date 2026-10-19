@@ -1,4 +1,4 @@
-// Part of qnot (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+// Part of qnot (https://github.com/cosscom/qnot). MIT licensed; installable with shadcn.
 'use client';
 import { compile, defineFields, f } from '@qnot/core';
 import { BellRingIcon, CircleCheckIcon, PauseIcon, PlayIcon } from 'lucide-react';

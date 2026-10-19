@@ -18,6 +18,6 @@ export const Filters = () => <QueryBuilder fields={fields} onChange={(q) => save
 
 Build your own UI with `useQueryStore`, `QueryProvider`, `useRule`, `useGroup`, `useQuery`, `useHistory` and the drag hooks.
 
-Docs: https://github.com/sean-brydon/trawlnet/tree/main/apps/web/content/docs
+Docs: https://github.com/cosscom/qnot/tree/main/apps/web/content/docs
 
-MIT licensed. Part of [qnot](https://github.com/sean-brydon/trawlnet).
+MIT licensed. Part of [qnot](https://github.com/cosscom/qnot).

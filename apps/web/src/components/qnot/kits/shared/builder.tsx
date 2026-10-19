@@ -1,4 +1,4 @@
-// Part of qnot (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+// Part of qnot (https://github.com/cosscom/qnot). MIT licensed; installable with shadcn.
 // A UI-kit-agnostic qnot query builder: every behaviour lives here, built only on
 // @qnot/react's headless hooks; the look comes from the Kit it is given (./kit.ts). Feature for
 // feature it matches the coss builder and @qnot/react's default UI: grouped struct fields,

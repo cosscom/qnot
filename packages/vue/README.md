@@ -18,6 +18,6 @@ const store = createQueryStore({ fields });
 
 Composables: `useQueryStore`, `provideQueryStore`, `useRule`, `useGroup`, `useQuery`, `useHistory`, …
 
-Docs: https://github.com/sean-brydon/trawlnet/tree/main/apps/web/content/docs
+Docs: https://github.com/cosscom/qnot/tree/main/apps/web/content/docs
 
-MIT licensed. Part of [qnot](https://github.com/sean-brydon/trawlnet).
+MIT licensed. Part of [qnot](https://github.com/cosscom/qnot).

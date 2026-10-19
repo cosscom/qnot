@@ -7,11 +7,11 @@ SKIP_PATHS = {'./apps/web/public/r', './apps/web/public/islands', './bench/dist'
 TEXT_EXT = {'.ts', '.tsx', '.js', '.mjs', '.cjs', '.json', '.md', '.mdx', '.css', '.svelte', '.vue', '.yml', '.yaml', '.html', '.txt', '.py'}
 SKIP_FILES = {'./pnpm-lock.yaml', './scripts/rename-to-qnot.py'}
 
-REPO = 'https://github.com/sean-brydon/trawlnet'
+REPO = 'https://github.com/cosscom/qnot'
 TOKEN = '\u0000REPO_URL\u0000'
 
 def sweep(s: str, path: str) -> str:
-    s = s.replace(REPO, TOKEN).replace('sean-brydon/trawlnet', '\u0000REPO_SLUG\u0000')
+    s = s.replace(REPO, TOKEN).replace('cosscom/qnot', '\u0000REPO_SLUG\u0000')
     s = s.replace('@trawlnet/', '@qnot/')
     s = s.replace('TRAWLNET', 'QNOT').replace('Trawlnet', 'Qnot').replace('trawlnet', 'qnot')
     # CSS class prefix: only real class tokens (not btn-, data-…-tn- etc.).
@@ -22,7 +22,7 @@ def sweep(s: str, path: str) -> str:
     s = s.replace("root: 'tn'", "root: 'qn'")
     s = re.sub(r"(['\"`])\.tn(?![A-Za-z0-9_\-])", r'\1.qn', s)  # selectors in tests: '.tn', '.tn > …'
     s = re.sub(r"(['\"`])tn(['\"`])", r'\1qn\2', s)            # className 'tn'
-    s = s.replace(TOKEN, REPO).replace('\u0000REPO_SLUG\u0000', 'sean-brydon/trawlnet')
+    s = s.replace(TOKEN, REPO).replace('\u0000REPO_SLUG\u0000', 'cosscom/qnot')
     return s
 
 changed = []

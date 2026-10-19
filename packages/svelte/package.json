@@ -9,13 +9,13 @@
     "runes"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/sean-brydon/trawlnet#readme",
+  "homepage": "https://github.com/cosscom/qnot#readme",
   "bugs": {
-    "url": "https://github.com/sean-brydon/trawlnet/issues"
+    "url": "https://github.com/cosscom/qnot/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sean-brydon/trawlnet.git",
+    "url": "git+https://github.com/cosscom/qnot.git",
     "directory": "packages/svelte"
   },
   "type": "module",

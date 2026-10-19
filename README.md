@@ -45,7 +45,7 @@ export function Filters() {
 }
 ```
 
-Docs: [https://github.com/sean-brydon/trawlnet/tree/main/apps/web/content/docs](https://github.com/sean-brydon/trawlnet/tree/main/apps/web/content/docs) (also served by `apps/web`).
+Docs: [https://github.com/cosscom/qnot/tree/main/apps/web/content/docs](https://github.com/cosscom/qnot/tree/main/apps/web/content/docs) (also served by `apps/web`).
 
 ## Repository
 

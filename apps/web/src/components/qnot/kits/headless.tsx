@@ -1,4 +1,4 @@
-// Part of qnot (https://github.com/sean-brydon/trawlnet). MIT licensed; installable with shadcn.
+// Part of qnot (https://github.com/cosscom/qnot). MIT licensed; installable with shadcn.
 // "Your own" UI: qnot's query builder from plain HTML elements and Tailwind classes, no component
 // library. It's the smallest complete kit, so read it as the recipe: every control below is a few
 // lines of markup, and ../shared/builder.tsx turns @qnot/react's hooks into the builder around
