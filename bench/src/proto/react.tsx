@@ -1,4 +1,4 @@
-// Headless React bindings: hooks only, no markup. Any UI kit (MUI, shadcn, Mantine, plain HTML) renders on top.
+// Headless React bindings: hooks only, no markup. Any UI kit (MUI, shadcn, plain HTML) renders on top.
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { createQueryStore, type GroupJSON, type GroupNode, type Id, type QNode, type QueryStore, type RuleJSON, type RuleNode } from './core';
 

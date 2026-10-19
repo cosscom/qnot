@@ -8,7 +8,7 @@ import { registryItem } from '@/lib/registry';
 
 export const metadata: Metadata = {
   title: 'UI kits',
-  description: 'The same query builder in coss ui, shadcn/ui, MUI, Mantine and plain HTML, all editing one store.',
+  description: 'The same query builder in coss ui, shadcn/ui, MUI and plain HTML, all editing one store.',
 };
 
 /** The registry item behind each kit in the switcher. */
@@ -16,7 +16,6 @@ const ITEMS: Record<KitId, string> = {
   coss: 'query-builder',
   shadcn: 'query-builder-shadcn',
   mui: 'query-builder-mui',
-  mantine: 'query-builder-mantine',
   headless: 'query-builder-headless',
 };
 
@@ -52,13 +51,6 @@ function setup(kit: KitId): ReactNode {
           Installs <code>@mui/material</code>, <code>@mui/icons-material</code> and Emotion. The builder wraps itself in its own <code>ThemeProvider</code> (light or dark from the{' '}
           <code>dark</code> class on <code>&lt;html&gt;</code>), so it needs neither your theme nor <code>CssBaseline</code>; edit <code>themeFor</code> in the file to match your
           app. With the App Router and MUI elsewhere on the page, keep your usual <code>AppRouterCacheProvider</code>.
-        </p>
-      );
-    case 'mantine':
-      return (
-        <p>
-          Installs <code>@mantine/core</code> and <code>@mantine/hooks</code>. The builder brings its own <code>MantineProvider</code> (light or dark from the <code>dark</code>{' '}
-          class) and imports the Mantine stylesheets its components use, so there's no global setup. In an app that already uses Mantine you can drop the inner provider.
         </p>
       );
     case 'headless':

@@ -61,7 +61,7 @@ function Hero() {
 }
 
 const FRAMEWORKS = ['React', 'Vue', 'Svelte', 'Solid', 'Vanilla JS'];
-const KITS = ['coss ui', 'shadcn/ui', 'MUI', 'Mantine', 'your own'];
+const KITS = ['coss ui', 'shadcn/ui', 'MUI', 'your own'];
 
 function WorksWith() {
   return (

@@ -1,6 +1,6 @@
 'use client';
 // /kits: the same qnot query builder in five UI kits, all editing one store. Each kit is loaded
-// on demand, so MUI and Mantine only download when picked.
+// on demand, so MUI only downloads when picked.
 import '@qnot/core/styles.css';
 import { createQueryStore, type Query } from '@qnot/core';
 import { QueryProvider, useQuery } from '@qnot/react';
@@ -16,14 +16,12 @@ import type { QueryBuilderProps } from '@/components/qnot/kits/shared/builder';
 const loading = () => <div className="h-96 animate-pulse rounded-xl border bg-muted/40" />;
 const shadcn = dynamic(() => import('@/components/qnot/kits/shadcn').then((m) => m.QueryBuilder), { ssr: false, loading });
 const mui = dynamic(() => import('@/components/qnot/kits/mui').then((m) => m.QueryBuilder), { ssr: false, loading });
-const mantine = dynamic(() => import('@/components/qnot/kits/mantine').then((m) => m.QueryBuilder), { ssr: false, loading });
 const headless = dynamic(() => import('@/components/qnot/kits/headless').then((m) => m.QueryBuilder), { ssr: false, loading });
 
 export const KITS = [
   { id: 'coss', label: 'coss ui', builder: CossQueryBuilder as ComponentType<QueryBuilderProps> },
   { id: 'shadcn', label: 'shadcn/ui', builder: shadcn },
   { id: 'mui', label: 'MUI', builder: mui },
-  { id: 'mantine', label: 'Mantine', builder: mantine },
   { id: 'headless', label: 'your own', builder: headless },
 ] as const;
 export type KitId = (typeof KITS)[number]['id'];

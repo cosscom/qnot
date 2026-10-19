@@ -57,7 +57,7 @@ export interface SurfaceProps extends Omit<HTMLAttributes<HTMLDivElement>, 'chil
 
 export interface Kit {
   name: string;
-  /** Theme/context the controls need (MUI ThemeProvider, MantineProvider, tooltip providers…). */
+  /** Theme/context the controls need (MUI ThemeProvider, tooltip providers…). */
   Provider: ComponentType<{ children: ReactNode }>;
   Select: ComponentType<Control & { items: readonly Item[]; value: string | null; onChange: (v: string) => void; mono?: boolean }>;
   TextInput: ComponentType<Control & { value: string; onChange: (v: string) => void; type?: 'text' | 'date' | 'time' | 'datetime-local' }>;

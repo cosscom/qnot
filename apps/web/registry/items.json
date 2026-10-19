@@ -57,19 +57,6 @@
       "docs": "Render <QueryBuilder store={store} /> from @/components/qnot/kits/mui. It wraps itself in a ThemeProvider that follows the .dark class on <html>."
     },
     {
-      "name": "query-builder-mantine",
-      "type": "registry:component",
-      "title": "Query builder (Mantine)",
-      "description": "The qnot query builder made of Mantine components, with Mantine's styles imported per component.",
-      "files": [
-        "src/components/qnot/kits/mantine.tsx"
-      ],
-      "dependencies": [
-        "@mantine/hooks"
-      ],
-      "docs": "Render <QueryBuilder store={store} /> from @/components/qnot/kits/mantine. It wraps itself in a MantineProvider that follows the .dark class on <html>."
-    },
-    {
       "name": "query-builder-headless",
       "type": "registry:component",
       "title": "Query builder (plain HTML)",
@@ -121,7 +108,7 @@
       "name": "workflow",
       "type": "registry:block",
       "title": "Workflow automation triggers",
-      "description": "“When a booking is created and …, then …” with a live event log",
+      "description": "\u201cWhen a booking is created and \u2026, then \u2026\u201d with a live event log",
       "files": [
         "src/components/qnot/examples/workflow.tsx"
       ]
