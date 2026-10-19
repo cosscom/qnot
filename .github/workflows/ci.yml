@@ -1,17 +1,22 @@
 name: CI
 
+# Pushes to main always run. Pull requests run only once they carry the `run-ci` label: adding the
+# label starts a run, and later pushes to a labelled PR run again.
 on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # Adding some other label gets its own group, so it can't cancel a run in progress.
+  group: ci-${{ github.ref }}${{ github.event.action == 'labeled' && github.event.label.name != 'run-ci' && format('-{0}', github.run_id) || '' }}
   cancel-in-progress: true
 
 jobs:
   packages:
     name: Typecheck, test, build packages
+    if: github.event_name != 'pull_request' || (contains(github.event.pull_request.labels.*.name, 'run-ci') && (github.event.action != 'labeled' || github.event.label.name == 'run-ci'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +38,7 @@ jobs:
 
   web:
     name: Build website
+    if: github.event_name != 'pull_request' || (contains(github.event.pull_request.labels.*.name, 'run-ci') && (github.event.action != 'labeled' || github.event.label.name == 'run-ci'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +57,7 @@ jobs:
 
   security:
     name: SQL injection fuzz (Postgres, MySQL, SQL Server, SQLite)
+    if: github.event_name != 'pull_request' || (contains(github.event.pull_request.labels.*.name, 'run-ci') && (github.event.action != 'labeled' || github.event.label.name == 'run-ci'))
     runs-on: ubuntu-latest
     services:
       postgres:
