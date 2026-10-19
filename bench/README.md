@@ -10,6 +10,27 @@ node report.mjs         # -> results/REPORT.md
 node dbg.mjs dist <page>.html "<js expr>" [shot.png]   # poke at one page
 ```
 
+## Full suite
+
+```sh
+pnpm --filter cqb-bench suite     # or: cd bench && node suite.mjs   (~25 min)
+```
+
+Builds every page, then runs the UI matrix (10 adapters, including the Vue, Svelte and Solid
+bindings, × 10…5,000 rules), a 4× CPU-throttled pass for mount/keystroke/add-rule, the core
+benchmarks (`core/suite.ts`, Node, no DOM), and bundle sizes (`build.mjs`: per page plus every
+`@qnot/*` entry, gzip and brotli). Writes `results/suite.json` (median, p25/p75/p95, min/max and
+sample count per metric, plus machine/browser/library versions) and refreshes `results/results.json`
+from the same run. The site's `/benchmarks` page reads `suite.json` at build time.
+
+Sizes whose projected cold mount exceeds `MOUNT_BUDGET_MS` (45 s) are recorded as skipped, with the
+reason, instead of being dropped. A quick slice: `ONLY=qnot,rqb SIZES=10,100 OUT=/tmp/s.json node suite.mjs --no-core --no-throttle`.
+
+Interactions on the last page of each size, all through the library's own UI: type into a text value,
+switch a rule's field (Age ↔ First name, so the value editor changes too), toggle its operator
+(equals ↔ not equals), drag a rule to the top of its group (timed from the drop), add a rule, remove a
+rule. Each is timed until the DOM shows the change, then one macrotask and a forced layout.
+
 ## Method
 
 - **Dataset** (`src/shared.ts`): 10 fields (text/number/select/boolean). Root AND group with

@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "bench": "node run.mjs"
+    "bench": "node run.mjs",
+    "suite": "node suite.mjs"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",

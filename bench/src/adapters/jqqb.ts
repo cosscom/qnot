@@ -3,7 +3,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'jQuery-QueryBuilder/dist/css/query-builder.default.css';
 import $ from 'jquery';
 (window as any).jQuery = (window as any).$ = $;
-import { FIELDS, makeTree, isGroup, type Adapter, type CGroup } from '../shared';
+import { FIELDS, makeTree, isGroup, pickNative, type Adapter, type CGroup } from '../shared';
 import { install } from '../runner';
 // @ts-ignore
 import qbSource from 'jQuery-QueryBuilder/dist/js/query-builder.standalone.js' with { type: 'text' };
@@ -44,7 +44,23 @@ const adapter: Adapter = {
     }),
   addRule: (el) => el.querySelector<HTMLButtonElement>('.query-builder > .rules-group-container > .rules-group-header [data-add="rule"]')!.click(),
   sql: () => $qb.queryBuilder('getSQL', false).sql,
+  removeRule: (el, i) => rows(el)[i]!.querySelector<HTMLButtonElement>('[data-delete="rule"]')!.click(),
+  async changeField(el, i, to) {
+    await pickNative(rows(el)[i]!.querySelector('.rule-filter-container select')!, to.name);
+    const type = to.type === 'number' ? 'number' : 'text';
+    return () =>
+      rows(el)[i]!.querySelector<HTMLSelectElement>('.rule-filter-container select')!.value === to.name &&
+      rows(el)[i]!.querySelector<HTMLInputElement>('.rule-value-container input')?.type === type;
+  },
+  async changeOperator(el, i, negate) {
+    const op = negate ? 'not_equal' : 'equal';
+    await pickNative(rows(el)[i]!.querySelector('.rule-operator-container select')!, op);
+    return () => rows(el)[i]!.querySelector<HTMLSelectElement>('.rule-operator-container select')!.value === op;
+  },
+  notes: { reorder: 'Drag and drop is the optional sortable plugin, which needs interact.js; not in the default build.' },
 };
+
+const rows = (el: HTMLElement) => el.querySelectorAll<HTMLElement>('.rule-container');
 
 // Bundled as text and evaluated with this === window, like a classic <script>: its UMD wrapper
 // otherwise takes the global branch with this === exports and never finds jQuery.

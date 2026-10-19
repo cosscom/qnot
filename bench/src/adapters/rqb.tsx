@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import { QueryBuilder, formatQuery, type Field, type RuleGroupType, type RuleType } from 'react-querybuilder';
-import { FIELDS, makeTree, isGroup, type Adapter, type CGroup } from '../shared';
+import { FIELDS, makeTree, isGroup, pickNative, type Adapter, type CGroup } from '../shared';
 import { install } from '../runner';
 
 const fields: Field[] = FIELDS.map((f) => ({
@@ -52,6 +52,20 @@ const adapter: Adapter = {
     }),
   addRule: (el) => el.querySelector<HTMLButtonElement>('.queryBuilder > .ruleGroup > .ruleGroup-header > .ruleGroup-addRule')!.click(),
   sql: () => formatQuery(current, 'sql'),
+  removeRule: (el, i) => rows(el)[i]!.querySelector<HTMLButtonElement>('.rule-remove')!.click(),
+  async changeField(el, i, to) {
+    await pickNative(rows(el)[i]!.querySelector('.rule-fields')!, to.name);
+    const type = to.type === 'number' ? 'number' : 'text';
+    return () => rows(el)[i]!.querySelector<HTMLSelectElement>('.rule-fields')!.value === to.name && rows(el)[i]!.querySelector<HTMLInputElement>('input.rule-value')?.type === type;
+  },
+  async changeOperator(el, i, negate) {
+    const op = negate ? '!=' : '=';
+    await pickNative(rows(el)[i]!.querySelector('.rule-operators')!, op);
+    return () => rows(el)[i]!.querySelector<HTMLSelectElement>('.rule-operators')!.value === op;
+  },
+  notes: { reorder: 'Drag and drop needs the separate @react-querybuilder/dnd and react-dnd packages; the default build has none.' },
 };
+
+const rows = (el: HTMLElement) => el.querySelectorAll<HTMLElement>('.rule');
 
 install(adapter);
