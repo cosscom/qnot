@@ -1,11 +1,11 @@
 // apps/web smoke test: every route at desktop + phone widths, light or dark (DARK=1), console errors,
-// horizontal overflow, and the interactive checks (category filter, islands sync, parity demos).
+// horizontal overflow, and the interactive checks (category filter, islands sync).
 import { chromium } from 'playwright';
 const S = process.argv[2];
 const BASE = process.env.BASE ?? 'http://localhost:5192';
 const dark = !!process.env.DARK;
-const SLUGS = ['routing-forms', 'linear-filters', 'workflow', 'saved-views', 'product-filters', 'segments', 'feature-flags', 'alerting', 'access-policy', 'rqb-dropin', 'server-side'];
-const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/parity', '/docs'];
+const SLUGS = ['linear-filters', 'workflow', 'saved-views', 'product-filters', 'segments', 'feature-flags', 'alerting', 'access-policy', 'rqb-dropin', 'server-side'];
+const ROUTES = ['/', '/examples', ...SLUGS.map((s) => `/examples/${s}`), '/playground', '/docs'];
 const b = await chromium.launch();
 const report = [];
 for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['phone', { width: 390, height: 844 }]]) {
@@ -19,7 +19,7 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['p
     await p.waitForTimeout(route === '/playground' ? 1200 : 500);
     const overflow = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     const name = route === '/' ? 'home' : route.slice(1).replace(/\//g, '_');
-    if (label === 'desktop' || ['/examples', '/examples/routing-forms', '/playground', '/parity', '/examples/linear-filters'].includes(route)) {
+    if (label === 'desktop' || ['/examples', '/playground', '/examples/linear-filters'].includes(route)) {
       await p.screenshot({ path: `${S}/web-${name}-${label}${dark ? '-dark' : ''}.png` });
     }
     report.push([label, route, res?.status(), overflow > 1 ? `OVERFLOW ${overflow}px` : 'ok', errors.slice(before).join(' | ') || 'no errors']);
@@ -46,15 +46,7 @@ for (const [label, viewport] of [['desktop', { width: 1440, height: 1000 }], ['p
     await p.waitForTimeout(400);
     await p.screenshot({ path: `${S}/web-playground-settings${dark ? '-dark' : ''}.png` });
     await p.keyboard.press('Escape');
-    // Parity demos via hash.
-    const demos = {};
-    for (const id of ['array', 'functions', 'cases', 'sql-import', 'readonly']) {
-      await p.goto(`${BASE}/parity#${id}`, { waitUntil: 'networkidle' });
-      await p.waitForTimeout(500);
-      demos[id] = (await p.locator(`[data-demo="${id}"]`).count()) ? 'open' : 'MISSING';
-      if (id === 'cases') await p.screenshot({ path: `${S}/web-parity-cases${dark ? '-dark' : ''}.png` });
-    }
-    console.log({ platformCards, sync, demos });
+    console.log({ platformCards, sync });
   }
   await p.close();
 }

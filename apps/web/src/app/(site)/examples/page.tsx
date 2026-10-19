@@ -6,7 +6,7 @@ import { SKETCHES } from '@/examples/sketches';
 
 export const metadata: Metadata = {
   title: 'Examples',
-  description: 'What a query builder is for: routing forms, filter bars, segments, feature flags, alert rules, access policies and more, each built on trawlnet.',
+  description: 'What a query builder is for: filter bars, segments, feature flags, alert rules, access policies and more, each built on trawlnet.',
 };
 
 export default function Page() {

@@ -28,9 +28,8 @@ route(response); // { value: { team: 'emea-support' }, index: 1 }
 
 Each route's condition is an ordinary query, so give each one its own store and builder. A routing
 form editor is a list of cards, each holding a `QueryBuilder` (or your own UI over the hooks), a
-result picker, and controls to reorder and duplicate routes. The Cal.com routing forms example in
-[Examples](/examples) is built exactly this way, including "all / any / none of these rules" as
-AND, OR and NOT+OR on the group.
+result picker, and controls to reorder and duplicate routes. A common touch is an "all / any / none of these rules" switch, which maps to AND, OR and NOT+OR
+on the group.
 
 ## Exporting
 

@@ -14,45 +14,6 @@ const Mark = ({ accent }: { accent?: boolean }) => (
   </span>
 );
 
-const RoutingForms = () => (
-  <div className="flex flex-col">
-    <Sketch.Panel>
-      <Sketch.Row>
-        <Mark accent />
-        <Sketch.Bar tone="ink" w={3} />
-        <Sketch.Segmented active={0} />
-        <Sketch.Bar w={12} />
-      </Sketch.Row>
-      <Sketch.Row>
-        <Sketch.Select w={11} />
-        <Sketch.Select tone="soft" w={5} />
-        <Sketch.Select w={8} />
-      </Sketch.Row>
-    </Sketch.Panel>
-    <Link />
-    <Sketch.Panel>
-      <Sketch.Row>
-        <Mark />
-        <Sketch.Bar tone="ink" w={8} />
-      </Sketch.Row>
-      <Sketch.Row>
-        <Sketch.Select w={10} />
-        <Sketch.Select tone="accent" w={13} />
-      </Sketch.Row>
-    </Sketch.Panel>
-    <Link />
-    <Sketch.Panel>
-      <Sketch.Row className="justify-between">
-        <Sketch.Row>
-          <Mark />
-          <Sketch.Bar w={20} />
-        </Sketch.Row>
-        <Sketch.Toggle on />
-      </Sketch.Row>
-    </Sketch.Panel>
-  </div>
-);
-
 const IssueRow = ({ w, accent }: { w: number; accent?: boolean }) => (
   <Sketch.Row className="border-b py-1.5 last:border-b-0">
     <Sketch.Dot tone={accent ? 'accent' : 'soft'} />
@@ -290,7 +251,6 @@ const ServerSide = () => (
 );
 
 export const SKETCHES: Record<string, () => ReactNode> = {
-  'routing-forms': RoutingForms,
   'linear-filters': LinearFilters,
   workflow: Workflow,
   'saved-views': SavedViews,
